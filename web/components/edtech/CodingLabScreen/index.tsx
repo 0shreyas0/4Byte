@@ -194,63 +194,47 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
   }, [currentProblem]);
 
   const runCode = useCallback(() => {
-  const runCode = useCallback(async () => {
     setIsRunning(true);
     setOutput("");
     setShowHint(false);
 
-    const lang: Language = domain === "Python" ? "python" : "javascript";
-    const inputs = currentProblem.testCases.map(tc => tc.input);
-
     try {
-      const result = await compileAndRun(lang, code, currentProblem.functionName, inputs);
+      // eslint-disable-next-line no-new-func
+      const fn = new Function(`return (${code})`)();
+      const results: TestStatus[] = [];
+      const outputLines: string[] = [];
 
-      if (!result.success) {
-        setOutput(`❌ Error:\n${result.error}`);
-        setTestStatuses(currentProblem.testCases.map(() => "fail"));
-      } else {
-        const statuses: TestStatus[] = [];
-        const outputLines: string[] = [];
-
-        currentProblem.testCases.forEach((tc, i) => {
-          const actualRaw = result.outputs[i];
-          let passed = false;
-          let actualDisplay = actualRaw;
-
-          if (actualRaw && actualRaw.startsWith("ERROR_MARKER:")) {
-            outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — ${actualRaw.replace("ERROR_MARKER:", "")}`);
-          } else {
-            try {
-              // Standardize JSON comparison for robustness
-              const actual = JSON.parse(actualRaw || "null");
-              const expected = eval(tc.expectedOutput);
-              passed = JSON.stringify(actual) === JSON.stringify(expected);
-              actualDisplay = JSON.stringify(actual);
-            } catch {
-              passed = false;
-            }
-
-            outputLines.push(
-              `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${actualDisplay}, expected ${tc.expectedOutput}`}`
-            );
-          }
-          statuses.push(passed ? "pass" : "fail");
-        });
-
-        setTestStatuses(statuses);
-        setOutput(outputLines.join("\n"));
-
-        if (statuses.every(s => s === "pass")) {
-          setCompletedProblems((prev) => new Set([...prev, currentIndex]));
+      currentProblem.testCases.forEach((tc, i) => {
+        try {
+          // eslint-disable-next-line no-eval
+          const inputVal = eval(tc.input);
+          const actual = fn(inputVal);
+          // eslint-disable-next-line no-eval
+          const expected = eval(tc.expectedOutput);
+          const passed = JSON.stringify(actual) === JSON.stringify(expected);
+          results.push(passed ? "pass" : "fail");
+          outputLines.push(
+            `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`}`
+          );
+        } catch {
+          results.push("fail");
+          outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — Check your function signature`);
         }
+      });
+
+      setTestStatuses(results);
+      setOutput(outputLines.join("\n"));
+
+      if (results.every((r) => r === "pass")) {
+        setCompletedProblems((prev) => new Set([...prev, currentIndex]));
       }
     } catch (err: any) {
-      setOutput(`❌ Unexpected Error: ${err.message}`);
+      setOutput(`❌ Syntax Error: ${err.message}`);
       setTestStatuses(currentProblem.testCases.map(() => "fail"));
     }
 
     setIsRunning(false);
-  }, [code, currentProblem, currentIndex, domain]);
+  }, [code, currentProblem, currentIndex]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < problems.length - 1) {

@@ -177,11 +177,18 @@ export default function Home() {
           />
         )}
 
-        {screen === "coding-lab" && (
+        {screen === "coding-lab" && domain !== "Web Dev" && (
           <CodingLabScreen
             domain={domain}
             onComplete={handleQuizComplete}
             onBack={() => navigate("learning-concept")}
+          />
+        )}
+
+        {screen === "coding-lab" && domain === "Web Dev" && (
+          <WebPlayground
+            mode={mode}
+            onExit={() => navigate("learning-concept")}
           />
         )}
 
