@@ -31,7 +31,8 @@ export type Screen =
   | "processing"
   | "results"
   | "simulation"
-  | "sandbox";
+  | "sandbox"
+  | "web-sandbox";
 
 interface NavbarProps {
   screen: Screen;

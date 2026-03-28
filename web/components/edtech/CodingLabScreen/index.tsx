@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ArrowLeft, Play, CheckCircle, XCircle, Terminal, Code2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Play, CheckCircle, XCircle, Terminal, Code2, ChevronRight, Code } from "lucide-react";
 import { TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 import { compileAndRun, Language } from "@/lib/edtech/compiler";
 
@@ -135,6 +135,28 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
   ],
 };
 
+const LANGUAGES = ["JavaScript", "Python", "C++", "C", "Java", "Go", "Rust"];
+
+const LANG_EXT: Record<string, string> = {
+  JavaScript: "js",
+  Python: "py",
+  "C++": "cpp",
+  C: "c",
+  Java: "java",
+  Go: "go",
+  Rust: "rs",
+};
+
+const LANG_TEMPLATES: Record<string, (funcName: string) => string> = {
+  JavaScript: (f) => `function ${f}() {\n  // Write your solution here\n  \n}`,
+  Python: (f) => `def ${f}():\n    # Write your solution here\n    pass`,
+  "C++": () => `#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}`,
+  C: () => `#include <stdio.h>\n\nint main() {\n    // Write your solution here\n    return 0;\n}`,
+  Java: () => `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // Write your solution here\n    }\n}`,
+  Go: () => `package main\n\nimport "fmt"\n\nfunc main() {\n    // Write your solution here\n}`,
+  Rust: () => `fn main() {\n    // Write your solution here\n}`,
+};
+
 interface CodingLabScreenProps {
   domain: string;
   onComplete: (scores: Record<string, TopicScore>, results: QuestionResult[]) => void;
@@ -146,6 +168,7 @@ type TestStatus = "idle" | "pass" | "fail";
 export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLabScreenProps) {
   const problems = CODING_PROBLEMS[domain] || CODING_PROBLEMS["DSA"];
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [language, setLanguage] = useState("JavaScript");
   const [code, setCode] = useState(problems[0].starterCode);
   const [testStatuses, setTestStatuses] = useState<TestStatus[]>([]);
   const [output, setOutput] = useState<string>("");
@@ -156,6 +179,21 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
 
   const currentProblem = problems[currentIndex];
 
+  const handleLanguageChange = useCallback((lang: string) => {
+    setLanguage(lang);
+    if (lang === "JavaScript") {
+      setCode(currentProblem.starterCode);
+    } else {
+      const funcMatch = currentProblem.starterCode.match(/function\s+([a-zA-Z0-9_]+)/) ||
+        currentProblem.starterCode.match(/def\s+([a-zA-Z0-9_]+)/);
+      const funcName = funcMatch ? funcMatch[1] : "solution";
+      setCode(LANG_TEMPLATES[lang](funcName));
+    }
+    setTestStatuses([]);
+    setOutput("");
+  }, [currentProblem]);
+
+  const runCode = useCallback(() => {
   const runCode = useCallback(async () => {
     setIsRunning(true);
     setOutput("");
@@ -404,8 +442,28 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
           >
             <Terminal size={14} color="#FFD60A" />
             <span style={{ color: "#888", fontSize: "0.75rem", fontFamily: "monospace" }}>
-              solution.{domain === "Python" ? "py" : "js"}
+              solution.{LANG_EXT[language] || "js"}
             </span>
+
+            {/* Language Selector */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#2a2a2a", border: "1.5px solid #444", padding: "3px 8px", marginLeft: 4 }}>
+              <Code size={12} color="#8B5CF6" />
+              <select
+                value={language}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                style={{
+                  background: "transparent", color: "#FFF", border: "none",
+                  outline: "none", fontSize: "0.72rem", fontWeight: 700,
+                  cursor: "pointer", appearance: "none", textTransform: "uppercase",
+                }}
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l} value={l} style={{ background: "#1e1e1e" }}>{l}</option>
+                ))}
+              </select>
+              <span style={{ color: "#555", fontSize: "0.65rem", pointerEvents: "none" }}>▼</span>
+            </div>
+
             <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
               {allPassed && !isLastProblem && (
                 <button
