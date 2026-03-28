@@ -62,52 +62,17 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
     >
       {/* Decorative background grid */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage:
-            "linear-gradient(#0D0D0D22 1px, transparent 1px), linear-gradient(90deg, #0D0D0D22 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+            "linear-gradient(#0D0D0D22 2px, transparent 2px), linear-gradient(90deg, #0D0D0D22 1px, transparent 1px)",
+          backgroundSize: "50px 50px",
         }}
       />
 
-      {/* Nav */}
-      <nav
-        className="relative mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 md:px-8 md:py-5"
-        style={{ borderBottom: "2.5px solid #0D0D0D", background: "#F5F0E8" }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 flex items-center justify-center"
-            style={{ background: "#FFD60A", border: "2.5px solid #0D0D0D", boxShadow: "3px 3px 0 #0D0D0D" }}
-          >
-            <Brain size={20} color="#0D0D0D" strokeWidth={2.5} />
-          </div>
-          <span style={{ fontSize: "1.2rem", fontWeight: 800, letterSpacing: "-0.04em" }}>
-            NeuralPath
-          </span>
-        </div>
-        <div className="hidden md:flex items-center gap-8">
-          {["How it works", "Domains", "About"].map((item) => (
-            <span
-              key={item}
-              style={{ fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", letterSpacing: "-0.01em" }}
-              className="hover:underline"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-        <button
-          onClick={onStart}
-          className="brutal-btn px-5 py-2.5 text-sm"
-          style={{ background: "#0D0D0D", color: "#F5F0E8" }}
-        >
-          Get Started →
-        </button>
-      </nav>
 
       {/* Hero */}
-      <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-14 sm:px-6 md:px-12 md:pt-16 md:pb-20">
+      <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-14 sm:px-6 md:px-12 md:pt-20 md:pb-20">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12 xl:gap-16">
           {/* Left: Text */}
           <div className="flex-1 max-w-3xl">
@@ -190,12 +155,11 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
             </div>
 
             {/* Stats */}
-            <div className="grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3 relative z-10">
               {STATS.map((s) => (
                 <div
                   key={s.value}
-                  className="px-5 py-4"
-                  style={{ border: "2.5px solid #0D0D0D", background: "#FFFFFF", boxShadow: "3px 3px 0 #0D0D0D" }}
+                  className="px-5 py-4 brutal-card"
                 >
                   <div style={{ fontSize: "1.8rem", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>{s.value}</div>
                   <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#666", marginTop: "6px", lineHeight: 1.35 }}>{s.label}</div>
@@ -212,7 +176,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
       </div>
 
       {/* Features */}
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-12 md:py-20">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-12 md:py-20">
         <h2
           style={{
             fontSize: "2rem",
@@ -234,8 +198,8 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
 
       {/* Bottom CTA */}
       <div
-        className="mx-auto mb-14 flex max-w-7xl flex-col items-start justify-between gap-6 px-6 py-8 sm:px-8 md:mb-20 md:flex-row md:items-center md:px-10 md:py-10"
-        style={{ background: "#0D0D0D", border: "2.5px solid #0D0D0D", boxShadow: "6px 6px 0 #FFD60A" }}
+        className="relative z-10 mx-auto mb-14 flex max-w-7xl flex-col items-start justify-between gap-6 px-6 py-8 sm:px-8 md:mb-20 md:flex-row md:items-center md:px-10 md:py-10"
+        style={{ background: "#0D0D0D", border: "4px solid #0D0D0D", boxShadow: "var(--shadow-yellow)" }}
       >
         <div>
           <h3 style={{ color: "#FFD60A", fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1 }}>
@@ -346,20 +310,17 @@ function FeatureCard({ feature, index }: { feature: typeof FEATURES[0]; index: n
   const Icon = feature.icon;
   return (
     <div
-      className="p-6 group cursor-default"
+      className="p-6 group cursor-default brutal-card relative z-10"
       style={{
-        border: "2.5px solid #0D0D0D",
-        background: "#FFFFFF",
-        boxShadow: "4px 4px 0 #0D0D0D",
-        transition: "transform 0.15s, box-shadow 0.15s",
+        transition: "transform 0.2s, box-shadow 0.2s",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.transform = "translate(-2px, -2px)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "6px 6px 0 #0D0D0D";
+        (e.currentTarget as HTMLElement).style.transform = "translate(-4px, -4px)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-brutal-lg)";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.transform = "translate(0, 0)";
-        (e.currentTarget as HTMLElement).style.boxShadow = "4px 4px 0 #0D0D0D";
+        (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-brutal)";
       }}
     >
       <div

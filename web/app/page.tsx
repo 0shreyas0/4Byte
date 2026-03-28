@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Navbar from "@/components/edtech/Navbar";
 import LandingScreen from "@/components/edtech/LandingScreen";
 import DomainSelection from "@/components/edtech/DomainSelection";
 import LearningTimeline from "@/components/edtech/LearningTimeline";
@@ -18,6 +19,17 @@ type Screen =
   | "processing"
   | "results"
   | "simulation";
+
+// Screens that show the global navbar
+const NAVBAR_SCREENS: Screen[] = [
+  "landing",
+  "domain-select",
+  "timeline",
+  "quiz",
+  "processing",
+  "results",
+  "simulation",
+];
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -50,57 +62,82 @@ export default function Home() {
     setScreen("landing");
   }, []);
 
+  // Navbar navigation — only allow jumping to screens that have been reached
+  const handleNavNavigate = useCallback(
+    (target: Screen) => {
+      setScreen(target);
+    },
+    []
+  );
+
   return (
-    <main>
-      {screen === "landing" && (
-        <LandingScreen onStart={() => setScreen("domain-select")} />
-      )}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F5F0E8",
+        backgroundImage: "radial-gradient(circle, #00000018 1.5px, transparent 1.5px)",
+        backgroundSize: "24px 24px",
+      }}
+    >
+      {/* Global sticky navbar */}
+      <Navbar
+        screen={screen}
+        domain={domain}
+        onNavigate={handleNavNavigate}
+        onRestart={handleRestart}
+      />
 
-      {screen === "domain-select" && (
-        <DomainSelection
-          onSelect={handleDomainSelect}
-          onBack={() => setScreen("landing")}
-        />
-      )}
+      <main>
+        {screen === "landing" && (
+          <LandingScreen onStart={() => setScreen("domain-select")} />
+        )}
 
-      {screen === "timeline" && (
-        <LearningTimeline
-          domain={domain}
-          onStart={() => setScreen("quiz")}
-          onBack={() => setScreen("domain-select")}
-        />
-      )}
+        {screen === "domain-select" && (
+          <DomainSelection
+            onSelect={handleDomainSelect}
+            onBack={() => setScreen("landing")}
+          />
+        )}
 
-      {screen === "quiz" && (
-        <QuizScreen
-          domain={domain}
-          onComplete={handleQuizComplete}
-          onBack={() => setScreen("timeline")}
-        />
-      )}
+        {screen === "timeline" && (
+          <LearningTimeline
+            domain={domain}
+            onStart={() => setScreen("quiz")}
+            onBack={() => setScreen("domain-select")}
+          />
+        )}
 
-      {screen === "processing" && (
-        <AIProcessingScreen onComplete={handleProcessingComplete} />
-      )}
+        {screen === "quiz" && (
+          <QuizScreen
+            domain={domain}
+            onComplete={handleQuizComplete}
+            onBack={() => setScreen("timeline")}
+          />
+        )}
 
-      {screen === "results" && analysis && (
-        <MainDashboard
-          domain={domain}
-          scores={scores}
-          analysis={analysis}
-          onSimulate={() => setScreen("simulation")}
-          onRestart={handleRestart}
-        />
-      )}
+        {screen === "processing" && (
+          <AIProcessingScreen onComplete={handleProcessingComplete} />
+        )}
 
-      {screen === "simulation" && analysis && (
-        <SimulationMode
-          domain={domain}
-          originalScores={scores}
-          originalAnalysis={analysis}
-          onBack={() => setScreen("results")}
-        />
-      )}
-    </main>
+        {screen === "results" && analysis && (
+          <MainDashboard
+            domain={domain}
+            scores={scores}
+            analysis={analysis}
+            onSimulate={() => setScreen("simulation")}
+            onRestart={handleRestart}
+          />
+        )}
+
+        {screen === "simulation" && analysis && (
+          <SimulationMode
+            domain={domain}
+            originalScores={scores}
+            originalAnalysis={analysis}
+            onBack={() => setScreen("results")}
+          />
+        )}
+      </main>
+    </div>
   );
 }
