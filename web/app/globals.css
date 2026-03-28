@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+
+/* ─── Design Tokens ─── */
+:root {
+  --background: #F5F0E8;
+  --foreground: #0D0D0D;
+  --primary: #1A1A1A;
+  --secondary: #F0EBE0;
+  --muted: #888;
+  --accent: #FFD60A;
+  --border: #0D0D0D;
+  --card: #FFFFFF;
+  --surface: #FAFAF5;
+
+  --success: #1DB954;
+  --danger: #FF3B3B;
+  --warning: #FFD60A;
+  --info: #3B82F6;
+
+  --shadow-brutal: 4px 4px 0px #0D0D0D;
+  --shadow-brutal-lg: 6px 6px 0px #0D0D0D;
+  --shadow-brutal-xl: 8px 8px 0px #0D0D0D;
+}
+
+/* ─── Base ─── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Neo-Brutalism Classes ─── */
+.brutal-border        { border: 2.5px solid var(--border); }
+.brutal-border-thick  { border: 3.5px solid var(--border); }
+.brutal-shadow        { box-shadow: var(--shadow-brutal); }
+.brutal-shadow-lg     { box-shadow: var(--shadow-brutal-lg); }
+.brutal-shadow-xl     { box-shadow: var(--shadow-brutal-xl); }
+
+.brutal-card {
+  border: 2.5px solid var(--border);
+  box-shadow: var(--shadow-brutal);
+  background: var(--card);
+}
+
+.brutal-card-accent {
+  border: 2.5px solid var(--border);
+  box-shadow: var(--shadow-brutal);
+  background: var(--accent);
+}
+
+.brutal-btn {
+  border: 2.5px solid var(--border);
+  box-shadow: var(--shadow-brutal);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: transparent;
+}
+
+.brutal-btn:hover:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border);
+}
+
+.brutal-btn:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px var(--border);
+}
+
+.brutal-input {
+  border: 2.5px solid var(--border);
+  background: var(--card);
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  outline: none;
+  transition: box-shadow 0.15s ease;
+}
+
+.brutal-input:focus { box-shadow: var(--shadow-brutal); }
+
+/* ─── Typography ─── */
+.font-mono-code { font-family: var(--font-jetbrains-mono), 'JetBrains Mono', monospace; }
+
+/* ─── Progress Bar ─── */
+.progress-bar-bg {
+  background: var(--secondary);
+  border: 2px solid var(--border);
+  height: 12px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--success);
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--secondary); border-left: 2px solid var(--border); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ─── Animations ─── */
+@keyframes slide-in-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+.animate-slide-in     { animation: slide-in-up 0.35s ease forwards; }
+.animate-bounce-subtle{ animation: bounce-subtle 2s ease-in-out infinite; }
+.animate-spin-slow    { animation: spin-slow 3s linear infinite; }
+.animate-blink        { animation: blink 1s ease-in-out infinite; }
