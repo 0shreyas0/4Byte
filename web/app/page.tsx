@@ -14,6 +14,7 @@ import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
 import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
+import WebPlayground from "@/components/edtech/WebPlayground";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
 export default function Home() {
@@ -193,7 +194,7 @@ export default function Home() {
             scores={scores}
             analysis={analysis}
             onSimulate={() => navigate("simulation")}
-            onPractice={() => navigate("sandbox")}
+            onPractice={() => navigate(domain === "Web Dev" ? "web-sandbox" : "sandbox")}
             onRestart={handleRestart}
           />
         )}
@@ -211,6 +212,13 @@ export default function Home() {
         {screen === "sandbox" && (
           <SandboxIDE
             domain={domain}
+            mode={mode}
+            onExit={() => navigate("simulation")}
+          />
+        )}
+
+        {screen === "web-sandbox" && (
+          <WebPlayground
             mode={mode}
             onExit={() => navigate("simulation")}
           />

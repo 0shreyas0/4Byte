@@ -158,55 +158,120 @@ export default function SandboxIDE({ domain, mode, onExit }: SandboxIDEProps) {
   const handleRun = () => {
     setTestResult("running");
     setErrorMsg("");
-    
+
     setTimeout(() => {
-      // Very basic simulated compiler handling
+      // ── Non-JS: heuristic only ─────────────────────────────────────────
       if (language !== "JavaScript") {
-        if (!code.includes("return") && !code.includes("print") && !code.includes("cout") && !code.includes("fmt")) {
+        const hasLogic = code.includes("return") || code.includes("print") ||
+          code.includes("cout") || code.includes("fmt") || code.includes("printf");
+        const changedEnough = code.length > LANGUAGE_TEMPLATES[language].length + 15;
+        if (!hasLogic || !changedEnough) {
           setTestResult("fail");
-          setErrorMsg("Compilation Error: Missing core logic or return statements.");
+          setErrorMsg("Test Case 1 Failed.\nYou haven't implemented the algorithm yet.\nMake sure to write logic beyond the template.");
         } else {
-          // If code hasn't changed from template significantly
-          if (code.length < LANGUAGE_TEMPLATES[language].length + 10) {
-            setTestResult("fail");
-            setErrorMsg("Test Case 1 Failed.\nOutput does not match expected result. Make sure you implement the algorithm.");
-          } else {
-            setTestResult("pass");
-          }
+          setTestResult("pass");
         }
         return;
       }
 
-      // Real JavaScript Evaluation
-      try {
-        const match = code.match(/function\s+([a-zA-Z0-9_]+)/);
-        if (!match) throw new Error("Could not find a valid function declaration.");
-        const funcName = match[1];
-
-        // Safely evaluate their code and retrieve the function
-        const fn = new Function(`
-          ${code}
-          return ${funcName};
-        `)();
-
-        if (typeof fn !== "function") throw new Error("Parsed code is not a function.");
-
-        for (let i = 0; i < activeChallenge.testCases.length; i++) {
-          const tc = activeChallenge.testCases[i];
-          // Provide deep copies to prevent side effects in case of arrays
-          const argsCopy = JSON.parse(JSON.stringify(tc.args));
-          const result = fn(...argsCopy);
-          if (JSON.stringify(result) !== JSON.stringify(tc.expected)) {
-            setTestResult("fail");
-            setErrorMsg(`Test Case ${i+1} Failed\nExpected: ${JSON.stringify(tc.expected)}\nActual: ${result === undefined ? 'undefined' : JSON.stringify(result)}`);
-            return;
-          }
-        }
-
-        setTestResult("pass");
-      } catch (err: any) {
+      // ── Guard 1: Untouched boilerplate ────────────────────────────────
+      if (code.includes("// your code here")) {
         setTestResult("fail");
-        setErrorMsg(err.toString());
+        setErrorMsg("Error: No code written!\nDelete '// your code here' and replace it with your actual solution.");
+        return;
+      }
+
+      // ── Guard 2: Empty body ───────────────────────────────────────────
+      const bodyMatch = code.match(/\{([\s\S]*)\}$/);
+      if (!bodyMatch || bodyMatch[1].trim() === "") {
+        setTestResult("fail");
+        setErrorMsg("Error: Function body is empty. Write your logic inside the function.");
+        return;
+      }
+
+      // ── Guard 3: No test cases defined ───────────────────────────────
+      const tcs = activeChallenge.testCases;
+      if (!tcs || tcs.length === 0) {
+        setTestResult("fail");
+        setErrorMsg("Error: No test cases found for this challenge.");
+        return;
+      }
+
+      // ── Guard 4: Extract function name ───────────────────────────────
+      const match = code.match(/function\s+([a-zA-Z0-9_]+)\s*\(/);
+      if (!match) {
+        setTestResult("fail");
+        setErrorMsg("Syntax Error: No valid function declaration found.\nExample: function twoSum(nums, target) { ... }");
+        return;
+      }
+      const funcName = match[1];
+
+      // ── Core Eval: Script-tag injection (most reliable in-browser) ────
+      const runnerKey = `__runner_${Date.now()}`;
+
+      // Inject test harness into window so it survives eval scope
+      (window as any)[runnerKey] = { passed: 0, total: tcs.length, error: null, failMsg: null };
+
+      const harnessScript = `
+(function() {
+  try {
+    ${code}
+    if (typeof ${funcName} !== 'function') {
+      window['${runnerKey}'].error = "'${funcName}' is not callable. Check your function definition.";
+      return;
+    }
+    var tcs = ${JSON.stringify(tcs)};
+    for (var i = 0; i < tcs.length; i++) {
+      var args = JSON.parse(JSON.stringify(tcs[i].args));
+      var expected = tcs[i].expected;
+      var result;
+      try {
+        result = ${funcName}.apply(null, args);
+      } catch(re) {
+        window['${runnerKey}'].error = "Runtime Error on Test Case " + (i+1) + ": " + re.message;
+        return;
+      }
+      if (JSON.stringify(result) !== JSON.stringify(expected)) {
+        window['${runnerKey}'].failMsg = (
+          "Test Case " + (i+1) + " Failed\\n" +
+          "  Input    : " + JSON.stringify(tcs[i].args) + "\\n" +
+          "  Expected : " + JSON.stringify(expected) + "\\n" +
+          "  Actual   : " + (result === undefined ? "undefined (forgot to return?)" : JSON.stringify(result))
+        );
+        return;
+      }
+      window['${runnerKey}'].passed++;
+    }
+  } catch(e) {
+    window['${runnerKey}'].error = "Error: " + e.message;
+  }
+})();
+      `;
+
+      try {
+        const script = document.createElement("script");
+        script.textContent = harnessScript;
+        document.body.appendChild(script);
+        document.body.removeChild(script);
+
+        const runner = (window as any)[runnerKey];
+        delete (window as any)[runnerKey];
+
+        if (runner.error) {
+          setTestResult("fail");
+          setErrorMsg(runner.error);
+        } else if (runner.failMsg) {
+          setTestResult("fail");
+          setErrorMsg(runner.failMsg);
+        } else if (runner.passed === tcs.length) {
+          setTestResult("pass");
+        } else {
+          setTestResult("fail");
+          setErrorMsg(`Only ${runner.passed}/${tcs.length} test cases passed.`);
+        }
+      } catch (e: any) {
+        setTestResult("fail");
+        setErrorMsg(`Execution Error: ${e.message}`);
       }
     }, 1200);
   };
