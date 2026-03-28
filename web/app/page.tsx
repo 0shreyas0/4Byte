@@ -1,30 +1,25 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import Navbar from "@/components/edtech/Navbar";
+import Navbar, { Screen } from "@/components/edtech/Navbar";
 import LandingScreen from "@/components/edtech/LandingScreen";
 import DomainSelection from "@/components/edtech/DomainSelection";
+import ModeSelection, { LearningMode } from "@/components/edtech/ModeSelection"; // 🔥 Added
 import LearningTimeline from "@/components/edtech/LearningTimeline";
+import LearningConcept from "@/components/edtech/LearningConcept"; // 🔥 Added
 import QuizScreen from "@/components/edtech/QuizScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
-type Screen =
-  | "landing"
-  | "domain-select"
-  | "timeline"
-  | "quiz"
-  | "processing"
-  | "results"
-  | "simulation";
-
 // Screens that show the global navbar
 const NAVBAR_SCREENS: Screen[] = [
   "landing",
   "domain-select",
+  "mode-select",
   "timeline",
+  "learning-concept", // 🔥 Sync
   "quiz",
   "processing",
   "results",
@@ -34,13 +29,25 @@ const NAVBAR_SCREENS: Screen[] = [
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
   const [domain, setDomain] = useState<string>("DSA");
+  const [mode, setMode] = useState<LearningMode>("beginner"); // 🔥 Added: mode state
   const [scores, setScores] = useState<Record<string, TopicScore>>({});
   const [results, setResults] = useState<QuestionResult[]>([]); // 🔥 Added: raw results state
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
   const handleDomainSelect = useCallback((d: string) => {
     setDomain(d);
-    setScreen("timeline");
+    setScreen("mode-select"); // 🔥 Next step: Choose mode
+  }, []);
+
+  const handleModeSelect = useCallback((m: LearningMode) => {
+    setMode(m);
+    // Beginner Flow -> Start learning journey
+    // Revision Flow -> Jump straight to testing
+    if (m === "beginner") {
+      setScreen("timeline");
+    } else {
+      setScreen("quiz");
+    }
   }, []);
 
   const handleQuizComplete = useCallback(
@@ -102,11 +109,31 @@ export default function Home() {
           />
         )}
 
+        {screen === "mode-select" && (
+          <ModeSelection
+            domain={domain}
+            onSelect={handleModeSelect}
+            onBack={() => setScreen("domain-select")}
+          />
+        )}
+
         {screen === "timeline" && (
           <LearningTimeline
             domain={domain}
-            onStart={() => setScreen("quiz")}
-            onBack={() => setScreen("domain-select")}
+            onStart={() => {
+              // Beginner Mode -> Goes to Concept first
+              // Revision Mode -> (Already skips timeline)
+              setScreen("learning-concept");
+            }}
+            onBack={() => setScreen("mode-select")}
+          />
+        )}
+
+        {screen === "learning-concept" && (
+          <LearningConcept
+            domain={domain}
+            onComplete={() => setScreen("quiz")}
+            onBack={() => setScreen("mode-select")}
           />
         )}
 

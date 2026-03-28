@@ -18,10 +18,12 @@ import {
   HomeIcon,
 } from "lucide-react";
 
-type Screen =
+export type Screen =
   | "landing"
   | "domain-select"
+  | "mode-select"
   | "timeline"
+  | "learning-concept" // 🔥 Added
   | "quiz"
   | "processing"
   | "results"

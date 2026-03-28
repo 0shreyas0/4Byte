@@ -1,7 +1,7 @@
 "use client";
 
 import { AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
-import { ArrowLeft, Play, ExternalLink, Sparkles, Clock, Target, AlertCircle } from "lucide-react";
+import { ArrowLeft, Play, ExternalLink, Sparkles, Clock, Target, AlertCircle, Code, Terminal, Zap } from "lucide-react";
 
 interface SimulationModeProps {
   domain: string;
@@ -175,6 +175,45 @@ export default function SimulationMode({
                 </div>
               </div>
             ))}
+
+            {/* 🔥 NEW: Practice Challenge Card */}
+            <div
+              className="group flex flex-col p-8 transition-all hover:-translate-x-2 hover:-translate-y-2"
+              style={{
+                background: "#0D0D0D",
+                color: "#FFFFFF",
+                border: "4px solid #0D0D0D",
+                boxShadow: "10px 10px 0 #8B5CF6",
+              }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-[#8B5CF6] border-2 border-white rotate-3">
+                  <Code size={32} />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Final Stage</div>
+                  <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Ready to <br />Practice?</h2>
+                </div>
+              </div>
+
+              <p className="text-sm font-bold opacity-80 leading-relaxed mb-10">
+                You&apos;ve watched the theory. Now it&apos;s time to build muscle memory. 
+                {domain === "DSA" 
+                  ? " Solve a live coding challenge in our sandbox IDE." 
+                  : " Take a high-pressure practice quiz to master these concepts."}
+              </p>
+
+              <button
+                className="mt-auto flex items-center justify-center gap-4 py-6 bg-[#FFD60A] text-black text-sm font-black uppercase tracking-widest hover:bg-white transition-all brutal-btn"
+                style={{ boxShadow: "0 0 0 transparent" }}
+              >
+                {domain === "DSA" ? (
+                  <><Terminal size={20} /> Open Sandbox IDE</>
+                ) : (
+                  <><Zap size={20} fill="currentColor" /> Start Practice MCQ</>
+                )}
+              </button>
+            </div>
           </div>
         ) : (
           <div 
