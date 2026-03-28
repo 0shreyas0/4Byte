@@ -15,10 +15,12 @@ import {
   Sparkles,
   RotateCcw,
   HomeIcon,
+  LogOut
 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 export type Screen =
-  | "login"
+  | "auth"
   | "landing"
   | "domain-select"
   | "mode-select"
@@ -34,7 +36,6 @@ export type Screen =
 interface NavbarProps {
   screen: Screen;
   domain: string;
-  isLoggedIn: boolean;
   onNavigate: (screen: Screen) => void;
   onRestart: () => void;
   onGetStarted: () => void;
@@ -76,12 +77,12 @@ const NAV_ITEMS: {
 export default function Navbar({ 
   screen, 
   domain, 
-  isLoggedIn, 
   onNavigate, 
   onRestart, 
   onGetStarted 
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, logout } = useAuth();
 
   const isActive = (item: (typeof NAV_ITEMS)[0]) =>
     item.group.includes(screen);
@@ -133,18 +134,6 @@ export default function Navbar({
                   textTransform: "uppercase",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = "#0D0D0D";
-                    e.currentTarget.style.color = "#FFD60A";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "#0D0D0D";
-                  }
-                }}
               >
                 <Icon size={15} className="shrink-0" />
                 {item.label}
@@ -156,7 +145,7 @@ export default function Navbar({
         {/* ── Right actions ───────────────────────────────────────────── */}
         <div className="ml-auto flex items-stretch" style={{ borderLeft: "4px solid #0D0D0D" }}>
 
-          {isLoggedIn ? (
+          {user ? (
             <>
               {/* Active domain badge */}
               {domain && (
@@ -214,8 +203,6 @@ export default function Navbar({
                   background: "transparent",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <RotateCcw size={18} color="#0D0D0D" />
               </button>
@@ -230,8 +217,6 @@ export default function Navbar({
                   background: "transparent",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <Bell size={18} color="#0D0D0D" />
                 <span
@@ -240,19 +225,18 @@ export default function Navbar({
                 />
               </button>
 
-              {/* Profile */}
+              {/* Logout */}
               <button
-                title="Profile"
+                title={`Log out (${user.email})`}
+                onClick={() => { if(confirm("Log out?")) logout(); }}
                 className="flex items-center justify-center transition-colors duration-100"
                 style={{
                   width: 56,
                   background: "#0D0D0D",
                   cursor: "pointer",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a1a")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#0D0D0D")}
               >
-                <User size={18} color="#FFD60A" />
+                <LogOut size={18} color="#FFD60A" />
               </button>
             </>
           ) : (
@@ -272,8 +256,6 @@ export default function Navbar({
                 height: "100%",
                 whiteSpace: "nowrap",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a1a")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "#0D0D0D")}
             >
               Get Started
               <Sparkles size={15} color="#FFD60A" />
@@ -290,8 +272,6 @@ export default function Navbar({
               cursor: "pointer",
             }}
             onClick={() => setMobileOpen((o) => !o)}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
             {mobileOpen ? <X size={20} color="#0D0D0D" /> : <Menu size={20} color="#0D0D0D" />}
           </button>
