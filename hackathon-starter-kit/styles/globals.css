@@ -1,0 +1,352 @@
+@import "tailwindcss";
+@import "./scrollbar.css";
+
+:root {
+    /* Sophisticated Light Base - Creamy/Warm hints */
+    --background: #fafafa;
+    --foreground: #09090b;
+    
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    
+    --secondary: #f1f5f9;
+    --secondary-foreground: #18181b;
+    
+    --muted: #f4f4f5;
+    --muted-foreground: #71717a;
+    
+    --accent: #f4f4f5;
+    --accent-foreground: #18181b;
+    
+    --destructive: #dc2626;
+    --destructive-foreground: #fafafa;
+    
+    --success: #10b981;
+    --success-foreground: #ffffff;
+    
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+
+    --info: #3b82f6;
+    --info-foreground: #ffffff;
+    
+    --border: #e4e4e7;
+    --input: #e4e4e7;
+    --ring: var(--primary);
+    
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    
+    --popover: #ffffff;
+    --popover-foreground: #09090b;
+
+    --radius: 0.75rem;
+    --radius: 0.75rem;
+    
+    /* Runtime font vars — JS overwrites these inline on <html> to change fonts live */
+    --font-heading: var(--font-outfit);
+    --font-body: var(--font-inter);
+    --font-action: var(--font-inter);
+    --font-serif: var(--font-lora);
+    --font-mono-fixed: var(--font-geist-mono);
+
+    /* Default action font size (overridden by action size slider) */
+    --fs-action: 0.875rem;
+
+    /* Semantic Font Sizes */
+    --fs-h1: 6rem;
+    --fs-h2: 3rem;
+    --fs-h3: 1.5rem;
+    --fs-base: 1rem;
+    --fs-sm: 0.875rem;
+    --fs-xs: 0.75rem;
+    --fs-2xs: 0.625rem; /* 10px */
+    --fs-3xs: 0.5625rem; /* 9px */
+    --fs-4xs: 0.5rem; /* 8px */
+    --fs-5xs: 0.375rem; /* 6px */
+
+    /* Semantic Font Weights */
+    --fw-heading: 800;
+    --fw-body: 400;
+    --fw-action: 600;
+
+    /* Semantic Spacing & Line Heights */
+    --ls-heading: -0.025em;
+    --ls-body: 0em;
+    --ls-action: 0.025em;
+    
+    --lh-heading: 1.1;
+    --lh-body: 1.6;
+    --lh-action: 1;
+
+    /* Semantic Letter Spacing */
+    --tracking-h1: -0.04em;
+    --tracking-h2: -0.03em;
+    --tracking-h3: -0.02em;
+    --tracking-body: normal;
+    --tracking-tight: -0.01em;
+    --tracking-tighter: -0.02em;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
+
+    /* Extra Semantic Components */
+    --code-bg: #09090b;
+    --code-border: rgba(255,255,255,0.1);
+
+    /* Category Colors - Light Mode */
+    --category-electronics: #3b82f6;
+    --category-clothing: #ec4899;
+    --category-documents: #f59e0b;
+    --category-accessories: #8b5cf6;
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+.dark {
+    /* Premium Dark Base - Deep Ocean/Slate Tint */
+    --background: #050507;
+    --foreground: #f2f2f3;
+    
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    
+    /* Secondary and Muted with depth */
+    --secondary: #111116; 
+    --secondary-foreground: #f2f2f3;
+    
+    --muted: #111116;
+    --muted-foreground: #a1a1aa;
+    
+    --accent: #1c1c24;
+    --accent-foreground: #f2f2f3;
+    
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f2f2f3;
+    
+    --success: #064e3b;
+    --success-foreground: #f2f2f3;
+    
+    --warning: #78350f;
+    --warning-foreground: #f2f2f3;
+
+    --info: #1e3a8a;
+    --info-foreground: #f2f2f3;
+    
+    /* Low contrast borders for elegance */
+    --border: #1c1c24;
+    --input: #1c1c24;
+    --ring: var(--primary);
+    
+    /* Surface colors slightly elevated */
+    --card: #09090c;
+    --card-foreground: #f2f2f3;
+    
+    --popover: #09090c;
+    --popover-foreground: #f2f2f3;
+
+    /* Category Colors - Dark Mode (More vibrant for dark) */
+    --category-electronics: #60a5fa;
+    --category-clothing: #f472b6;
+    --category-documents: #fbbf24;
+    --category-accessories: #a78bfa;
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+    
+    --color-category-electronics: var(--category-electronics);
+    --color-category-clothing: var(--category-clothing);
+    --color-category-documents: var(--category-documents);
+    --color-category-accessories: var(--category-accessories);
+    
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-code-bg: var(--code-bg);
+    --color-code-border: var(--code-border);
+    
+    --radius-xl: var(--radius);
+    --radius-lg: calc(var(--radius) - 2px);
+    --radius-md: calc(var(--radius) - 4px);
+    --radius-sm: calc(var(--radius) - 8px);
+    
+    --font-sans: var(--font-body);
+
+    /* Weight Mappings for Tailwind v4 */
+    --font-weight-heading: var(--fw-heading);
+    --font-weight-body: var(--fw-body);
+    --font-weight-action: var(--fw-action);
+
+    /* Tracking Mappings for Tailwind v4 */
+    --tracking-heading: var(--ls-heading);
+    --tracking-body: var(--ls-body);
+    --tracking-action: var(--ls-action);
+    --tracking-h1: var(--tracking-h1);
+    --tracking-h2: var(--tracking-h2);
+    --tracking-h3: var(--tracking-h3);
+    --tracking-tight: var(--tracking-tight);
+    --tracking-tighter: var(--tracking-tighter);
+
+    /* Mapped Semantic Font Sizes */
+    --text-h1: var(--fs-h1);
+    --text-h2: var(--fs-h2);
+    --text-h3: var(--fs-h3);
+    --text-base: var(--fs-base);
+    --text-sm: var(--fs-sm);
+    --text-xs: var(--fs-xs);
+    --text-2xs: var(--fs-2xs);
+    --text-3xs: var(--fs-3xs);
+    --text-4xs: var(--fs-4xs);
+    --text-5xs: var(--fs-5xs);
+
+    /* Mapped Semantic Font Weights */
+    --font-weight-heading: var(--fw-heading);
+    --font-weight-body: var(--fw-body);
+    --font-weight-action: var(--fw-action);
+
+    /* Mapped Semantic Spacing & Line Heights */
+    --letter-spacing-heading: var(--ls-heading);
+    --letter-spacing-body: var(--ls-body);
+    --letter-spacing-action: var(--ls-action);
+    
+    /* Specific Tracking for Headings */
+    --tracking-h1: -0.05em;
+    --tracking-h2: -0.04em;
+    --tracking-h3: -0.03em;
+    --tracking-tight: -0.02em;
+    --tracking-tighter: -0.04em;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
+    
+    --line-height-heading: var(--lh-heading);
+    --line-height-body: var(--lh-body);
+    --line-height-action: var(--lh-action);
+}
+
+/* Base Typography Enhancements */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading), sans-serif;
+    font-weight: var(--fw-heading);
+    letter-spacing: var(--ls-heading);
+    line-height: var(--lh-heading);
+    color: var(--foreground);
+    text-wrap: balance;
+}
+
+p {
+    font-family: var(--font-body), sans-serif;
+    font-weight: var(--fw-body);
+    font-size: var(--fs-base);
+    line-height: var(--lh-body);
+    color: var(--muted-foreground);
+    text-wrap: pretty;
+}
+
+button, input, select, textarea {
+    font-family: var(--font-action), sans-serif;
+    font-size: var(--fs-action);
+    font-weight: var(--fw-action);
+}
+
+b, strong {
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body), var(--font-sans), sans-serif;
+    font-weight: var(--fw-body);
+    font-size: var(--fs-base);
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Modern Grid Background */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-image: radial-gradient(var(--foreground) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.05;
+    mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+    pointer-events: none;
+}
+
+.glass-nav {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .glass-nav {
+    background: rgba(10, 10, 10, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* View Transition Animations */
+::view-transition-group(root) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-new(root) {
+  animation-name: wipe-in;
+  accent-color: red; /* force repaint */
+}
+
+::view-transition-old(root) {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes wipe-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Scrollbar styles are in styles/scrollbar.css */
