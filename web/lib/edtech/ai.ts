@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { YouTubeVideo } from "./youtube";
 
-const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const apiKey = process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey || "");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -292,5 +292,117 @@ export async function generateLearningCapsule(
   } catch (error) {
     console.error("Learning Capsule failure:", error);
     return null;
+  }
+}
+
+/**
+ * 🔥 NEW: Generate a conversational, sequential explanation based on the Concept Graph.
+ * Identifies WHY the user failed by tracing dependencies.
+ */
+export async function generateRootCauseExplanation(
+  mode: "KINDER" | "SCHOOL" | "ENGINEERING",
+  domain: string,
+  rootCause: string,
+  weakTopics: string[],
+  dependencyChain: string[]
+): Promise<string[]> {
+  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
+    return [
+      `You struggled with ${rootCause}.`,
+      `Since ${rootCause} is a foundation for ${dependencyChain.slice(1).join(", ")}, you also faced issues there.`,
+      `Focus on ${rootCause} first to improve your overall score.`
+    ];
+  }
+
+  const prompt = `
+    You are an Expert AI Tutor explaining test results.
+    
+    ========================
+    CONTEXT
+    ========================
+    Domain: ${domain}
+    Learning Mode: ${mode}
+    Analysis:
+    - Main Root Cause: ${rootCause}
+    - Weak Topics: ${weakTopics.join(", ")}
+    - Dependency Chain: ${dependencyChain.join(" -> ")}
+    
+    ========================
+    YOUR TASK
+    ========================
+    1. Explain WHY the student failed. 
+    2. Focus on the dependency (e.g. "You failed sorting BECAUSE sorting depends on loops, and your loops are weak").
+    3. Tracing the "Concept Graph" is the core of this explanation.
+    4. Provide clear, actionable advice.
+    5. Adapt tone to ${mode} mode:
+       - KINDER: Very simple, analogies, friendly.
+       - SCHOOL: Clear, step-by-step, encouraging.
+       - ENGINEERING: Technical, precise, focused on logic flow.
+    
+    ========================
+    OUTPUT FORMAT
+    ========================
+    Return a JSON ARRAY of strings. Each string is ONE SHORT PARAGRAPH or sentence.
+    The Tutor will speak these strings one by one. Max 4 to 6 parts.
+    
+    Example: ["You did your best!", "However, your main issue is in loops.", "Because sorting depends on loops, that's why you struggled with the sorting questions.", "Master loops first, and everything else will get easier!"]
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("No JSON array found");
+    
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    return [
+      `Our analysis shows your main hurdle is ${rootCause}.`,
+      `Tracing your mistakes, we see that your weakness in ${rootCause} directly affected your performance in ${dependencyChain.slice(1, 3).join(" and ")}.`,
+      `This is because ${dependencyChain[1] || "these topics"} rely heavily on the foundations of ${rootCause}.`,
+      `Strengthen ${rootCause} first, and you will see a massive improvement in your overall ${domain} skills!`
+    ];
+  }
+}
+
+/**
+ * 🔥 NEW: Explain a specific piece of text (highlighted by user).
+ * Returns a sequential array of strings for the tutor to speak.
+ */
+/**
+ * 🔥 NEW: Explain a specific piece of text using the server-side API.
+ */
+export async function explainTextSelection(
+  selection: string,
+  mode: "KINDER" | "SCHOOL" | "ENGINEERING" = "ENGINEERING"
+): Promise<string[]> {
+  try {
+    const response = await fetch("/api/explain", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selection, mode })
+    });
+
+    if (!response.ok) {
+       const err = await response.json().catch(() => ({}));
+       throw new Error(err.error || "API Route Failure");
+    }
+
+    const segments = await response.json();
+    if (Array.isArray(segments)) return segments;
+    
+    return [
+      "Analyzing: " + (selection.length > 20 ? selection.slice(0, 20) + "..." : selection),
+      "Found internal conceptual dependencies.",
+      "Stand by while I synchronize your learning path."
+    ];
+  } catch (error: any) {
+    console.error("Selection explanation failed:", error.message);
+    return [
+      `Status: ${error.message}`,
+      `Selection: "${selection.slice(0, 20)}..."`,
+      "Identifying the core conceptual dependencies.",
+      "Try again in a moment!"
+    ];
   }
 }

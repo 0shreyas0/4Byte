@@ -1,5 +1,8 @@
 import { fetchYouTubeVideos } from "./youtube";
-import { refineRecommendations, generateOptimizedQuery, filterVideosByDomain, generateLearningCapsule, LearningCapsule } from "./ai";
+import { 
+  refineRecommendations, generateOptimizedQuery, filterVideosByDomain, 
+  generateLearningCapsule, LearningCapsule, generateRootCauseExplanation 
+} from "./ai";
 
 export type LearningPersona = "KINDER" | "SCHOOL" | "ENGINEERING";
 export type TopicStatus = "weak" | "medium" | "strong";
@@ -284,7 +287,15 @@ export async function analyzePerformanceAsync(
     "beginner"
   );
 
-  return { ...result, learningPath: enhancedPath, capsule };
+  const dynamicExplanation = await generateRootCauseExplanation(
+    persona,
+    domain,
+    result.rootCause,
+    result.weakTopics,
+    result.dependencyChain
+  );
+
+  return { ...result, learningPath: enhancedPath, capsule, explanation: dynamicExplanation };
 }
 
 export function simulateImprovement(

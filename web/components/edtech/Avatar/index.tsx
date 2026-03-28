@@ -37,54 +37,102 @@ export default function Avatar() {
   }, []);
 
   // 🗣️ SPEAK FUNCTION
-  const speak = useCallback((text: string, manualVoice?: SpeechSynthesisVoice) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-
-    window.speechSynthesis.cancel();
-    if (videoRef.current) videoRef.current.pause();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    const activeVoice = manualVoice || selectedVoice;
-    if (activeVoice) utterance.voice = activeVoice;
-    
-    utterance.rate = rate; 
-    utterance.pitch = pitch;
-
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+  const speakPromise = useCallback((text: string, voice?: SpeechSynthesisVoice) => {
+    return new Promise<void>((resolve) => {
+      if (typeof window === "undefined" || !window.speechSynthesis) {
+        resolve();
+        return;
       }
-    };
 
-    utterance.onend = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const activeVoice = voice || selectedVoice;
+      if (activeVoice) utterance.voice = activeVoice;
+      
+      utterance.rate = rate; 
+      utterance.pitch = pitch;
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setMsg(text);
+        if (videoRef.current) {
+          videoRef.current.loop = true;
+          videoRef.current.play().catch(() => {});
+        }
+      };
+
+      utterance.onend = () => {
+        resolve();
+      };
+      
+      utterance.onerror = () => {
+        resolve();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    });
+  }, [selectedVoice, rate, pitch]);
+
+  const speak = useCallback(async (input: string | string[]) => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    const parts = Array.isArray(input) ? input : [input];
+    
+    // Initial thinking state
+    setIsThinking(true);
+    setMsg("🤔 Thinking...");
+    await new Promise(r => setTimeout(r, 800));
+    setIsThinking(false);
+
+    try {
+      for (const part of parts) {
+        await speakPromise(part);
+      }
+    } finally {
       setIsSpeaking(false);
+      setMsg("");
       if (videoRef.current) {
+        videoRef.current.loop = false;
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
       }
-    };
+    }
+  }, [speakPromise]);
 
-    window.speechSynthesis.speak(utterance);
-  }, [selectedVoice, rate, pitch]);
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setIsThinking(false);
+    setMsg("");
+    if (videoRef.current) {
+      videoRef.current.loop = false;
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }, []);
 
-  // Listen for global "tutor-speak" events
+  // Listen for global "tutor-speak" / "tutor-stop" events
   useEffect(() => {
     const handleSpeakEvent = (e: any) => {
       if (e.detail?.text) {
-        setIsThinking(true);
-        setMsg("🤔 Thinking...");
-        setTimeout(() => {
-          setIsThinking(false);
-          setMsg(e.detail.text);
-          speak(e.detail.text);
-        }, 800);
+        if (e.detail.thinking) {
+          setIsThinking(true);
+          setMsg("🤔 Thinking...");
+        }
+        speak(e.detail.text);
       }
     };
+    const handleStopEvent = () => stop();
+
     window.addEventListener("tutor-speak", handleSpeakEvent);
-    return () => window.removeEventListener("tutor-speak", handleSpeakEvent);
-  }, [speak]);
+    window.addEventListener("tutor-stop", handleStopEvent);
+    
+    return () => {
+      window.removeEventListener("tutor-speak", handleSpeakEvent);
+      window.removeEventListener("tutor-stop", handleStopEvent);
+    };
+  }, [speak, stop]);
 
   // 🏛️ RENDER SETTINGS PANEL
   const renderSettings = () => (
@@ -127,7 +175,7 @@ export default function Avatar() {
         </div>
 
         <button 
-          onClick={() => speak("This is a preview of the selected voice engine. Does it sound smooth to you?", selectedVoice || undefined)}
+          onClick={() => speak("This is a preview of the selected voice engine. Does it sound smooth to you?")}
           className="w-full py-2 bg-[#FFD60A] border-2 border-black font-black uppercase text-[10px] flex items-center justify-center gap-2 hover:translate-y-[-2px] active:translate-y-[0px] transition-all shadow-[4px_4px_0_#0D0D0D]"
         >
           <Play size={12} fill="currentColor" /> Test Current Setting
@@ -191,9 +239,12 @@ export default function Avatar() {
                   </div>
                   <button 
                     onClick={() => { 
-                      const welcome = "Namaste! I am your AI Learning Assistant from 4Byte. I will guide you through your mistakes, explain core concepts, and provide personalized mnemonics. Just click Explain Highlights on your results dashboard to start a lesson!";
+                      const welcome = [
+                        "Namaste! I am your AI Learning Assistant from 4Byte.",
+                        "I will guide you through your mistakes, explain core concepts, and provide personalized mnemonics.",
+                        "Just click the button on your dashboard to start a lesson!"
+                      ];
                       setIsActivated(true); 
-                      setMsg(welcome);
                       speak(welcome); 
                     }}
                     className="px-6 py-3 bg-black text-white text-xs font-black uppercase tracking-widest border-4 border-white shadow-[6px_6px_0_#0D0D0D] active:scale-95 transition-all"
@@ -234,8 +285,8 @@ export default function Avatar() {
   );
 }
 
-export function tutorSpeak(text: string) {
+export function tutorSpeak(text: string | string[], thinking: boolean = false) {
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("tutor-speak", { detail: { text } }));
+    window.dispatchEvent(new CustomEvent("tutor-speak", { detail: { text, thinking } }));
   }
 }

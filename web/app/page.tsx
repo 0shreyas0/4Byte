@@ -20,6 +20,7 @@ import OnboardingSurvey from "@/components/edtech/OnboardingSurvey";
 import UserProfilePage from "@/components/edtech/UserProfilePage";
 import ResourceLibrary from "@/components/edtech/ResourceLibrary";
 import Avatar from "@/components/edtech/Avatar";
+import TextSelector from "@/components/edtech/TextSelector";
 import { useAuth } from "@/lib/AuthContext";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult, LearningPersona } from "@/lib/edtech/conceptGraph";
 import { recordSession } from "@/lib/edtech/streakService";
@@ -297,6 +298,7 @@ export default function Home() {
 
       {/* Persistent AI Tutor Avatar */}
       <Avatar />
+      <TextSelector persona={aiPersona} />
     </div>
   );
 }

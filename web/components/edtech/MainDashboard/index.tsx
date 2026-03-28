@@ -362,8 +362,12 @@ function CapsuleCard({ analysis }: { analysis: AnalysisResult }) {
              
              <button
                onClick={() => {
-                 const fullText = capsule.topics.map(t => `${t.name}: ${t.summary}. Your mistake was ${t.mistake}. Remember: ${t.rule}`).join(". ");
-                 tutorSpeak(`Let me explain your results. ${fullText} Your next move should be ${capsule.next_action}`);
+                 if (analysis.explanation && analysis.explanation.length > 0) {
+                   tutorSpeak(analysis.explanation);
+                 } else {
+                   const fullText = capsule.topics.map(t => `${t.name}: ${t.summary}. Your mistake was ${t.mistake}. Remember: ${t.rule}`).join(". ");
+                   tutorSpeak(`Let me explain your results. ${fullText} Your next move should be ${capsule.next_action}`);
+                 }
                }}
                style={{
                  width: "100%",
