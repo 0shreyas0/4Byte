@@ -81,6 +81,7 @@ export default function ProfilePanel({ open, onClose, onNavigate }: ProfilePanel
   const roleInfo = profile?.role ? ROLE_LABELS[profile.role] : null;
   const goalInfo = profile?.learningGoal ? GOAL_LABELS[profile.learningGoal] : null;
   const expInfo = profile?.experienceLevel ? EXP_LABELS[profile.experienceLevel] : null;
+  const profileNameFontSize = "1.05rem";
 
   const handleSaveName = async () => {
     setSaving(true);
@@ -197,7 +198,7 @@ export default function ProfilePanel({ open, onClose, onNavigate }: ProfilePanel
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       className="brutal-input"
-                      style={{ flex: 1, padding: "6px 10px", fontSize: "0.9rem", minWidth: 0 }}
+                      style={{ flex: 1, padding: "6px 10px", fontSize: profileNameFontSize, fontWeight: 900, minWidth: 0 }}
                       autoFocus
                     />
                     <button
@@ -217,7 +218,7 @@ export default function ProfilePanel({ open, onClose, onNavigate }: ProfilePanel
                   </div>
                 ) : (
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontWeight: 900, fontSize: "1.05rem", color: "#0D0D0D", letterSpacing: "-0.02em" }}>
+                    <span style={{ fontWeight: 900, fontSize: profileNameFontSize, color: "#0D0D0D", letterSpacing: "-0.02em" }}>
                       {displayName}
                     </span>
                     <button

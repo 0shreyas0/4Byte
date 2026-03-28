@@ -17,8 +17,10 @@ import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
 import WebPlayground from "@/components/edtech/WebPlayground";
 import OnboardingSurvey from "@/components/edtech/OnboardingSurvey";
 import UserProfilePage from "@/components/edtech/UserProfilePage";
+import ResourceLibrary from "@/components/edtech/ResourceLibrary";
 import { useAuth } from "@/lib/AuthContext";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
+import { recordSession } from "@/lib/edtech/streakService";
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -32,7 +34,7 @@ export default function Home() {
   // Whether we're waiting for the profile to load after a login event
   const [awaitingPostLogin, setAwaitingPostLogin] = useState(false);
 
-  const { user, profile, profileLoading } = useAuth();
+  const { user, profile, profileLoading, refreshProfile } = useAuth();
 
   // Linear Step-by-Step Navigation
   const navigate = useCallback((next: Screen) => {
@@ -117,8 +119,17 @@ export default function Home() {
   const handleProcessingComplete = useCallback(async () => {
     const result = await analyzePerformanceAsync(scores, domain, results);
     setAnalysis(result);
+    // Record the completed session → updates streak, totalSessions, activityLog, topicMastery & latestAnalysis
+    if (user) {
+      try {
+        await recordSession(user.uid, domain, scores, result);
+        await refreshProfile(); // pull fresh data so everything is in sync
+      } catch (e) {
+        console.error("Failed to record session:", e);
+      }
+    }
     navigate("results");
-  }, [scores, domain, results, navigate]);
+  }, [scores, domain, results, navigate, user, refreshProfile]);
 
   const handleRestart = useCallback(() => {
     setScores({});
@@ -175,6 +186,27 @@ export default function Home() {
           />
         )}
 
+        {screen === "results" && (
+          <MainDashboard
+            analysis={analysis || profile?.latestAnalysis}
+            scores={Object.keys(scores).length > 0 ? scores : (profile?.latestScores || {})}
+            domain={domain || (profile?.latestAnalysis?.domain || "DSA")}
+            onRestart={handleRestart}
+            onSimulate={() => navigate("simulation")}
+            onPractice={() => navigate(domain === "Web Dev" ? "web-sandbox" : "sandbox")}
+          />
+        )}
+
+        {screen === "simulation" && (
+          <SimulationMode
+            originalAnalysis={analysis || profile?.latestAnalysis}
+            originalScores={Object.keys(scores).length > 0 ? scores : (profile?.latestScores || {})}
+            domain={domain || (profile?.latestAnalysis?.domain || "DSA")}
+            onBack={() => navigate("results")}
+            onPractice={() => navigate("coding-lab")}
+          />
+        )}
+
         {screen === "mode-select" && (
           <ModeSelection
             domain={domain}
@@ -226,25 +258,8 @@ export default function Home() {
           <AIProcessingScreen onComplete={handleProcessingComplete} />
         )}
 
-        {screen === "results" && analysis && (
-          <MainDashboard
-            domain={domain}
-            scores={scores}
-            analysis={analysis}
-            onSimulate={() => navigate("simulation")}
-            onPractice={() => navigate(domain === "Web Dev" ? "web-sandbox" : "sandbox")}
-            onRestart={handleRestart}
-          />
-        )}
-
-        {screen === "simulation" && analysis && (
-          <SimulationMode
-            domain={domain}
-            originalScores={scores}
-            originalAnalysis={analysis}
-            onBack={() => navigate("results")}
-            onPractice={() => navigate("coding-lab")}
-          />
+        {screen === "library" && (
+          <ResourceLibrary currentDomain={domain} />
         )}
 
         {screen === "sandbox" && (

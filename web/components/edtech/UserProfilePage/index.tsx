@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Flame,
   BookOpen,
@@ -265,6 +265,17 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
           </div>
         </div>
 
+        {/* ── ACTIVITY HEATMAP ── */}
+        <ActivityHeatmap 
+          streak={streak} 
+          sessions={sessions} 
+          userId={user?.uid ?? ""} 
+          activityLog={profile?.activityLog} 
+        />
+
+        {/* ── SMART RECOMMENDATIONS ── */}
+        <SmartRecommendations profile={profile} onNavigateToDomain={onNavigateToDomain} />
+
         {/* ── TWO COLUMN LAYOUT ── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }} className="grid-cols-1 lg:grid-cols-2">
 
@@ -404,36 +415,63 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                     (profile?.preferredDomains ?? []).map((d) => {
                       const meta = DOMAIN_META[d] ?? { icon: Code2, color: "#E5E5E5", textColor: "#0D0D0D", shadow: "#CCC" };
                       const Icon = meta.icon;
+                      // Get top 3 topics by mastery for this domain
+                      const domainMastery = profile?.topicMastery?.[d] || {};
+                      const topTopics = Object.entries(domainMastery)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 2);
+
                       return (
-                        <button
+                        <div
                           key={d}
-                          onClick={() => onNavigateToDomain(d)}
                           style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 12,
-                            padding: "14px 16px",
+                            padding: "16px",
                             border: "3px solid #0D0D0D",
                             background: meta.color,
                             boxShadow: `4px 4px 0 ${meta.shadow}`,
-                            cursor: "pointer",
-                            textAlign: "left",
-                            transition: "all 0.1s ease",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 12,
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.transform = "translate(2px, 2px)"; e.currentTarget.style.boxShadow = `2px 2px 0 ${meta.shadow}`; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `4px 4px 0 ${meta.shadow}`; }}
                         >
-                          <div style={{ width: 36, height: 36, background: "rgba(255,255,255,0.15)", border: `2px solid ${meta.textColor === "#FFFFFF" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <Icon size={18} color={meta.textColor} strokeWidth={2.5} />
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 800, fontSize: "0.95rem", color: meta.textColor }}>{d}</div>
-                            <div style={{ fontSize: "0.72rem", fontWeight: 600, color: meta.textColor, opacity: 0.6 }}>
-                              {sessions === 0 ? "No attempts yet" : "Tap to start a session"}
+                          <div
+                            onClick={() => onNavigateToDomain(d)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 12,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <div style={{ width: 36, height: 36, background: "rgba(255,255,255,0.15)", border: `2px solid ${meta.textColor === "#FFFFFF" ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <Icon size={18} color={meta.textColor} strokeWidth={2.5} />
                             </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 800, fontSize: "0.95rem", color: meta.textColor }}>{d}</div>
+                              <div style={{ fontSize: "0.72rem", fontWeight: 600, color: meta.textColor, opacity: 0.6 }}>
+                                {sessions === 0 ? "No attempts yet" : "Click to continue path"}
+                              </div>
+                            </div>
+                            <ChevronRight size={16} color={meta.textColor} />
                           </div>
-                          <ChevronRight size={16} color={meta.textColor} />
-                        </button>
+
+                          {/* Topic Mastery Bars */}
+                          {topTopics.length > 0 && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingTop: 10, borderTop: `2px solid ${meta.textColor === "#FFFFFF" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)"}` }}>
+                              {topTopics.map(([topic, score]) => (
+                                <div key={topic}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                                    <span style={{ fontSize: "0.65rem", fontWeight: 800, color: meta.textColor, textTransform: "uppercase" }}>{topic}</span>
+                                    <span style={{ fontSize: "0.65rem", fontWeight: 900, color: meta.textColor }}>{score}%</span>
+                                  </div>
+                                  <div style={{ height: 6, background: "rgba(0,0,0,0.1)", border: `1px solid ${meta.textColor === "#FFFFFF" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.2)"}` }}>
+                                    <div style={{ height: "100%", width: `${score}%`, background: meta.textColor === "#FFFFFF" ? "#FFFFFF" : "#0D0D0D" }} />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       );
                     })
                   )}
@@ -475,44 +513,242 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
               )}
             </Section>
 
-            {/* Streak motivation */}
-            <Section title="Your Momentum" accent="#FF3B3B" accentText="#FFFFFF">
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {/* Streak visual */}
-                <div style={{ padding: "20px", background: "#0D0D0D", border: "2px solid #0D0D0D", display: "flex", alignItems: "center", gap: 14 }}>
-                  <Flame size={32} color="#FF3B3B" strokeWidth={2.5} />
-                  <div>
-                    <div style={{ fontWeight: 900, fontSize: "2rem", color: "#FFFFFF", letterSpacing: "-0.04em", lineHeight: 1 }}>{streak} day{streak !== 1 ? "s" : ""}</div>
-                    <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>Current Streak</div>
-                  </div>
-                  <div style={{ marginLeft: "auto", textAlign: "right" }}>
-                    <div style={{ fontWeight: 900, fontSize: "0.75rem", color: "#FFD60A", letterSpacing: "0.04em" }}>
-                      {streak === 0 ? "Start today!" : streak < 3 ? "Keep going!" : streak < 7 ? "You're on fire!" : "Unstoppable! 🏆"}
-                    </div>
-                  </div>
-                </div>
+            {/* achievements section above */}
 
-                {/* Weekly dots */}
-                <div style={{ display: "flex", gap: 6, justifyContent: "center", padding: "12px 0" }}>
-                  {["M", "T", "W", "T", "F", "S", "S"].map((day, i) => {
-                    const active = i < Math.min(streak, 7);
+            {/* Community Rank Mock */}
+            <Section title="Community Rank" accent="#AF52DE" accentText="#FFFFFF">
+              <div style={{ padding: "12px", background: "#0D0D0D", border: "2px solid #0D0D0D", display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ width: 44, height: 44, background: "#AF52DE", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #0D0D0D", flexShrink: 0 }}>
+                  <Trophy size={22} color="#FFFFFF" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <div style={{ color: "#FFFFFF", fontWeight: 900, fontSize: "1.2rem", lineHeight: 1 }}>Top 12%</div>
+                  <div style={{ color: "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>Global Learner Rank</div>
+                </div>
+              </div>
+              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { name: "You", score: `${questionsAnswered}`, rank: 1242, isMe: true },
+                  { name: "CodeMaster", score: "1520", rank: 1241, isMe: false },
+                  { name: "NexusDev", score: "1105", rank: 1243, isMe: false },
+                ].map((p) => (
+                  <div key={p.name} style={{ display: "flex", alignItems: "center", padding: "6px 10px", background: p.isMe ? "#AF52DE" : "#F5F0E8", border: "2px solid #0D0D0D", opacity: p.isMe ? 1 : 0.6 }}>
+                    <span style={{ fontWeight: 800, fontSize: "0.75rem", width: 40, color: p.isMe ? "#FFF" : "#000" }}>#{p.rank}</span>
+                    <span style={{ fontWeight: 800, fontSize: "0.75rem", flex: 1, color: p.isMe ? "#FFF" : "#000" }}>{p.name}</span>
+                    <span style={{ fontWeight: 900, fontSize: "0.75rem", color: p.isMe ? "#FFF" : "#000" }}>{p.score} pts</span>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Activity Heatmap ─────────────────────────────────────────────────────
+const HEAT_COLORS = [
+  "#EDEAE0", // 0 — empty (matches cream bg)
+  "#9BE9A8", // 1 — light green
+  "#40C463", // 2 — medium
+  "#30A14E", // 3 — dark
+  "#216E39", // 4 — darkest
+];
+
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_LABELS  = ["","Mon","","Wed","","Fri",""];
+
+// Seeded pseudo-random so it's stable per user
+function seededRand(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function buildActivityData(streak: number, sessions: number, uid: string, activityLog?: Record<string, number>): number[] {
+  const DAYS = 371; // 53 weeks × 7
+  const activity = Array.from({ length: DAYS }, () => 0);
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Map each cell in the 371-day grid to a specific date
+  for (let i = 0; i < DAYS; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (DAYS - 1 - i));
+    
+    // Format to YYYY-MM-DD to match our log keys
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    
+    if (activityLog && activityLog[iso]) {
+      const count = activityLog[iso];
+      // Cap at 4 levels
+      activity[i] = count >= 4 ? 4 : count >= 3 ? 3 : count >= 2 ? 2 : 1;
+    }
+  }
+
+  // Fallback: If map is empty but sessions > 0, scatter some mock data
+  // (This handles users who had sessions before we added activityLog)
+  const loggedDays = Object.keys(activityLog || {}).length;
+  if (loggedDays === 0 && sessions > 0) {
+    const seed = uid.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) || 42;
+    const rand = seededRand(seed);
+    const activityDensity = Math.min(sessions / 30, 0.4);
+    for (let i = 0; i < DAYS - streak; i++) {
+      const r = rand();
+      if (r < activityDensity) {
+        activity[i] = r < activityDensity * 0.2 ? 4 : r < activityDensity * 0.6 ? 2 : 1;
+      }
+    }
+    // Stamp the current streak
+    for (let i = 0; i < streak; i++) {
+      activity[DAYS - 1 - i] = 3;
+    }
+  }
+
+  return activity;
+}
+
+function ActivityHeatmap({ streak, sessions, userId, activityLog }: { streak: number; sessions: number; userId: string; activityLog?: Record<string, number> }) {
+  const WEEKS = 53;
+  const CELL = 13;
+  const GAP  = 3;
+
+  // Build flat day array using real log
+  const activity = useMemo(() => buildActivityData(streak, sessions, userId, activityLog), [streak, sessions, userId, activityLog]);
+
+  // Figure out which column each week starts on for month labels
+  const today = new Date();
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - (WEEKS * 7 - 1));
+
+  // Build weeks as 2D: weeks[w][d] = level
+  const weeks: number[][] = [];
+  for (let w = 0; w < WEEKS; w++) {
+    weeks.push(activity.slice(w * 7, w * 7 + 7));
+  }
+
+  // Month label positions
+  const monthLabels: { label: string; col: number }[] = [];
+  for (let w = 0; w < WEEKS; w++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + w * 7);
+    if (w === 0 || d.getDate() <= 7) {
+      const label = MONTH_NAMES[d.getMonth()];
+      if (!monthLabels.length || monthLabels[monthLabels.length - 1].label !== label) {
+        monthLabels.push({ label, col: w });
+      }
+    }
+  }
+
+  const totalActive = activity.filter((v) => v > 0).length;
+  const gridW = WEEKS * (CELL + GAP);
+
+  return (
+    <div style={{ background: "#FFFFFF", border: "3px solid #0D0D0D", boxShadow: "6px 6px 0 #0D0D0D", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ background: "#0D0D0D", borderBottom: "3px solid #0D0D0D", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Flame size={15} color="#FF3B3B" strokeWidth={2.5} />
+          <span style={{ fontWeight: 900, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.14em", color: "#FFFFFF" }}>Activity Heatmap</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>{totalActive} active days this year</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>Less</span>
+            {HEAT_COLORS.map((c, i) => (
+              <div key={i} style={{ width: 11, height: 11, background: c, border: "1px solid rgba(255,255,255,0.1)" }} />
+            ))}
+            <span style={{ fontSize: "0.65rem", fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>More</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "16px 20px 20px", overflowX: "auto" }}>
+        <div style={{ display: "flex", gap: 0, minWidth: gridW + 36 }}>
+
+          {/* Day labels (left side) */}
+          <div style={{ display: "flex", flexDirection: "column", gap: GAP, marginRight: 8, paddingTop: 22 }}>
+            {DAY_LABELS.map((d, i) => (
+              <div key={i} style={{ height: CELL, display: "flex", alignItems: "center" }}>
+                <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#AAA", width: 28, textAlign: "right" }}>{d}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div style={{ flex: 1 }}>
+            {/* Month labels */}
+            <div style={{ display: "flex", height: 18, marginBottom: 4, position: "relative", width: gridW }}>
+              {monthLabels.map(({ label, col }) => (
+                <span
+                  key={`${label}-${col}`}
+                  style={{
+                    position: "absolute",
+                    left: col * (CELL + GAP),
+                    fontSize: "0.65rem",
+                    fontWeight: 800,
+                    color: "#888",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            {/* Cells (columns = weeks, rows = days) */}
+            <div style={{ display: "flex", gap: GAP }}>
+              {weeks.map((week, wi) => (
+                <div key={wi} style={{ display: "flex", flexDirection: "column", gap: GAP }}>
+                  {week.map((level, di) => {
+                    const date = new Date(startDate);
+                    date.setDate(date.getDate() + wi * 7 + di);
+                    const dateStr = date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
                     return (
-                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                        <div style={{ width: 32, height: 32, background: active ? "#FF3B3B" : "#F5F0E8", border: "2px solid #0D0D0D", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          {active && <Flame size={14} color="#FFFFFF" strokeWidth={2.5} />}
-                        </div>
-                        <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#888" }}>{day}</span>
-                      </div>
+                      <div
+                        key={di}
+                        title={level > 0 ? `${dateStr} — ${level} session${level > 1 ? "s" : ""}` : dateStr}
+                        style={{
+                          width: CELL,
+                          height: CELL,
+                          background: HEAT_COLORS[level],
+                          border: `1px solid ${level === 0 ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.12)"}`,
+                          cursor: level > 0 ? "pointer" : "default",
+                          transition: "transform 0.1s ease",
+                        }}
+                        onMouseEnter={(e) => { if (level > 0) (e.currentTarget as HTMLDivElement).style.transform = "scale(1.3)"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "scale(1)"; }}
+                      />
                     );
                   })}
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                {/* Quick guidance */}
-                <div style={{ padding: "12px 14px", background: "#FFD60A", border: "2px solid #0D0D0D", fontWeight: 700, fontSize: "0.8rem", color: "#0D0D0D", lineHeight: 1.5 }}>
-                  💡 Take a quiz today to {streak === 0 ? "start your streak" : "extend your streak"}. Even one session counts!
-                </div>
-              </div>
-            </Section>
+        {/* Footer stats */}
+        <div style={{ display: "flex", gap: 20, marginTop: 16, flexWrap: "wrap" }}>
+          {[
+            { label: "Current Streak", value: `${streak} day${streak !== 1 ? "s" : ""}`, color: "#FF3B3B", icon: Flame },
+            { label: "Total Sessions", value: sessions.toString(), color: "#216E39", icon: BookOpenIcon },
+            { label: "Active Days", value: totalActive.toString(), color: "#30A14E", icon: ZapIcon },
+          ].map(({ label, value, color, icon: Icon }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Icon size={13} color={color} strokeWidth={2.5} />
+              <span style={{ fontSize: "0.72rem", fontWeight: 800, color: "#0D0D0D" }}>{value}</span>
+              <span style={{ fontSize: "0.68rem", fontWeight: 600, color: "#AAA" }}>{label}</span>
+            </div>
+          ))}
+          <div style={{ marginLeft: "auto", fontSize: "0.72rem", fontWeight: 700, color: streak === 0 ? "#FF3B3B" : streak < 7 ? "#FF9F0A" : "#216E39" }}>
+            {streak === 0 ? "⚡ Start your streak today!" : streak < 3 ? "🔥 Keep it going!" : streak < 7 ? "🔥 You're on fire!" : "🏆 Unstoppable!"}
           </div>
         </div>
       </div>
@@ -538,4 +774,62 @@ function Section({
 
 function Label({ text }: { text: string }) {
   return <div style={{ fontWeight: 800, fontSize: "0.68rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "#888", marginBottom: 6 }}>{text}</div>;
+}
+
+// ─── Smart Recommendations Component ──────────────────────────────────────
+function SmartRecommendations({ profile, onNavigateToDomain }: { profile: any; onNavigateToDomain: (d: string) => void }) {
+  // Find topics < 60% score in preferred domains
+  const recommendations: { domain: string; topic: string; score: number }[] = [];
+  
+  if (profile?.topicMastery) {
+    Object.entries(profile.topicMastery as Record<string, Record<string, number>>).forEach(([domain, topics]) => {
+      if (profile.preferredDomains?.includes(domain)) {
+        Object.entries(topics).forEach(([topic, score]) => {
+          if (score < 70) {
+            recommendations.push({ domain, topic, score });
+          }
+        });
+      }
+    });
+  }
+
+  // Sort by lowest score
+  const focusTopics = recommendations.sort((a, b) => a.score - b.score).slice(0, 2);
+
+  if (focusTopics.length === 0) return null;
+
+  return (
+    <div style={{ background: "#FF9F0A", border: "4px solid #0D0D0D", boxShadow: "8px 8px 0 #0D0D0D", padding: "20px 24px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 20 }}>
+      {/* Icon + Intro */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ width: 48, height: 48, background: "#0D0D0D", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #0D0D0D" }}>
+          <Sparkles size={22} color="#FFD60A" strokeWidth={2.5} />
+        </div>
+        <div>
+          <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#0D0D0D", letterSpacing: "-0.02em" }}>Recommended Next Steps</div>
+          <div style={{ fontSize: "0.78rem", fontWeight: 700, opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Based on your focus areas</div>
+        </div>
+      </div>
+
+      {/* Recs */}
+      <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 16 }}>
+        {focusTopics.map((rec) => (
+          <div key={rec.topic} style={{ flex: "1 1 200px", padding: "14px", background: "#FFFFFF", border: "3px solid #0D0D0D", boxShadow: "4px 4px 0 #0D0D0D", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: "0.9rem", color: "#0D0D0D" }}>{rec.topic}</div>
+              <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#888" }}>{rec.domain} · {rec.score}% Mastered</div>
+            </div>
+            <button 
+              onClick={() => onNavigateToDomain(rec.domain)}
+              style={{ padding: "8px 12px", background: "#0D0D0D", color: "#FFD60A", fontWeight: 800, fontSize: "0.7rem", border: "none", cursor: "pointer", transition: "transform 0.1s ease" }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
+            >
+              Master Now
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }

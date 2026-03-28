@@ -17,8 +17,23 @@ export default function SimulationMode({
   onBack,
   onPractice,
 }: SimulationModeProps) {
+  if (!originalAnalysis) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#F5F0E8", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px" }}>
+        <div style={{ maxWidth: 500, width: "100%", background: "#FFFFFF", border: "4px solid #0D0D0D", boxShadow: "10px 10px 0 #0D0D0D", padding: "40px", textAlign: "center" }}>
+          <Sparkles size={48} color="#8B5CF6" style={{ margin: "0 auto 24px" }} />
+          <h2 style={{ fontWeight: 900, fontSize: "1.8rem", textTransform: "uppercase", marginBottom: 16 }}>Path Not Found</h2>
+          <p style={{ fontWeight: 700, opacity: 0.6, marginBottom: 32 }}>Take your first quiz to unlock a custom learning path designed specifically for your skill gaps.</p>
+          <button onClick={onBack} style={{ width: "100%", background: "#8B5CF6", color: "#FFFFFF", padding: "16px", fontWeight: 900, fontSize: "1rem", textTransform: "uppercase", cursor: "pointer", border: "none" }}>
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Get all weak topics (score < 45)
-  const weakTopics = originalAnalysis.learningPath.filter(step => originalAnalysis.topicStatuses[step.topic] === "weak");
+  const weakTopics = (originalAnalysis.learningPath || []).filter(step => originalAnalysis.topicStatuses?.[step.topic] === "weak");
   
   // Collect all recommendations from these topics
   interface FlatRec {

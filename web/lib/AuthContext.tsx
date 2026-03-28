@@ -16,6 +16,11 @@ export interface UserProfile {
   onboardingComplete: boolean;
   streak: number;
   totalSessions: number;
+  lastActiveDate?: string;                   // "YYYY-MM-DD" of last session
+  activityLog?: Record<string, number>;      // { "YYYY-MM-DD": sessionCount }
+  topicMastery?: Record<string, Record<string, number>>; // { domain: { topic: score_0_100 } }
+  latestAnalysis?: any; // AnalysisResult
+  latestScores?: Record<string, any>; // Record<string, TopicScore>
   createdAt?: unknown;
   lastActive?: unknown;
 }

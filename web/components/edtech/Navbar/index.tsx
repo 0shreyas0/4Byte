@@ -32,6 +32,7 @@ export type Screen =
   | "processing"
   | "results"
   | "simulation"
+  | "library"
   | "sandbox"
   | "web-sandbox";
 
@@ -62,7 +63,6 @@ const NAV_ITEMS: {
     group: ["domain-select", "mode-select", "timeline", "learning-concept"],
   },
   {
-
     label: "Results",
     icon: BarChart3,
     screen: "results",
@@ -73,6 +73,12 @@ const NAV_ITEMS: {
     icon: Sparkles,
     screen: "simulation",
     group: ["simulation"],
+  },
+  {
+    label: "Library",
+    icon: BookOpen,
+    screen: "library",
+    group: ["library"],
   },
 ];
 
@@ -146,14 +152,14 @@ export default function Navbar({
         </nav>
 
         {/* ── Right actions ───────────────────────────────────────────── */}
-        <div className="ml-auto flex items-stretch" style={{ borderLeft: "4px solid #0D0D0D" }}>
+        <div className="ml-auto flex items-stretch h-full" style={{ borderLeft: "4px solid #0D0D0D" }}>
 
           {user ? (
-            <>
+            <div className="flex items-stretch h-full">
               {/* Active domain badge */}
               {domain && (
                 <div
-                  className="hidden md:flex items-center gap-2 px-4"
+                  className="hidden md:flex items-center gap-2 px-4 h-full"
                   style={{ borderRight: "4px solid #0D0D0D" }}
                 >
                   <div
@@ -164,20 +170,16 @@ export default function Navbar({
                       color: "#FFD60A",
                       fontWeight: 800,
                       fontSize: "0.7rem",
-                      letterSpacing: "0.04em",
                     }}
                   >
                     {domain.slice(0, 2).toUpperCase()}
                   </div>
-                  <div style={{ lineHeight: 1.2 }}>
-                    <div style={{ fontWeight: 800, fontSize: "0.75rem", textTransform: "uppercase", color: "#0D0D0D" }}>
+                  <div style={{ lineHeight: 1.1 }}>
+                    <div style={{ fontWeight: 800, fontSize: "0.7rem", textTransform: "uppercase", color: "#0D0D0D" }}>
                       {domain}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Trophy size={10} color="#0D0D0D" />
-                      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#0D0D0D" }}>
-                        Active Domain
-                      </span>
+                    <div style={{ fontSize: "0.6rem", fontWeight: 700, opacity: 0.6, textTransform: "uppercase" }}>
+                      Active
                     </div>
                   </div>
                 </div>
@@ -185,35 +187,17 @@ export default function Navbar({
 
               {/* Streak badge */}
               <div
-                className="hidden sm:flex items-center gap-1.5 px-4"
-                style={{ borderRight: "4px solid #0D0D0D", background: "#0D0D0D" }}
+                className="hidden sm:flex items-center gap-1.5 px-4 h-full"
+                style={{ borderRight: "4px solid #0D0D0D", background: "rgba(0,0,0,0.05)" }}
               >
-                <Flame size={14} color="#FFD60A" />
-                <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>7</span>
-                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                  Streak
-                </span>
+                <Flame size={14} color="#0D0D0D" fill="#0D0D0D" />
+                <span style={{ fontWeight: 900, color: "#0D0D0D", fontSize: "0.95rem" }}>{profile?.streak ?? 0}</span>
               </div>
-
-              {/* Restart */}
-              <button
-                onClick={onRestart}
-                title="Restart"
-                className="flex items-center justify-center transition-colors duration-100"
-                style={{
-                  width: 56,
-                  borderRight: "4px solid #0D0D0D",
-                  background: "transparent",
-                  cursor: "pointer",
-                }}
-              >
-                <RotateCcw size={18} color="#0D0D0D" />
-              </button>
 
               {/* Bell */}
               <button
                 title="Notifications"
-                className="flex items-center justify-center relative group transition-colors duration-100"
+                className="flex items-center justify-center relative transition-colors duration-100 h-full"
                 style={{
                   width: 56,
                   borderRight: "4px solid #0D0D0D",
@@ -223,8 +207,8 @@ export default function Navbar({
               >
                 <Bell size={18} color="#0D0D0D" />
                 <span
-                  className="absolute animate-pulse"
-                  style={{ top: 10, right: 12, width: 8, height: 8, background: "#FF3B3B", borderRadius: "50%", border: "2px solid #FFD60A" }}
+                  className="absolute"
+                  style={{ top: 12, right: 14, width: 8, height: 8, background: "#FF3B3B", borderRadius: "50%", border: "2px solid #FFD60A" }}
                 />
               </button>
 
@@ -232,22 +216,19 @@ export default function Navbar({
               <button
                 title="My Profile"
                 onClick={() => setProfileOpen(true)}
-                className="flex items-center justify-center gap-1.5 px-3 transition-colors duration-100"
+                className="flex items-center justify-center px-4 h-full transition-colors duration-100"
                 style={{
                   background: "#FFD60A",
-                  borderLeft: "4px solid #0D0D0D",
                   cursor: "pointer",
-                  height: "100%",
                 }}
               >
                 <div
                   style={{
-                    width: 32, height: 32,
+                    width: 34, height: 34,
                     background: "#0D0D0D",
                     border: "2px solid #0D0D0D",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontWeight: 900, fontSize: "0.7rem", color: "#FFD60A",
-                    letterSpacing: "0.02em",
+                    fontWeight: 900, fontSize: "0.75rem", color: "#FFD60A",
                   }}
                 >
                   {profile?.displayName
@@ -255,7 +236,7 @@ export default function Navbar({
                     : user.email?.slice(0, 2).toUpperCase() ?? <User size={14} />}
                 </div>
               </button>
-            </>
+            </div>
           ) : (
             /* ── Guest CTA ── */
             <button
