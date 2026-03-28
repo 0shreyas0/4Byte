@@ -70,8 +70,26 @@ export async function fetchYouTubeVideos(query: string): Promise<YouTubeVideo[]>
       channel: item.snippet.channelTitle,
       duration: durations[item.id.videoId],
     }));
-  } catch (error) {
-    console.error("Error fetching YouTube videos:", error);
-    return [];
+  } catch (error: any) {
+    // 403 = API key restricted / quota exhausted — degrade gracefully
+    if (error?.response?.status === 403) {
+      console.warn("YouTube API: 403 Forbidden (key restricted or quota hit). Using mock data.");
+    } else {
+      console.warn("YouTube fetch failed, using mock data:", error?.message || error);
+    }
+    return [
+      {
+        title: "Understanding the concept — Recommended Study",
+        videoId: "mock1",
+        url: "https://www.youtube.com/results?search_query=learn+programming",
+        channel: "Study Resources",
+      },
+      {
+        title: "Practice Problems and Exercises",
+        videoId: "mock2",
+        url: "https://www.youtube.com/results?search_query=programming+exercises",
+        channel: "Code Practice",
+      },
+    ];
   }
 }

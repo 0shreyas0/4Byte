@@ -241,7 +241,7 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
         </h2>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
           {analysis.learningPath.slice(0, 5).map((step, i) => (
-            <div key={step.topic} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div key={`${step.topic}-${i}`} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
                 background: i === 0 ? "#FF3B3B" : i === 1 ? "#FFD60A" : "#1DB954",
                 border: "3px solid #0D0D0D",
@@ -396,7 +396,7 @@ function AnalyticsTab({ scores, analysis }: { scores: Record<string, TopicScore>
             <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>⚡ Root Cause Chain</div>
             <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
               {analysis.dependencyChain.map((t, i) => (
-                <div key={t} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div key={`${t}-${i}`} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div style={{ background: i === 0 ? "#FF3B3B" : "#fff", color: "#0D0D0D", border: "2.5px solid #FFD60A", padding: "8px 16px", fontWeight: 900, fontSize: "0.9rem" }}>
                     {i === 0 && "⚡ "}{t}
                   </div>
@@ -554,7 +554,7 @@ function ConceptMapTab({ domain, scores, analysis }: {
           <div style={{ background: "#0D0D0D", border: "4px solid #0D0D0D", padding: "16px", boxShadow: "6px 6px 0 #FFD60A" }}>
             <h3 style={{ fontWeight: 900, fontSize: "0.75rem", color: "#FFD60A", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>⚡ Key Insights</h3>
             {analysis.dependencyChain.slice(0, 3).map((t, i) => (
-              <div key={t} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < 2 ? "1px solid #333" : "none" }}>
+              <div key={`insight-${t}-${i}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: i < 2 ? "1px solid #333" : "none" }}>
                 <div style={{ width: 20, height: 20, background: i === 0 ? "#FF3B3B" : "#FFD60A", border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.6rem", flexShrink: 0 }}>{i + 1}</div>
                 <span style={{ fontWeight: 700, fontSize: "0.8rem", color: "#fff" }}>{t}</span>
                 <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "#888" }}>{scores[t]?.score ?? "—"}%</span>
