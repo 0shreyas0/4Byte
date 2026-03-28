@@ -8,27 +8,47 @@ export default function Avatar() {
   const [isActivated, setIsActivated] = useState(false);
   const [msg, setMsg] = useState("");
   const [isVisible, setIsVisible] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [rate, setRate] = useState(1.0);
+  const [rate, setRate] = useState(0.95);
   const [pitch, setPitch] = useState(1.0);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const typeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInterruptedRef = useRef(false);
 
   // 🎙️ VOICE MANAGEMENT
   useEffect(() => {
     const loadVoices = () => {
       const allVoices = window.speechSynthesis.getVoices();
-      setVoices(allVoices);
       
-      // Default selection: User specifically wants Google Hindi if available
-      const preferred = allVoices.find(v => v.name.includes("Google Hindi")) || 
-                        allVoices.find(v => v.name.includes("Google") || v.name.includes("Natural"));
-      setSelectedVoice(preferred || allVoices[0]);
+      // 1. Core Target Elite 3
+      const elite = allVoices.filter(v => 
+        v.name.includes("Google UK English Female") ||
+        v.name.includes("Google US English") ||
+        v.name.includes("Google हिन्दी")
+      );
+      
+      // 2. High-Quality Fallbacks (Any Google/Natural)
+      const highQuality = allVoices.filter(v => 
+        v.name.includes("Google") || 
+        v.name.includes("Natural") || 
+        v.name.includes("Female")
+      ).filter(v => !v.name.includes("David") && !v.name.includes("Zira"));
+
+      const finalSelection = elite.length > 0 ? elite : highQuality.length > 0 ? highQuality : allVoices.slice(0, 5);
+      
+      setVoices(finalSelection);
+      
+      const prioritized = 
+        elite.find(v => v.name.includes("Google UK English Female")) ||
+        elite.find(v => v.name.includes("Google US English")) ||
+        elite.find(v => v.name.includes("Google हिन्दी")) ||
+        highQuality[0];
+      
+      setSelectedVoice(prioritized || allVoices[0]);
     };
     
     loadVoices();
@@ -73,6 +93,8 @@ export default function Avatar() {
   }, [selectedVoice, rate, pitch]);
 
   const speak = useCallback(async (input: string | string[]) => {
+    isInterruptedRef.current = false;
+    
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -87,6 +109,7 @@ export default function Avatar() {
 
     try {
       for (const part of parts) {
+        if (isInterruptedRef.current) break;
         await speakPromise(part);
       }
     } finally {
@@ -101,6 +124,7 @@ export default function Avatar() {
   }, [speakPromise]);
 
   const stop = useCallback(() => {
+    isInterruptedRef.current = true;
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
     setIsThinking(false);
@@ -202,24 +226,24 @@ export default function Avatar() {
 
       {/* Subtitles */}
       {(msg || isThinking) && (
-        <div className="mb-4 max-w-[320px] px-6 py-4 bg-black text-white text-sm font-black border-4 border-white shadow-[8px_8px_0_#AF52DE] text-center animate-in fade-in slide-in-from-bottom-4">
+        <div className="mb-4 max-w-[240px] px-4 py-3 bg-black text-white text-[10px] font-black border-4 border-white shadow-[6px_6px_0_#AF52DE] text-center animate-in fade-in slide-in-from-bottom-4">
            {msg}
         </div>
       )}
 
       {/* Tutor Frame */}
       <div className="flex flex-col items-center group relative">
-        <div className="border-4 border-black p-2 bg-white shadow-[12px_12px_0px_#000] relative">
+        <div className="border-4 border-black p-1.5 bg-white shadow-[8px_8px_0px_#000] relative">
           <div className="absolute -top-3 -right-3 flex gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={() => setShowSettings(!showSettings)} className="p-1.5 bg-[#FFD60A] border-2 border-black hover:bg-yellow-400">
-              <Settings size={14} />
+              <Settings size={12} />
             </button>
             <button onClick={() => setIsVisible(false)} className="p-1.5 bg-white border-2 border-black hover:bg-gray-100">
-              <X size={14} />
+              <X size={12} />
             </button>
           </div>
 
-          <div className="w-64 h-64 bg-gray-200 overflow-hidden flex items-center justify-center relative">
+          <div className="w-48 h-48 bg-gray-200 overflow-hidden flex items-center justify-center relative">
              <video
                ref={videoRef}
                src="/avatar/talking.mp4"
@@ -233,53 +257,55 @@ export default function Avatar() {
              />
 
              {!isActivated && (
-               <div className="absolute inset-0 bg-white/20 backdrop-blur-[4px] flex flex-col items-center justify-center p-6 bg-gradient-to-tr from-[#AF52DE]/10 to-[#FFD60A]/10">
-                  <div className="mb-3 p-3 bg-[#FFD60A] border-4 border-black animate-bounce shadow-[4px_4px_0_#0D0D0D]">
-                     <Sparkles size={32} />
+               <div className="absolute inset-0 bg-white/20 backdrop-blur-[4px] flex flex-col items-center justify-center p-4 bg-gradient-to-tr from-[#AF52DE]/10 to-[#FFD60A]/10 text-center">
+                  <div className="mb-2 p-2 bg-[#FFD60A] border-4 border-black animate-bounce shadow-[3px_3px_0_#0D0D0D]">
+                     <Sparkles size={24} />
                   </div>
                   <button 
                     onClick={() => { 
                       const welcome = [
-                        "Namaste! I am your AI Learning Assistant from 4Byte.",
-                        "I will guide you through your mistakes, explain core concepts, and provide personalized mnemonics.",
-                        "Just click the button on your dashboard to start a lesson!"
+                        "Namaste! I am your AI Learning Assistant.",
+                        "I will guide you through your mistakes.",
+                        "Highlight any text to start a lesson!"
                       ];
                       setIsActivated(true); 
                       speak(welcome); 
                     }}
-                    className="px-6 py-3 bg-black text-white text-xs font-black uppercase tracking-widest border-4 border-white shadow-[6px_6px_0_#0D0D0D] active:scale-95 transition-all"
+                    className="px-4 py-2 bg-black text-white text-[9px] font-black uppercase tracking-widest border-4 border-white shadow-[4px_4px_0_#0D0D0D] active:scale-95 transition-all"
                   >
-                    Enable AI Tutor
+                    Enable Tutor
                   </button>
                </div>
              )}
 
              {isThinking && (
                <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] flex items-center justify-center">
-                  <div className="w-2 h-2 bg-black rounded-full animate-ping mx-1" />
-                  <div className="w-2 h-2 bg-black rounded-full animate-ping mx-1 [animation-delay:200ms]" />
-                  <div className="w-2 h-2 bg-black rounded-full animate-ping mx-1 [animation-delay:400ms]" />
+                  <div className="w-1.5 h-1.5 bg-black rounded-full animate-ping mx-1" />
+                  <div className="w-1.5 h-1.5 bg-black rounded-full animate-ping mx-1 [animation-delay:200ms]" />
+                  <div className="w-1.5 h-1.5 bg-black rounded-full animate-ping mx-1 [animation-delay:400ms]" />
                </div>
              )}
+
+             {isSpeaking && (
+              <div className="absolute top-2 left-2 z-30">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); stop(); }}
+                  className="p-1 px-1.5 border-2 border-black bg-white text-[8px] font-black uppercase flex items-center gap-1 hover:bg-red-500 hover:text-white transition-all shadow-[2px_2px_0_#000]"
+                >
+                  <X size={10} /> Stop
+                </button>
+              </div>
+            )}
           </div>
 
           <div 
-            className={`mt-3 text-sm px-3 py-1 border-2 border-black font-black uppercase tracking-widest text-center transition-all ${
+            className={`mt-2 text-[10px] px-2 py-1 border-2 border-black font-black uppercase tracking-widest text-center transition-all ${
               isSpeaking ? "bg-green-400" : isThinking ? "bg-[#FFD60A]" : isActivated ? "bg-[#AF52DE] text-white" : "bg-gray-100 opacity-50"
             }`}
           >
-            {!isActivated ? "Locked" : isSpeaking ? "🗣️ Speaking..." : isThinking ? "🧠 Thinking..." : `✨ ${selectedVoice?.name?.split(' ')[0] || "Online"}`}
+            {!isActivated ? "Locked" : isSpeaking ? "Speaking..." : isThinking ? "Thinking..." : `Mode: ${selectedVoice?.name?.split(' ')[0] || "AI"}`}
           </div>
         </div>
-
-        {isActivated && (
-           <button 
-             onClick={() => setIsMuted(!isMuted)} 
-             className="absolute -right-6 top-12 p-2 bg-white border-2 border-black shadow-[4px_4px_0_#000] hover:translate-x-1 transition-transform"
-           >
-             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-           </button>
-        )}
       </div>
     </div>
   );
