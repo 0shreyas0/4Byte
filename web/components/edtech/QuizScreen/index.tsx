@@ -7,7 +7,7 @@ import { TopicScore } from "@/lib/edtech/conceptGraph";
 
 interface QuizScreenProps {
   domain: string;
-  onComplete: (scores: Record<string, TopicScore>) => void;
+  onComplete: (scores: Record<string, TopicScore>, results: QuestionResult[]) => void;
   onBack: () => void;
 }
 
@@ -16,6 +16,7 @@ type AnswerState = "idle" | "correct" | "wrong";
 interface QuestionResult {
   questionId: string;
   topic: string;
+  concept: string; // 🔥 Added: micro-gap concept
   isCorrect: boolean;
   timeSpent: number;
 }
@@ -47,7 +48,13 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
     const timeSpent = Math.round((Date.now() - questionStart) / 1000);
     setResults((prev) => [
       ...prev,
-      { questionId: current.id, topic: current.topic, isCorrect, timeSpent },
+      { 
+        questionId: current.id, 
+        topic: current.topic, 
+        concept: current.concept, // 🔥 Now tracked from QUIZ_DATA
+        isCorrect, 
+        timeSpent 
+      },
     ]);
 
     // Small delay before showing explanation so the shake/color lands first
@@ -70,7 +77,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
           time: data.time,
         };
       }
-      onComplete(scores);
+      onComplete(scores, results);
     } else {
       setCurrentIndex((i) => i + 1);
       setSelectedOption(null);

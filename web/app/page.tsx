@@ -9,7 +9,7 @@ import QuizScreen from "@/components/edtech/QuizScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
-import { analyzePerformanceAsync, AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
+import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
 type Screen =
   | "landing"
@@ -35,6 +35,7 @@ export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
   const [domain, setDomain] = useState<string>("DSA");
   const [scores, setScores] = useState<Record<string, TopicScore>>({});
+  const [results, setResults] = useState<QuestionResult[]>([]); // 🔥 Added: raw results state
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
   const handleDomainSelect = useCallback((d: string) => {
@@ -43,18 +44,20 @@ export default function Home() {
   }, []);
 
   const handleQuizComplete = useCallback(
-    (quizScores: Record<string, TopicScore>) => {
+    (quizScores: Record<string, TopicScore>, rawResults: QuestionResult[]) => {
       setScores(quizScores);
+      setResults(rawResults); // 🔥 Now storing micro-gap data
       setScreen("processing");
     },
     []
   );
 
   const handleProcessingComplete = useCallback(async () => {
-    const result = await analyzePerformanceAsync(scores, domain);
+    // 🔥 New: Passing raw results to trigger mistake-driven analysis
+    const result = await analyzePerformanceAsync(scores, domain, results);
     setAnalysis(result);
     setScreen("results");
-  }, [scores, domain]);
+  }, [scores, domain, results]);
 
   const handleRestart = useCallback(() => {
     setScores({});

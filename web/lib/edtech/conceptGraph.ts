@@ -3,15 +3,6 @@ import { refineRecommendations, generateOptimizedQuery, filterVideosByDomain } f
 
 export type TopicStatus = "weak" | "medium" | "strong";
 
-export interface TopicScore {
-  score: number;
-  time: number; // seconds spent
-}
-
-export interface DependencyGraph {
-  [topic: string]: string[];
-}
-
 export interface YouTubeRecommendation {
   title: string;
   url: string;
@@ -22,10 +13,19 @@ export interface YouTubeRecommendation {
 
 export interface LearningStep {
   topic: string;
+  concept?: string; // 🔥 Added: micro-gap concept
   action: string;
   why: string;
   fixes: string;
   recommendations?: YouTubeRecommendation[];
+}
+
+export interface QuestionResult {
+  questionId: string;
+  topic: string;
+  concept?: string; // 🔥 Added: concept-level tracking
+  isCorrect: boolean;
+  timeSpent: number;
 }
 
 export interface AnalysisResult {
@@ -37,363 +37,172 @@ export interface AnalysisResult {
   explanation: string[];
   learningPath: LearningStep[];
   topicStatuses: Record<string, TopicStatus>;
+  microGaps: string[]; // 🔥 Added: list of specific concept mistakes
 }
 
-export const DOMAIN_DATA: Record<
-  string,
-  { graph: DependencyGraph; topics: string[]; description: string }
-> = {
+export interface TopicScore {
+  score: number;
+  time: number;
+}
+
+export const DOMAIN_DATA: Record<string, { topics: string[]; graph: Record<string, string[]> }> = {
   DSA: {
-    description: "Data Structures & Algorithms",
-    topics: [
-      "Variables",
-      "Loops",
-      "Functions",
-      "Arrays",
-      "Strings",
-      "Recursion",
-      "Sorting",
-      "Searching",
-      "Linked Lists",
-      "Trees",
-    ],
+    topics: ["Variables", "Loops", "Arrays", "Sorting", "Searching", "Recursion"],
     graph: {
       Variables: [],
       Loops: ["Variables"],
-      Functions: ["Variables"],
-      Arrays: ["Loops", "Variables"],
-      Strings: ["Arrays"],
-      Recursion: ["Functions"],
+      Arrays: ["Variables", "Loops"],
       Sorting: ["Arrays", "Loops"],
       Searching: ["Arrays", "Loops"],
-      "Linked Lists": ["Functions", "Arrays"],
-      Trees: ["Recursion", "Linked Lists"],
+      Recursion: ["Variables", "Loops"],
     },
   },
   "Web Dev": {
-    description: "Web Development",
-    topics: [
-      "HTML Basics",
-      "CSS Basics",
-      "Flexbox",
-      "Grid",
-      "JS Basics",
-      "DOM",
-      "Events",
-      "Fetch/API",
-      "React Basics",
-      "State Management",
-    ],
+    topics: ["HTML Basics", "CSS Basics", "JS Basics", "DOM", "Events", "Fetch/API", "Flexbox", "React Basics"],
     graph: {
       "HTML Basics": [],
       "CSS Basics": ["HTML Basics"],
-      Flexbox: ["CSS Basics"],
-      Grid: ["CSS Basics"],
-      "JS Basics": [],
+      "JS Basics": ["HTML Basics"],
       DOM: ["HTML Basics", "JS Basics"],
       Events: ["DOM"],
-      "Fetch/API": ["JS Basics", "Events"],
-      "React Basics": ["JS Basics", "DOM"],
-      "State Management": ["React Basics"],
+      "Fetch/API": ["JS Basics"],
+      Flexbox: ["CSS Basics"],
+      "React Basics": ["JS Basics", "DOM", "Events"],
     },
   },
   Aptitude: {
-    description: "Quantitative Aptitude",
-    topics: [
-      "Arithmetic",
-      "Percentages",
-      "Ratios",
-      "Algebra",
-      "Geometry",
-      "Time & Work",
-      "Time & Distance",
-      "Profit & Loss",
-      "Probability",
-      "Permutation",
-    ],
+    topics: ["Arithmetic", "Percentages", "Ratios", "Algebra", "Time & Work", "Profit & Loss", "Time & Distance", "Probability"],
     graph: {
       Arithmetic: [],
       Percentages: ["Arithmetic"],
       Ratios: ["Arithmetic"],
       Algebra: ["Arithmetic"],
-      Geometry: ["Arithmetic"],
-      "Time & Work": ["Ratios", "Arithmetic"],
-      "Time & Distance": ["Ratios", "Arithmetic"],
-      "Profit & Loss": ["Percentages", "Arithmetic"],
-      Probability: ["Ratios"],
-      Permutation: ["Probability"],
+      "Profit & Loss": ["Percentages"],
+      "Time & Work": ["Ratios"],
+      "Time & Distance": ["Ratios", "Algebra"],
+      Probability: ["Percentages", "Ratios"],
     },
   },
   "App Dev": {
-    description: "Mobile App Development",
-    topics: [
-      "React Native Basics",
-      "Navigation & Routing",
-      "UI Components",
-      "State Management",
-      "Native APIs",
-      "Firebase Integration",
-      "App Store Deployment",
-      "Performance Optimization",
-    ],
+    topics: ["React Native Basics", "Navigation & Routing", "UI Components", "State Management", "Native APIs", "Firebase Integration", "App Store Deployment", "Performance Optimization"],
     graph: {
       "React Native Basics": [],
-      "Navigation & Routing": ["React Native Basics"],
       "UI Components": ["React Native Basics"],
-      "State Management": ["Navigation & Routing"],
-      "Native APIs": ["UI Components"],
+      "Navigation & Routing": ["UI Components"],
+      "State Management": ["React Native Basics"],
+      "Native APIs": ["React Native Basics"],
       "Firebase Integration": ["State Management"],
-      "App Store Deployment": ["Firebase Integration"],
-      "Performance Optimization": ["Native APIs", "State Management"],
+      "App Store Deployment": ["UI Components"],
+      "Performance Optimization": ["State Management", "Native APIs"],
     },
-  },
-  "Data Science": {
-    description: "Data Science and Machine Learning",
-    topics: [
-      "Python for Data Science",
-      "NumPy & Pandas",
-      "Data Visualization",
-      "Statistics Basics",
-      "Machine Learning",
-      "Deep Learning",
-      "NLP Basics",
-      "Model Deployment",
-    ],
-    graph: {
-      "Python for Data Science": [],
-      "NumPy & Pandas": ["Python for Data Science"],
-      "Data Visualization": ["NumPy & Pandas"],
-      "Statistics Basics": ["Python for Data Science"],
-      "Machine Learning": ["NumPy & Pandas", "Statistics Basics"],
-      "Deep Learning": ["Machine Learning"],
-      "NLP Basics": ["Deep Learning"],
-      "Model Deployment": ["Machine Learning"],
-    },
-  },
-  Cybersecurity: {
-    description: "Ethical Hacking and Security",
-    topics: [
-      "Networking Fundamentals",
-      "Linux & Bash",
-      "Web Security Basics",
-      "OWASP Top 10",
-      "Nmap Scanning",
-      "Web App Pentesting",
-      "Metasploit Framework",
-      "CTF Challenges",
-    ],
-    graph: {
-      "Networking Fundamentals": [],
-      "Linux & Bash": ["Networking Fundamentals"],
-      "Web Security Basics": ["Networking Fundamentals"],
-      "OWASP Top 10": ["Web Security Basics"],
-      "Nmap Scanning": ["Linux & Bash"],
-      "Web App Pentesting": ["OWASP Top 10", "Linux & Bash"],
-      "Metasploit Framework": ["Nmap Scanning"],
-      "CTF Challenges": ["Web App Pentesting", "Linux & Bash"],
-    },
-  },
-  IoT: {
-    description: "Internet of Things and Embedded Systems",
-    topics: [
-      "Arduino & Raspberry Pi",
-      "Sensors & Actuators",
-      "Microcontroller Programming",
-      "MQTT & HTTP Protocols",
-      "Edge Computing",
-      "Cloud IoT Platforms",
-      "Real-time Data Streaming",
-      "IoT Security",
-    ],
-    graph: {
-      "Arduino & Raspberry Pi": [],
-      "Sensors & Actuators": ["Arduino & Raspberry Pi"],
-      "Microcontroller Programming": ["Arduino & Raspberry Pi"],
-      "MQTT & HTTP Protocols": ["Sensors & Actuators"],
-      "Edge Computing": ["Microcontroller Programming"],
-      "Cloud IoT Platforms": ["MQTT & HTTP Protocols"],
-      "Real-time Data Streaming": ["Cloud IoT Platforms"],
-      "IoT Security": ["Edge Computing", "Cloud IoT Platforms"],
-    },
-  },
-  Python: {
-    description: "Core to Advanced Python",
-    topics: [
-      "Python Basics & Syntax",
-      "Control Flow",
-      "Functions",
-      "OOP in Python",
-      "File I/O",
-      "Modules & Packages",
-      "Decorators & Generators",
-      "Testing & Debugging",
-    ],
-    graph: {
-      "Python Basics & Syntax": [],
-      "Control Flow": ["Python Basics & Syntax"],
-      Functions: ["Python Basics & Syntax"],
-      "OOP in Python": ["Functions"],
-      "File I/O": ["Control Flow"],
-      "Modules & Packages": ["Functions"],
-      "Decorators & Generators": ["Functions", "OOP in Python"],
-      "Testing & Debugging": ["Modules & Packages"],
-    },
-  },
+  }
 };
 
-export function getTopicStatus(score: number): TopicStatus {
-  if (score < 45) return "weak";
-  if (score < 70) return "medium";
-  return "strong";
-}
-
-export function findRootCause(
-  weakTopics: string[],
-  graph: DependencyGraph
-): { rootCause: string; chain: string[] } {
-  const weakSet = new Set(weakTopics);
-  let bestRoot = weakTopics[0];
-  let maxDependents = -1;
-
-  for (const candidate of weakTopics) {
-    const deps = graph[candidate] || [];
-    const allDepsWeak = deps.every((d) => weakSet.has(d) || deps.length === 0);
-
-    let dependents = 0;
-    for (const other of weakTopics) {
-      if (other !== candidate && (graph[other] || []).includes(candidate)) {
-        dependents++;
-      }
-    }
-
-    if (allDepsWeak && dependents > maxDependents) {
-      maxDependents = dependents;
-      bestRoot = candidate;
-    }
-  }
-
-  const chain: string[] = [bestRoot];
-  let current = bestRoot;
-  for (let i = 0; i < 5; i++) {
-    const next = weakTopics.find(
-      (t) => t !== current && (graph[t] || []).includes(current)
-    );
-    if (!next) break;
-    chain.push(next);
-    current = next;
-  }
-
-  return { rootCause: bestRoot, chain };
-}
-
-export function buildLearningPath(
-  rootCause: string,
-  chain: string[],
-  domain: string
-): LearningStep[] {
-  const pathReasons: Record<string, { action: string; why: string; fixes: string }> = {
-    Loops: {
-      action: "Master Loops",
-      why: "Loops are the foundation of all iteration logic",
-      fixes: "Fixes array traversal, sorting, and searching problems",
-    },
-    Variables: {
-      action: "Solidify Variables & Types",
-      why: "Variables are the atomic unit of all computation",
-      fixes: "Fixes type errors and logic bugs across all topics",
-    },
-    Arrays: {
-      action: "Practice Arrays",
-      why: "Arrays are the most fundamental data structure",
-      fixes: "Directly unblocks Sorting, Searching, and Strings",
-    },
-    Sorting: {
-      action: "Reattempt Sorting",
-      why: "Now that prerequisites are solid, sorting is achievable",
-      fixes: "Completes the DSA foundation for interviews",
-    },
-    Arithmetic: {
-      action: "Master Arithmetic Basics",
-      why: "All aptitude topics are built on arithmetic",
-      fixes: "Unblocks percentages, ratios, and algebra",
-    },
-    "HTML Basics": {
-      action: "Revisit HTML Basics",
-      why: "HTML is the skeleton of every webpage",
-      fixes: "Unblocks CSS, DOM, and React topics",
-    },
-    "JS Basics": {
-      action: "Strengthen JS Basics",
-      why: "JavaScript powers all interactivity on the web",
-      fixes: "Unblocks DOM, Events, Fetch, and React",
-    },
-    "React Native Basics": {
-      action: "Rebuild React Native Basics",
-      why: "Mobile architecture is hard without strong RN fundamentals",
-      fixes: "Unblocks routing, UI composition, and app state",
-    },
-    "Python for Data Science": {
-      action: "Revisit Python Data Basics",
-      why: "The whole data workflow depends on Python fluency",
-      fixes: "Unblocks Pandas, visualization, and machine learning",
-    },
-    "Networking Fundamentals": {
-      action: "Strengthen Networking Fundamentals",
-      why: "Security reasoning starts with packets, ports, and protocols",
-      fixes: "Unblocks Linux workflows, web security, and scanning",
-    },
-    "Arduino & Raspberry Pi": {
-      action: "Practice Board Fundamentals",
-      why: "IoT projects start with reliable hardware experimentation",
-      fixes: "Unblocks sensors, firmware, and device protocols",
-    },
-    "Python Basics & Syntax": {
-      action: "Lock In Python Syntax",
-      why: "Every advanced Python concept depends on clear fundamentals",
-      fixes: "Unblocks control flow, functions, and larger scripts",
-    },
-  };
-
-  return chain.map((topic, idx) => {
-    const preset = pathReasons[topic];
-    if (preset) {
-      return { topic, ...preset };
-    }
-    return {
-      topic,
-      action: idx === 0 ? `Learn ${topic}` : `Practice ${topic}`,
-      why: idx === 0 ? `${topic} is the root cause of your struggles` : `${topic} depends on what you just fixed`,
-      fixes: idx === chain.length - 1 ? "Completes your recovery path" : `Directly unblocks ${chain[idx + 1]}`,
-    };
-  });
-}
-
+/**
+ * 🔥 NEW MISTAKE-DRIVEN Performance Analysis
+ */
 export function analyzePerformance(
   scores: Record<string, TopicScore>,
-  domain: string
+  domain: string,
+  rawResults: QuestionResult[] = []
 ): AnalysisResult {
-  const graph = DOMAIN_DATA[domain]?.graph || {};
-  const topicStatuses: Record<string, TopicStatus> = {};
+  const data = DOMAIN_DATA[domain] || DOMAIN_DATA["DSA"];
+  const topics = data.topics;
+  const graph = data.graph;
 
   const weakTopics: string[] = [];
   const mediumTopics: string[] = [];
   const strongTopics: string[] = [];
+  const topicStatuses: Record<string, TopicStatus> = {};
+  const microGaps: string[] = [];
 
-  for (const [topic, data] of Object.entries(scores)) {
-    const status = getTopicStatus(data.score);
-    topicStatuses[topic] = status;
-    if (status === "weak") weakTopics.push(topic);
-    else if (status === "medium") mediumTopics.push(topic);
-    else strongTopics.push(topic);
+  // 1. Identify Micro-Gaps (Mistake-Driven)
+  rawResults.forEach(res => {
+    if (!res.isCorrect && res.concept) {
+      if (!microGaps.includes(res.concept)) {
+        microGaps.push(res.concept);
+      }
+    }
+  });
+
+  // 2. Identify Macro-Gaps (Score-Driven)
+  topics.forEach((t) => {
+    const s = scores[t]?.score || 0;
+    if (s < 45) {
+      weakTopics.push(t);
+      topicStatuses[t] = "weak";
+    } else if (s < 75) {
+      mediumTopics.push(t);
+      topicStatuses[t] = "medium";
+    } else {
+      // 💡 NEW: Even if strong, if mistakes exist in this topic, it remains a focus
+      const hasConceptMistakeInTopic = rawResults.some(r => r.topic === t && !r.isCorrect);
+      if (hasConceptMistakeInTopic) {
+        mediumTopics.push(t);
+        topicStatuses[t] = "medium";
+      } else {
+        strongTopics.push(t);
+        topicStatuses[t] = "strong";
+      }
+    }
+  });
+
+  // 3. Find Root Cause among Weak Topics
+  let rootCause = weakTopics.length > 0 ? weakTopics[0] : microGaps.length > 0 ? microGaps[0] : topics[0];
+  if (weakTopics.length > 0) {
+    for (const t of weakTopics) {
+      const deps = graph[t] || [];
+      const hasWeakDep = deps.some((d) => weakTopics.includes(d));
+      if (!hasWeakDep) {
+        rootCause = t;
+        break;
+      }
+    }
   }
 
-  const { rootCause, chain } =
-    weakTopics.length > 0
-      ? findRootCause(weakTopics, graph)
-      : { rootCause: strongTopics[0] || "N/A", chain: [strongTopics[0] || "N/A"] };
+  // 4. Build Dependency Chain
+  const chain: string[] = [];
+  let current = rootCause;
+  const visited = new Set();
+  while (current && !visited.has(current)) {
+    visited.add(current);
+    chain.push(current);
+    const dependents = Object.entries(graph).filter(([t, deps]) => deps.includes(current));
+    const nextWeak = dependents.find(([t]) => weakTopics.includes(t) || mediumTopics.includes(t));
+    if (nextWeak) {
+      current = nextWeak[0];
+    } else {
+      break;
+    }
+  }
 
-  const learningPath = buildLearningPath(rootCause, chain, domain);
-  const explanation = generateExplanation(rootCause, chain, weakTopics, scores);
+  // 5. Generate Micro-Gap Learning Steps
+  const learningPath: LearningStep[] = [];
+  
+  // First, address micro-gaps (specific conceptual mistakes)
+  microGaps.forEach(concept => {
+    const parentTopic = rawResults.find(r => r.concept === concept)?.topic || "General";
+    learningPath.push({
+      topic: parentTopic,
+      concept: concept,
+      action: `Master ${concept}`,
+      why: `You made mistakes in ${concept} even though your general knowledge of ${parentTopic} might be high.`,
+      fixes: `Focused study on ${concept} logic and common pitfalls.`
+    });
+  });
+
+  // Then add macro steps if not already covered
+  const seenTopics = new Set(learningPath.map(s => s.topic));
+  chain.forEach((t) => {
+    if (!seenTopics.has(t)) {
+      learningPath.push({
+        topic: t,
+        action: `Strengthen ${t}`,
+        why: `Topic ${t} is a critical dependency in your ${domain} path.`,
+        fixes: `Deep dive into ${t} fundamentals and practical applications.`
+      });
+    }
+  });
 
   return {
     weakTopics,
@@ -401,30 +210,35 @@ export function analyzePerformance(
     strongTopics,
     rootCause,
     dependencyChain: chain,
-    explanation,
-    learningPath,
+    explanation: [
+      `Our analysis identified ${microGaps.length} conceptual micro-gaps.`,
+      `Root cause: ${rootCause}`
+    ],
+    learningPath: learningPath.slice(0, 5), // Keep it concise
     topicStatuses,
+    microGaps,
   };
 }
 
-// 🔥 NEW ASYNC VERSION with YouTube and AI Integration
+/**
+ * Async version with YouTube and AI
+ */
 export async function analyzePerformanceAsync(
   scores: Record<string, TopicScore>,
-  domain: string
+  domain: string,
+  rawResults: QuestionResult[] = []
 ): Promise<AnalysisResult> {
-  const result = analyzePerformance(scores, domain);
+  const result = analyzePerformance(scores, domain, rawResults);
   
   const enhancedPath = await Promise.all(result.learningPath.map(async (step, i) => {
-    if (i > 1) return step; // Only fetch for first 2 critical steps
+    // Only fetch for first 3 critical steps (micro or macro)
+    if (i > 2) return step; 
 
-    const query = await generateOptimizedQuery(step.topic, step.fixes, "beginner", domain);
+    const focalPoint = step.concept || step.topic;
+    const query = await generateOptimizedQuery(focalPoint, step.fixes, "beginner", domain);
     const rawVideos = await fetchYouTubeVideos(query);
-    
-    // 🔥 New: Filter out garbage from other domains
     const filteredVideos = filterVideosByDomain(rawVideos, domain);
-    
-    // AI Refinement with Domain Context
-    const refined = await refineRecommendations(filteredVideos, step.topic, step.fixes, "beginner", domain);
+    const refined = await refineRecommendations(filteredVideos, focalPoint, step.fixes, "beginner", domain);
 
     return { ...step, recommendations: refined };
   }));
@@ -432,51 +246,31 @@ export async function analyzePerformanceAsync(
   return { ...result, learningPath: enhancedPath };
 }
 
-function generateExplanation(
-  rootCause: string,
-  chain: string[],
-  weakTopics: string[],
-  scores: Record<string, TopicScore>
-): string[] {
-  const rootScore = scores[rootCause]?.score || 0;
-  const lines: string[] = [
-    `You are struggling because "${rootCause}" is fundamentally weak (score: ${rootScore}%).`,
-  ];
-
-  for (let i = 0; i < chain.length - 1; i++) {
-    lines.push(
-      `"${chain[i + 1]}" directly depends on "${chain[i]}" — and since "${chain[i]}" is weak, "${chain[i + 1]}" breaks.`
-    );
-  }
-
-  lines.push(
-    `This is a cascading failure. Fix "${rootCause}" first, and the rest of the chain will improve automatically.`
-  );
-
-  return lines;
-}
-
 export function simulateImprovement(
-  scores: Record<string, TopicScore>,
-  topic: string,
+  originalScores: Record<string, TopicScore>,
+  improvedTopic: string,
   newScore: number,
-  graph: DependencyGraph
+  graph: Record<string, string[]>
 ): Record<string, number> {
-  const result: Record<string, number> = { ...Object.fromEntries(Object.entries(scores).map(([k, v]) => [k, v.score])) };
-  result[topic] = newScore;
+  const result: Record<string, number> = {};
+  Object.entries(originalScores).forEach(([t, v]) => (result[t] = v.score));
 
-  const improvement = newScore - (scores[topic]?.score || 0);
-  const cascade = 0.6;
+  result[improvedTopic] = newScore;
 
-  for (const [t, deps] of Object.entries(graph)) {
-    if (deps.includes(topic) && result[t] !== undefined) {
-      const boost = improvement * cascade;
-      result[t] = Math.min(100, result[t] + boost);
+  const queue = [improvedTopic];
+  const visited = new Set();
 
-      for (const [t2, deps2] of Object.entries(graph)) {
-        if (deps2.includes(t) && result[t2] !== undefined) {
-          result[t2] = Math.min(100, result[t2] + boost * cascade);
-        }
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    visited.add(current);
+
+    const dependents = Object.entries(graph).filter(([t, deps]) => deps.includes(current));
+    for (const [depName] of dependents) {
+      if (!visited.has(depName)) {
+        const currentScore = result[depName] || 0;
+        const gain = (result[current] - (originalScores[current]?.score || 0)) * 0.6;
+        result[depName] = Math.min(100, Math.max(currentScore, currentScore + gain));
+        queue.push(depName);
       }
     }
   }

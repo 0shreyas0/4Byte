@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnalysisResult, TopicScore, DOMAIN_DATA } from "@/lib/edtech/conceptGraph";
-import { ArrowRight, ChevronRight, RotateCcw, Sliders } from "lucide-react";
+import { ArrowRight, ChevronRight, RotateCcw, Sliders, AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 
 interface ResultsDashboardProps {
   domain: string;
@@ -487,14 +487,16 @@ function ConceptGraphSVG({
 /* ─── Analysis Tab ─── */
 function AnalysisTab({ scores, analysis }: { scores: Record<string, TopicScore>; analysis: AnalysisResult }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Weak topics */}
-      <div style={{ border: "2.5px solid #FF3B3B", background: "#FFF0F0", boxShadow: "4px 4px 0 #FF3B3B", padding: 24 }}>
-        <h2 style={{ fontWeight: 800, fontSize: "1.1rem", color: "#FF3B3B", marginBottom: 16, letterSpacing: "-0.02em" }}>
-          ⚠️ Weak Topics (Score &lt; 45%)
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* 🛑 NEE: Macro-gaps and Micro-gaps */}
+      <div className="md:col-span-1">
+        <h2 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          📉 Weak Topics (&lt; 45%)
         </h2>
         {analysis.weakTopics.length === 0 ? (
-          <p style={{ color: "#555", fontWeight: 600 }}>No weak topics detected! 🎉</p>
+          <div className="p-4" style={{ border: "2px solid #0D0D0D", background: "#FFFFFF", fontWeight: 700 }}>
+            No major topic weakness detected!
+          </div>
         ) : (
           analysis.weakTopics.map((t) => (
             <div
@@ -522,6 +524,33 @@ function AnalysisTab({ scores, analysis }: { scores: Record<string, TopicScore>;
             </div>
           ))
         )}
+      </div>
+
+      <div className="md:col-span-1">
+        <h2 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: 12, color: "#FF3B3B", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          🧠 Conceptual Micro-Gaps
+        </h2>
+        <div className="space-y-3">
+          {analysis.microGaps.length > 0 ? (
+            analysis.microGaps.map((concept) => (
+              <div
+                key={concept}
+                className="flex items-start gap-3 p-4"
+                style={{ border: "2.5px solid #0D0D0D", background: "#FFEBEB", boxShadow: "4px 4px 0 #FF3B3B" }}
+              >
+                <AlertCircle size={18} color="#FF3B3B" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "#FF3B3B" }}>{concept}</div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#666", marginTop: 2 }}>Focused practice needed</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-4 flex items-center gap-3" style={{ border: "2.5px solid #0D0D0D", background: "#F0FDF4", color: "#166534", fontWeight: 700 }}>
+              <CheckCircle2 size={18} /> No conceptual mistakes detected.
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Medium / Strong */}
