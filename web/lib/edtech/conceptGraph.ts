@@ -1,5 +1,5 @@
 import { fetchYouTubeVideos } from "./youtube";
-import { refineRecommendations, generateOptimizedQuery } from "./ai";
+import { refineRecommendations, generateOptimizedQuery, filterVideosByDomain } from "./ai";
 
 export type TopicStatus = "weak" | "medium" | "strong";
 
@@ -417,9 +417,14 @@ export async function analyzePerformanceAsync(
   const enhancedPath = await Promise.all(result.learningPath.map(async (step, i) => {
     if (i > 1) return step; // Only fetch for first 2 critical steps
 
-    const query = await generateOptimizedQuery(step.topic, step.fixes, "beginner");
+    const query = await generateOptimizedQuery(step.topic, step.fixes, "beginner", domain);
     const rawVideos = await fetchYouTubeVideos(query);
-    const refined = await refineRecommendations(rawVideos, step.topic, step.fixes, "beginner");
+    
+    // 🔥 New: Filter out garbage from other domains
+    const filteredVideos = filterVideosByDomain(rawVideos, domain);
+    
+    // AI Refinement with Domain Context
+    const refined = await refineRecommendations(filteredVideos, step.topic, step.fixes, "beginner", domain);
 
     return { ...step, recommendations: refined };
   }));

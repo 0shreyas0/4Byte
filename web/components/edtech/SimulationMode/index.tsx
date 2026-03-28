@@ -89,10 +89,14 @@ export default function SimulationMode({
         >
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <AlertCircle size={28} />
-              <h1 style={{ fontSize: "2rem", fontWeight: 900, lineHeight: 1 }}>Weak Topic Deep-Dive</h1>
+              <Target size={32} />
+              <h1 style={{ fontSize: "2.5rem", fontWeight: 900, lineHeight: 1 }}>{domain} Deep-Dive</h1>
             </div>
-            <p style={{ fontSize: "1rem", fontWeight: 700, opacity: 0.9 }}>
+            <div className="flex items-center gap-2 mb-4">
+               <div className="px-3 py-1 bg-white/30 rounded text-xs font-black uppercase">Domain: {domain}</div>
+               <div className="px-3 py-1 bg-white/30 rounded text-xs font-black uppercase">Level: Beginner</div>
+            </div>
+            <p style={{ fontSize: "1.1rem", fontWeight: 700, opacity: 0.9, maxWidth: "600px" }}>
               Master these concepts to fix the {weakTopics.length} gaps identified in your {domain} analysis.
             </p>
           </div>
