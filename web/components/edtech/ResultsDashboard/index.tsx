@@ -800,6 +800,43 @@ function LearningPathTab({
                   </p>
                 </div>
               </div>
+
+              {step.recommendations && step.recommendations.length > 0 && (
+                <div className="mt-4 pt-4 border-t-2 border-dashed border-gray-300">
+                  <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#8B5CF6", marginBottom: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    🎯 AI-Refined Resources
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    {step.recommendations.map((rec, idx) => (
+                      <a
+                        key={idx}
+                        href={rec.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block p-4 transition-all hover:-translate-x-1 hover:-translate-y-1"
+                        style={{ 
+                          background: "#FFFFFF", 
+                          border: "2.5px solid #0D0D0D",
+                          boxShadow: "4px 4px 0 #0D0D0D" 
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <h4 style={{ fontSize: "0.95rem", fontWeight: 800, color: "#0D0D0D", lineHeight: 1.3 }}>{rec.title}</h4>
+                          <span style={{ fontSize: "0.65rem", background: "#FFD60A", color: "#0D0D0D", padding: "3px 8px", fontWeight: 800, whiteSpace: "nowrap" as const }}>
+                            {rec.recommended_segment}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: "0.8rem", color: "#555", fontWeight: 600, lineHeight: 1.5, marginBottom: 10 }}>
+                          {rec.why_this_video}
+                        </p>
+                        <div className="flex items-center gap-2 text-[#8B5CF6] font-extrabold text-[10px] uppercase tracking-widest group-hover:gap-3 transition-all">
+                          Watch Lesson <ArrowRight size={10} strokeWidth={4} />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}

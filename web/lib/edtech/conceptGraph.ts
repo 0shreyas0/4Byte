@@ -1,3 +1,6 @@
+import { fetchYouTubeVideos, constructSearchQuery } from "./youtube";
+import { refineRecommendations } from "./ai";
+
 export type TopicStatus = "weak" | "medium" | "strong";
 
 export interface TopicScore {
@@ -9,6 +12,22 @@ export interface DependencyGraph {
   [topic: string]: string[];
 }
 
+export interface YouTubeRecommendation {
+  title: string;
+  url: string;
+  focus_concept: string;
+  recommended_segment: string;
+  why_this_video: string;
+}
+
+export interface LearningStep {
+  topic: string;
+  action: string;
+  why: string;
+  fixes: string;
+  recommendations?: YouTubeRecommendation[];
+}
+
 export interface AnalysisResult {
   weakTopics: string[];
   mediumTopics: string[];
@@ -18,13 +37,6 @@ export interface AnalysisResult {
   explanation: string[];
   learningPath: LearningStep[];
   topicStatuses: Record<string, TopicStatus>;
-}
-
-export interface LearningStep {
-  topic: string;
-  action: string;
-  why: string;
-  fixes: string;
 }
 
 export const DOMAIN_DATA: Record<
@@ -239,10 +251,7 @@ export function findRootCause(
   weakTopics: string[],
   graph: DependencyGraph
 ): { rootCause: string; chain: string[] } {
-  // Find the weak topic with fewest (or no) dependencies that others depend on
   const weakSet = new Set(weakTopics);
-
-  // Score each weak topic by how many other weak topics depend on it
   let bestRoot = weakTopics[0];
   let maxDependents = -1;
 
@@ -250,7 +259,6 @@ export function findRootCause(
     const deps = graph[candidate] || [];
     const allDepsWeak = deps.every((d) => weakSet.has(d) || deps.length === 0);
 
-    // Count how many other weak topics depend on this one
     let dependents = 0;
     for (const other of weakTopics) {
       if (other !== candidate && (graph[other] || []).includes(candidate)) {
@@ -264,7 +272,6 @@ export function findRootCause(
     }
   }
 
-  // Build the chain from root to failures
   const chain: string[] = [bestRoot];
   let current = bestRoot;
   for (let i = 0; i < 5; i++) {
@@ -386,7 +393,6 @@ export function analyzePerformance(
       : { rootCause: strongTopics[0] || "N/A", chain: [strongTopics[0] || "N/A"] };
 
   const learningPath = buildLearningPath(rootCause, chain, domain);
-
   const explanation = generateExplanation(rootCause, chain, weakTopics, scores);
 
   return {
@@ -399,6 +405,26 @@ export function analyzePerformance(
     learningPath,
     topicStatuses,
   };
+}
+
+// 🔥 NEW ASYNC VERSION with YouTube and AI Integration
+export async function analyzePerformanceAsync(
+  scores: Record<string, TopicScore>,
+  domain: string
+): Promise<AnalysisResult> {
+  const result = analyzePerformance(scores, domain);
+  
+  const enhancedPath = await Promise.all(result.learningPath.map(async (step, i) => {
+    if (i > 1) return step; // Only fetch for first 2 critical steps
+
+    const query = constructSearchQuery(step.topic, step.fixes, "beginner");
+    const rawVideos = await fetchYouTubeVideos(query);
+    const refined = await refineRecommendations(rawVideos, step.topic, step.fixes, "beginner");
+
+    return { ...step, recommendations: refined };
+  }));
+
+  return { ...result, learningPath: enhancedPath };
 }
 
 function generateExplanation(
@@ -437,13 +463,11 @@ export function simulateImprovement(
   const improvement = newScore - (scores[topic]?.score || 0);
   const cascade = 0.6;
 
-  // Propagate improvement to dependent topics
   for (const [t, deps] of Object.entries(graph)) {
     if (deps.includes(topic) && result[t] !== undefined) {
       const boost = improvement * cascade;
       result[t] = Math.min(100, result[t] + boost);
 
-      // Second-level
       for (const [t2, deps2] of Object.entries(graph)) {
         if (deps2.includes(t) && result[t2] !== undefined) {
           result[t2] = Math.min(100, result[t2] + boost * cascade);
