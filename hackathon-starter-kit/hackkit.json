@@ -1,6 +1,0 @@
-{
-  "componentsPath": "./components/hackkit",
-  "libPath": "./lib/hackkit",
-  "hooksPath": "./hooks/hackkit",
-  "registryUri": "https://raw.githubusercontent.com/Pruthv-creates/website-template/main/lib/registry.ts"
-}
