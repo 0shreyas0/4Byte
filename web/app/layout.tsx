@@ -20,7 +20,8 @@ export const metadata: Metadata = {
   title: "NeuralPath — AI-Powered Adaptive Learning",
   description:
     "Understand what you don't know — and why. NeuralPath uses AI and concept dependency graphs to detect your weak topics, find root causes, and build a personalized learning path.",
-  keywords: "adaptive learning, AI tutor, personalized education, DSA, web development, aptitude",
+  keywords:
+    "adaptive learning, AI tutor, personalized education, DSA, web development, aptitude, app development, data science, cybersecurity, IoT, python",
   openGraph: {
     title: "NeuralPath — AI-Powered Adaptive Learning",
     description: "Understand what you don't know — and why.",

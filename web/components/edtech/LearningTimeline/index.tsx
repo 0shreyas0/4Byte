@@ -21,46 +21,96 @@ interface TimelineNode {
 
 const TIMELINE_DATA: Record<string, TimelineNode[]> = {
   DSA: [
-    { id: "variables", label: "Variables", status: "completed", why: "The atomic unit of all programs. Without this, nothing works.", connects: ["Loops", "Functions"] },
-    { id: "loops", label: "Loops", status: "completed", why: "Powers all repetition logic — without this, you can't traverse data.", connects: ["Arrays", "Sorting", "Searching"] },
-    { id: "functions", label: "Functions", status: "active", why: "Abstraction and reuse — the backbone of clean code.", connects: ["Recursion"] },
-    { id: "arrays", label: "Arrays", status: "active", why: "The most fundamental data store. Mastery unlocks Sorting+Searching.", connects: ["Strings", "Sorting", "Searching"] },
-    { id: "strings", label: "Strings", status: "locked", why: "Strings are just character arrays. Mastering Arrays unlocks this.", connects: [] },
-    { id: "recursion", label: "Recursion", status: "locked", why: "Requires mastering Functions first. Unlocks Trees and Graph DFS.", connects: ["Trees"] },
-    { id: "sorting", label: "Sorting", status: "locked", why: "You need Arrays + Loops before you can sort.", connects: [] },
-    { id: "searching", label: "Searching", status: "locked", why: "Binary search requires sorted arrays. Linear search needs loops.", connects: [] },
-    { id: "linked-lists", label: "Linked Lists", status: "locked", why: "Pointer logic — requires Functions mastery.", connects: ["Trees"] },
-    { id: "trees", label: "Trees", status: "locked", why: "Needs Recursion + Linked Lists. The pinnacle of this path.", connects: [] },
+    { id: "variables", label: "Variables", status: "completed", why: "Everything in code starts with storing and updating values.", connects: ["Loops", "Functions"] },
+    { id: "loops", label: "Loops", status: "completed", why: "Iteration powers traversal, counting, and repeated logic.", connects: ["Arrays", "Sorting", "Searching"] },
+    { id: "functions", label: "Functions", status: "active", why: "Reusable logic is the base for recursion and modular problem solving.", connects: ["Recursion", "Linked Lists"] },
+    { id: "arrays", label: "Arrays", status: "active", why: "The first real data structure most interview problems build on.", connects: ["Strings", "Sorting", "Searching"] },
+    { id: "strings", label: "Strings", status: "locked", why: "Strings become easy once arrays and indexing feel natural.", connects: [] },
+    { id: "recursion", label: "Recursion", status: "locked", why: "Requires comfort with functions and repeated subproblems.", connects: ["Trees"] },
+    { id: "sorting", label: "Sorting", status: "locked", why: "Sorting combines arrays, loops, and comparison logic.", connects: [] },
+    { id: "searching", label: "Searching", status: "locked", why: "Efficient search depends on traversal and sorted structures.", connects: [] },
+    { id: "linked-lists", label: "Linked Lists", status: "locked", why: "Pointer-style thinking starts here and unlocks tree reasoning.", connects: ["Trees"] },
+    { id: "trees", label: "Trees", status: "locked", why: "Trees combine recursion, structure traversal, and abstraction.", connects: [] },
   ],
   "Web Dev": [
-    { id: "html", label: "HTML Basics", status: "completed", why: "The skeleton of every webpage. Everything visual is built on this.", connects: ["CSS", "DOM"] },
-    { id: "css", label: "CSS Basics", status: "completed", why: "Style the skeleton. Without HTML, CSS does nothing.", connects: ["Flexbox", "Grid"] },
-    { id: "flexbox", label: "Flexbox", status: "active", why: "The modern way to layout UI. Requires CSS fundamentals.", connects: [] },
-    { id: "grid", label: "Grid", status: "active", why: "2D layouts. Requires CSS fundamentals. More powerful than Flexbox.", connects: [] },
-    { id: "js", label: "JS Basics", status: "completed", why: "Logic, interactivity, and data manipulation.", connects: ["DOM", "Fetch"] },
-    { id: "dom", label: "DOM", status: "active", why: "Connects JS to HTML. The bridge between logic and display.", connects: ["Events"] },
-    { id: "events", label: "Events", status: "locked", why: "User interaction. Requires DOM understanding first.", connects: ["Fetch"] },
-    { id: "fetch", label: "Fetch/API", status: "locked", why: "Talk to servers. Requires JS + Events mastery.", connects: ["React"] },
-    { id: "react", label: "React Basics", status: "locked", why: "Component model. Requires JS + DOM fundamentals.", connects: ["State"] },
-    { id: "state", label: "State Management", status: "locked", why: "Data flow in apps. Requires React mastery.", connects: [] },
+    { id: "html", label: "HTML Basics", status: "completed", why: "HTML is the structure every interface sits on.", connects: ["CSS Basics", "DOM"] },
+    { id: "css", label: "CSS Basics", status: "completed", why: "Styling fundamentals unlock every layout system.", connects: ["Flexbox", "Grid"] },
+    { id: "js", label: "JS Basics", status: "completed", why: "JavaScript adds logic, state, and interactivity.", connects: ["DOM", "Fetch/API", "React Basics"] },
+    { id: "dom", label: "DOM", status: "active", why: "DOM knowledge bridges markup and interactive behavior.", connects: ["Events"] },
+    { id: "events", label: "Events", status: "active", why: "User-driven applications depend on event flow.", connects: ["Fetch/API"] },
+    { id: "flexbox", label: "Flexbox", status: "active", why: "Flexbox is the fastest route to solid responsive layouts.", connects: [] },
+    { id: "grid", label: "Grid", status: "locked", why: "Grid builds on CSS confidence for two-dimensional layouts.", connects: [] },
+    { id: "fetch", label: "Fetch/API", status: "locked", why: "Fetching data only clicks after JS and events feel easy.", connects: ["React Basics"] },
+    { id: "react", label: "React Basics", status: "locked", why: "React depends on strong JS plus DOM thinking.", connects: ["State Management"] },
+    { id: "state", label: "State Management", status: "locked", why: "State is where frontend architecture really begins.", connects: [] },
   ],
   Aptitude: [
-    { id: "arithmetic", label: "Arithmetic", status: "completed", why: "All math starts here. The root of the entire dependency graph.", connects: ["Percentages", "Ratios", "Algebra"] },
-    { id: "percentages", label: "Percentages", status: "active", why: "A ratio application. Requires arithmetic fluency.", connects: ["Profit & Loss"] },
-    { id: "ratios", label: "Ratios", status: "active", why: "Comparing quantities. Core of time-work and distance problems.", connects: ["Time & Work", "Time & Distance", "Probability"] },
-    { id: "algebra", label: "Algebra", status: "active", why: "Equations and unknowns. Extends arithmetic into abstract thinking.", connects: [] },
-    { id: "geometry", label: "Geometry", status: "locked", why: "Shapes and space. Needs arithmetic as foundation.", connects: [] },
-    { id: "time-work", label: "Time & Work", status: "locked", why: "Requires Ratios mastery. Common in competitive exams.", connects: [] },
-    { id: "time-distance", label: "Time & Distance", status: "locked", why: "Speed problems. Needs Ratio + Arithmetic.", connects: [] },
-    { id: "profit-loss", label: "Profit & Loss", status: "locked", why: "Business math. Needs percentages to understand.", connects: [] },
-    { id: "probability", label: "Probability", status: "locked", why: "Chances and outcomes. Needs Ratios to reason about.", connects: ["Permutation"] },
-    { id: "permutation", label: "Permutation", status: "locked", why: "Arrangements and choices. The capstone.", connects: [] },
+    { id: "arithmetic", label: "Arithmetic", status: "completed", why: "Arithmetic sits underneath almost every aptitude question.", connects: ["Percentages", "Ratios", "Algebra"] },
+    { id: "percentages", label: "Percentages", status: "active", why: "Percentages convert raw arithmetic into practical comparisons.", connects: ["Profit & Loss"] },
+    { id: "ratios", label: "Ratios", status: "active", why: "Ratios power speed, work, and probability reasoning.", connects: ["Time & Work", "Time & Distance", "Probability"] },
+    { id: "algebra", label: "Algebra", status: "active", why: "Equations turn word problems into solvable structure.", connects: [] },
+    { id: "geometry", label: "Geometry", status: "locked", why: "Spatial math lands better once core arithmetic is fluent.", connects: [] },
+    { id: "time-work", label: "Time & Work", status: "locked", why: "Work-rate questions depend on ratio intuition.", connects: [] },
+    { id: "time-distance", label: "Time & Distance", status: "locked", why: "Motion problems simplify once ratios feel automatic.", connects: [] },
+    { id: "profit-loss", label: "Profit & Loss", status: "locked", why: "Business math is mostly percentage fluency in disguise.", connects: [] },
+    { id: "probability", label: "Probability", status: "locked", why: "Chance problems need ratio and counting confidence.", connects: ["Permutation"] },
+    { id: "permutation", label: "Permutation", status: "locked", why: "Permutations are the capstone of counting-based reasoning.", connects: [] },
+  ],
+  "App Dev": [
+    { id: "rn-basics", label: "React Native Basics", status: "completed", why: "This is the base layer for building cross-platform mobile UI.", connects: ["Navigation & Routing", "UI Components"] },
+    { id: "navigation", label: "Navigation & Routing", status: "completed", why: "Real apps need predictable movement between screens.", connects: ["State Management"] },
+    { id: "ui", label: "UI Components", status: "active", why: "Reusable components speed up every mobile workflow.", connects: ["Native APIs"] },
+    { id: "state", label: "State Management", status: "active", why: "State coordinates data across screens and flows.", connects: ["Firebase Integration"] },
+    { id: "native-apis", label: "Native APIs", status: "locked", why: "Camera, storage, and sensors require strong component flow first.", connects: ["Performance Optimization"] },
+    { id: "firebase", label: "Firebase Integration", status: "locked", why: "Backend wiring works best after routing and state feel stable.", connects: ["App Store Deployment"] },
+    { id: "deployment", label: "App Store Deployment", status: "locked", why: "Shipping becomes easier when the data and auth flow are reliable.", connects: [] },
+    { id: "performance", label: "Performance Optimization", status: "locked", why: "Performance tuning matters once the app already works end to end.", connects: [] },
+  ],
+  "Data Science": [
+    { id: "python", label: "Python for Data Science", status: "completed", why: "Python is the working language behind the whole stack.", connects: ["NumPy & Pandas"] },
+    { id: "numpy-pandas", label: "NumPy & Pandas", status: "completed", why: "Structured data work begins with vectorized operations and tables.", connects: ["Data Visualization", "Machine Learning"] },
+    { id: "viz", label: "Data Visualization", status: "active", why: "You need to see the data before you can model it well.", connects: ["Kaggle Practice"] },
+    { id: "stats", label: "Statistics Basics", status: "active", why: "Statistics explains why the patterns are meaningful.", connects: ["Machine Learning"] },
+    { id: "ml", label: "Machine Learning", status: "locked", why: "ML depends on clean data plus statistical understanding.", connects: ["Deep Learning", "Model Deployment"] },
+    { id: "dl", label: "Deep Learning", status: "locked", why: "Deep learning is easier after classic ML concepts are solid.", connects: ["NLP Basics"] },
+    { id: "nlp", label: "NLP Basics", status: "locked", why: "NLP extends deep learning into text understanding.", connects: [] },
+    { id: "deploy", label: "Model Deployment", status: "locked", why: "A model matters only when it can run in a product.", connects: [] },
+  ],
+  Cybersecurity: [
+    { id: "networking", label: "Networking Fundamentals", status: "completed", why: "Security starts with understanding how systems communicate.", connects: ["Linux & Bash", "Web Security Basics"] },
+    { id: "linux", label: "Linux & Bash", status: "completed", why: "Most security tooling and labs live in terminal-first workflows.", connects: ["Nmap Scanning", "CTF Challenges"] },
+    { id: "web-sec", label: "Web Security Basics", status: "active", why: "Before exploits, you need the core request-response threat model.", connects: ["OWASP Top 10"] },
+    { id: "owasp", label: "OWASP Top 10", status: "active", why: "OWASP organizes the biggest real-world web risks.", connects: ["Web App Pentesting"] },
+    { id: "nmap", label: "Nmap Scanning", status: "locked", why: "Enumeration is the first step in almost every assessment.", connects: ["Metasploit Framework"] },
+    { id: "pentest", label: "Web App Pentesting", status: "locked", why: "Pentesting requires both web fundamentals and threat awareness.", connects: ["CTF Challenges"] },
+    { id: "metasploit", label: "Metasploit Framework", status: "locked", why: "Framework-heavy exploitation is easier after solid scanning practice.", connects: [] },
+    { id: "ctf", label: "CTF Challenges", status: "locked", why: "CTFs combine enumeration, exploitation, and persistence.", connects: [] },
+  ],
+  IoT: [
+    { id: "arduino", label: "Arduino & Raspberry Pi", status: "completed", why: "Hardware experimentation starts with accessible dev boards.", connects: ["Sensors & Actuators", "Microcontroller Programming"] },
+    { id: "sensors", label: "Sensors & Actuators", status: "completed", why: "Real devices become useful when they can observe and react.", connects: ["MQTT & HTTP Protocols"] },
+    { id: "microcontrollers", label: "Microcontroller Programming", status: "active", why: "Firmware logic is what makes devices reliable.", connects: ["Edge Computing"] },
+    { id: "protocols", label: "MQTT & HTTP Protocols", status: "active", why: "Devices need communication patterns before they can go online.", connects: ["Cloud IoT Platforms"] },
+    { id: "edge", label: "Edge Computing", status: "locked", why: "Local processing matters once device logic is stable.", connects: ["IoT Security"] },
+    { id: "cloud", label: "Cloud IoT Platforms", status: "locked", why: "Cloud dashboards make sense after your devices can publish data.", connects: ["Real-time Data Streaming"] },
+    { id: "streaming", label: "Real-time Data Streaming", status: "locked", why: "Streaming builds on protocol and cloud familiarity.", connects: [] },
+    { id: "security", label: "IoT Security", status: "locked", why: "Connected devices demand security at every layer.", connects: [] },
+  ],
+  Python: [
+    { id: "syntax", label: "Python Basics & Syntax", status: "completed", why: "Everything else depends on writing and reading Python cleanly.", connects: ["Control Flow", "Functions"] },
+    { id: "control-flow", label: "Control Flow", status: "completed", why: "Branching and loops are the backbone of small programs.", connects: ["File I/O"] },
+    { id: "functions", label: "Functions", status: "active", why: "Functions turn scripts into reusable tools.", connects: ["OOP in Python", "Modules & Packages"] },
+    { id: "oop", label: "OOP in Python", status: "active", why: "Classes help organize bigger codebases and automation tools.", connects: ["Decorators & Generators"] },
+    { id: "file-io", label: "File I/O", status: "locked", why: "Automation becomes practical once you can read and write files.", connects: ["Automation Scripts"] },
+    { id: "modules", label: "Modules & Packages", status: "locked", why: "Understanding imports is key to larger Python projects.", connects: ["Testing & Debugging"] },
+    { id: "decorators", label: "Decorators & Generators", status: "locked", why: "Advanced Python patterns land after strong function thinking.", connects: [] },
+    { id: "testing", label: "Testing & Debugging", status: "locked", why: "Reliable Python work depends on good debugging discipline.", connects: [] },
   ],
 };
 
 export default function LearningTimeline({ domain, onStart, onBack }: TimelineProps) {
   const [tooltip, setTooltip] = useState<string | null>(null);
-  const nodes = TIMELINE_DATA[domain] || TIMELINE_DATA["DSA"];
+  const nodes = TIMELINE_DATA[domain] || TIMELINE_DATA.DSA;
 
   const completed = nodes.filter((n) => n.status === "completed").length;
   const total = nodes.length;
@@ -68,7 +118,6 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8" }}>
-      {/* Header */}
       <div
         style={{
           borderBottom: "2.5px solid #0D0D0D",
@@ -99,7 +148,6 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10">
-        {/* Header row */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
           <div>
             <h1 style={{ fontSize: "2rem", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 8 }}>
@@ -110,23 +158,21 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
             </p>
           </div>
           <div className="flex items-center gap-4">
-            {/* Legend */}
             <div className="flex gap-3">
               {[
                 { color: "#1DB954", label: "Done" },
                 { color: "#FFD60A", label: "Active" },
                 { color: "#CCCCCC", label: "Locked" },
-              ].map((l) => (
-                <div key={l.label} className="flex items-center gap-1.5">
-                  <div style={{ width: 12, height: 12, background: l.color, border: "2px solid #0D0D0D" }} />
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700 }}>{l.label}</span>
+              ].map((legend) => (
+                <div key={legend.label} className="flex items-center gap-1.5">
+                  <div style={{ width: 12, height: 12, background: legend.color, border: "2px solid #0D0D0D" }} />
+                  <span style={{ fontSize: "0.75rem", fontWeight: 700 }}>{legend.label}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Progress */}
         <div
           className="p-4 mb-8 flex items-center gap-4"
           style={{ border: "2.5px solid #0D0D0D", background: "#FFFFFF", boxShadow: "4px 4px 0 #0D0D0D" }}
@@ -137,10 +183,7 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
           <div className="flex-1">
             <div style={{ fontSize: "0.8rem", fontWeight: 700, marginBottom: 6 }}>Concepts Mastered</div>
             <div className="progress-bar-bg" style={{ height: 16 }}>
-              <div
-                className="progress-bar-fill"
-                style={{ width: `${progress}%`, background: "#1DB954" }}
-              />
+              <div className="progress-bar-fill" style={{ width: `${progress}%`, background: "#1DB954" }} />
             </div>
           </div>
           <div
@@ -156,9 +199,7 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
           </div>
         </div>
 
-        {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
           <div
             style={{
               position: "absolute",
@@ -172,7 +213,7 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
 
           <div className="space-y-4">
             {nodes.map((node, index) => (
-              <TimelineNode
+              <TimelineNodeCard
                 key={node.id}
                 node={node}
                 index={index}
@@ -183,7 +224,6 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
           </div>
         </div>
 
-        {/* CTA */}
         <div className="mt-10 flex justify-end">
           <button
             onClick={onStart}
@@ -196,14 +236,14 @@ export default function LearningTimeline({ domain, onStart, onBack }: TimelinePr
         </div>
 
         <p style={{ fontSize: "0.85rem", color: "#888", fontWeight: 500, textAlign: "right", marginTop: 8 }}>
-          Brilliant-style: Click any node to see why it matters and what it connects to →
+          Click any unlocked node to see why it matters and what it connects to →
         </p>
       </div>
     </div>
   );
 }
 
-function TimelineNode({
+function TimelineNodeCard({
   node,
   index,
   isTooltipOpen,
@@ -220,11 +260,12 @@ function TimelineNode({
     locked: "#CCCCCC",
   };
 
-  const StatusIcon = node.status === "completed"
-    ? CheckCircle
-    : node.status === "locked"
-    ? Lock
-    : Circle;
+  const StatusIcon =
+    node.status === "completed"
+      ? CheckCircle
+      : node.status === "locked"
+        ? Lock
+        : Circle;
 
   return (
     <div
@@ -235,7 +276,6 @@ function TimelineNode({
         paddingLeft: 0,
       }}
     >
-      {/* Node dot */}
       <div
         style={{
           width: 56,
@@ -252,86 +292,86 @@ function TimelineNode({
         }}
         onClick={node.status !== "locked" ? onTooltipToggle : undefined}
       >
-        <StatusIcon
-          size={22}
-          color="#0D0D0D"
-          strokeWidth={2.5}
-        />
+        <StatusIcon size={22} color="#0D0D0D" strokeWidth={2.5} />
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, paddingTop: 6 }}>
-        <div className="flex items-center gap-3 flex-wrap">
-          <span style={{ fontSize: "1.05rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
-            {index + 1}. {node.label}
-          </span>
-          <span
+      <div
+        style={{
+          flex: 1,
+          background: "#FFFFFF",
+          border: "2.5px solid #0D0D0D",
+          boxShadow: "4px 4px 0 #0D0D0D",
+          padding: "16px 18px",
+        }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "#666", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
+              Node {index + 1}
+            </div>
+            <div style={{ fontSize: "1rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
+              {node.label}
+            </div>
+          </div>
+          <button
+            onClick={node.status !== "locked" ? onTooltipToggle : undefined}
+            disabled={node.status === "locked"}
             style={{
-              fontSize: "0.65rem",
-              fontWeight: 800,
-              background: statusColors[node.status],
-              border: "1.5px solid #0D0D0D",
-              padding: "2px 8px",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
+              border: "2px solid #0D0D0D",
+              background: node.status === "locked" ? "#E5E5E5" : "#F5F0E8",
+              width: 34,
+              height: 34,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: node.status === "locked" ? "not-allowed" : "pointer",
             }}
           >
-            {node.status}
-          </span>
-          {node.connects.length > 0 && (
-            <div className="flex items-center gap-1">
-              <span style={{ fontSize: "0.75rem", color: "#888", fontWeight: 600 }}>→ unlocks:</span>
-              {node.connects.map((c) => (
-                <span
-                  key={c}
-                  style={{
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    background: "#F5F0E8",
-                    border: "1.5px solid #0D0D0D",
-                    padding: "1px 6px",
-                  }}
-                >
-                  {c}
-                </span>
-              ))}
-            </div>
-          )}
-          {node.status !== "locked" && (
-            <button
-              onClick={onTooltipToggle}
-              style={{ display: "flex", alignItems: "center", gap: 4, background: "none", border: "none", cursor: "pointer", color: "#888", fontWeight: 600, fontSize: "0.78rem" }}
-            >
-              <Info size={14} />
-              Why this?
-            </button>
-          )}
+            <Info size={16} />
+          </button>
         </div>
 
-        {/* Expandable */}
         {isTooltipOpen && (
           <div
-            className="mt-3"
             style={{
-              background: "#FFFFFF",
-              border: "2px solid #0D0D0D",
-              boxShadow: "4px 4px 0 #0D0D0D",
-              padding: "14px 16px",
-              maxWidth: 480,
+              marginTop: 14,
+              borderTop: "2px solid #0D0D0D",
+              paddingTop: 14,
+              display: "grid",
+              gap: 10,
             }}
           >
-            <div style={{ fontSize: "0.75rem", fontWeight: 800, color: "#888", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
-              💡 Why this topic matters
+            <p style={{ fontSize: "0.9rem", color: "#333", lineHeight: 1.55 }}>{node.why}</p>
+            <div className="flex flex-wrap gap-2">
+              {node.connects.length > 0 ? (
+                node.connects.map((link) => (
+                  <span
+                    key={link}
+                    style={{
+                      fontSize: "0.72rem",
+                      fontWeight: 700,
+                      padding: "4px 8px",
+                      border: "2px solid #0D0D0D",
+                      background: "#FFD60A",
+                    }}
+                  >
+                    Unlocks {link}
+                  </span>
+                ))
+              ) : (
+                <span
+                  style={{
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    padding: "4px 8px",
+                    border: "2px solid #0D0D0D",
+                    background: "#F5F0E8",
+                  }}
+                >
+                  Terminal concept
+                </span>
+              )}
             </div>
-            <p style={{ fontSize: "0.88rem", fontWeight: 500, color: "#333", lineHeight: 1.6 }}>
-              {node.why}
-            </p>
-            {node.connects.length > 0 && (
-              <div style={{ marginTop: 10, fontSize: "0.82rem", fontWeight: 600, color: "#0D0D0D" }}>
-                🔗 Mastering this unlocks:{" "}
-                <strong>{node.connects.join(", ")}</strong>
-              </div>
-            )}
           </div>
         )}
       </div>

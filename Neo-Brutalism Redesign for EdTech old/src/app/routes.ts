@@ -4,7 +4,6 @@ import { Dashboard } from "./pages/Dashboard";
 import { ConceptMap } from "./pages/ConceptMap";
 import { Practice } from "./pages/Practice";
 import { Analytics } from "./pages/Analytics";
-import { Domains } from "./pages/Domains";
 
 export const router = createBrowserRouter([
   {
@@ -12,7 +11,6 @@ export const router = createBrowserRouter([
     Component: Layout,
     children: [
       { index: true, Component: Dashboard },
-      { path: "domains", Component: Domains },
       { path: "concept-map", Component: ConceptMap },
       { path: "practice", Component: Practice },
       { path: "analytics", Component: Analytics },

@@ -180,31 +180,31 @@ export function Practice() {
 
   if (mode === "select") {
     return (
-      <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-2">
-          <h1 className="font-black text-black text-3xl md:text-4xl uppercase tracking-tighter mb-2">
+        <div className="mb-6">
+          <h1 className="font-black text-black text-2xl md:text-3xl uppercase tracking-tight mb-1">
             ⚡ Practice Zone
           </h1>
-          <p className="font-bold text-black/60 text-base">
-            Choose a topic and test your knowledge with instant feedback
+          <p className="font-bold text-black/60 text-sm">
+            Choose a topic and test your knowledge
           </p>
         </div>
 
         {/* Topic selector */}
-        <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,0.1)]">
-          <h2 className="font-black text-black text-sm uppercase tracking-wider mb-5">
+        <div className="bg-white border-4 border-black p-5 shadow-[8px_8px_0px_black] mb-6">
+          <h2 className="font-black text-black text-sm uppercase tracking-wide mb-4">
             📚 Select Topic
           </h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {topics.map((t) => (
               <button
                 key={t}
                 onClick={() => setSelectedTopic(t)}
-                className={`px-5 py-2.5 border-3 border-black font-black text-sm uppercase tracking-wide transition-all duration-200 group
+                className={`px-4 py-2 border-3 border-black font-black text-sm uppercase tracking-wide transition-all duration-100
                   ${selectedTopic === t
-                    ? "bg-gradient-to-br from-black to-[#1a1a1a] text-[#FFD60A] shadow-[4px_4px_0px_rgba(255,214,10,0.2)]"
-                    : "bg-gradient-to-br from-[#FFD60A] to-[#FFC700] text-black shadow-[4px_4px_0px_rgba(0,0,0,0.1)] hover:shadow-[5px_5px_0px_rgba(0,0,0,0.12)] hover:translate-x-0.5 hover:translate-y-0.5"
+                    ? "bg-black text-white shadow-none translate-x-0.5 translate-y-0.5"
+                    : "bg-[#FFD60A] text-black shadow-[4px_4px_0px_black] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none"
                   }`}
               >
                 {t}
@@ -214,17 +214,17 @@ export function Practice() {
         </div>
 
         {/* Question preview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {filteredQuestions.map((q, i) => (
             <div
               key={q.id}
-              className="bg-white border-3 border-black p-4 flex items-start gap-3 shadow-[4px_4px_0px_rgba(0,0,0,0.08)] hover:shadow-[5px_5px_0px_rgba(0,0,0,0.12)] hover:translate-x-1 hover:translate-y-1 transition-all duration-200 group cursor-pointer"
+              className="bg-white border-3 border-black p-4 flex items-start gap-3 shadow-[4px_4px_0px_black]"
             >
-              <div className="w-9 h-9 bg-gradient-to-br from-black to-[#1a1a1a] text-[#FFD60A] flex items-center justify-center font-black text-sm flex-shrink-0 transform group-hover:scale-110 transition-transform duration-200">
+              <div className="w-8 h-8 bg-black text-white flex items-center justify-center font-black text-sm flex-shrink-0">
                 {i + 1}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-1">
                   <span
                     className="text-[10px] font-black px-2 py-0.5 border-2 border-black uppercase"
                     style={{
@@ -236,21 +236,21 @@ export function Practice() {
                   </span>
                   <span className="text-[10px] font-bold text-black/50 uppercase">{q.topic}</span>
                 </div>
-                <p className="font-bold text-black text-sm leading-tight line-clamp-2 group-hover:text-black transition-colors">{q.question}</p>
+                <p className="font-bold text-black text-sm leading-tight line-clamp-2">{q.question}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Start */}
-        <div className="bg-gradient-to-br from-black via-[#1a1a1a] to-black border-4 border-black p-6 shadow-[8px_8px_0px_rgba(255,214,10,0.3)]">
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            <div className="flex-1">
-              <div className="font-black text-[#FFD60A] text-2xl uppercase tracking-tight mb-1">
+        <div className="bg-black border-4 border-black p-5 shadow-[8px_8px_0px_#FFD60A]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="font-black text-[#FFD60A] text-lg uppercase">
                 {filteredQuestions.length} Questions Ready
               </div>
               <div className="text-white/70 font-bold text-sm">
-                Topic: <span className="text-[#FFD60A]">{selectedTopic}</span>
+                Topic: {selectedTopic}
               </div>
             </div>
             <button
@@ -259,9 +259,9 @@ export function Practice() {
                 setAnswers([]);
                 setMode("quiz");
               }}
-              className="bg-gradient-to-r from-[#FFD60A] to-[#FFC700] border-3 border-[#FFD60A] px-8 py-4 font-black text-black text-sm uppercase tracking-wider shadow-[6px_6px_0px_rgba(0,0,0,0.2)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_rgba(0,0,0,0.15)] transition-all duration-200 flex items-center gap-2 group whitespace-nowrap"
+              className="bg-[#FFD60A] border-3 border-[#FFD60A] px-8 py-4 font-black text-black text-sm uppercase tracking-wide shadow-[5px_5px_0px_white] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center gap-2"
             >
-              <Zap className="w-5 h-5 group-hover:animate-pulse" /> Start Quiz ➜
+              <Zap className="w-5 h-5" /> Start Quiz ➜
             </button>
           </div>
         </div>
@@ -271,46 +271,40 @@ export function Practice() {
 
   if (mode === "result") {
     const grade = scorePercent >= 80 ? "Excellent! 🏆" : scorePercent >= 60 ? "Good Job! 👍" : "Keep Practicing! 💪";
-    const gradeColor = scorePercent >= 80 ? "from-[#34C759] to-[#29A14D]" : scorePercent >= 60 ? "from-[#FFD60A] to-[#FFC700]" : "from-[#FF3B30] to-[#E63B21]";
-    const textColor = scorePercent >= 80 || scorePercent >= 60 ? "#000" : "#fff";
-    const shadowColor = scorePercent >= 80 ? "rgba(52, 199, 89, 0.3)" : scorePercent >= 60 ? "rgba(255, 214, 10, 0.3)" : "rgba(255, 59, 48, 0.3)";
+    const gradeColor = scorePercent >= 80 ? "#34C759" : scorePercent >= 60 ? "#FFD60A" : "#FF3B30";
 
     return (
-      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+      <div className="p-4 md:p-6 max-w-2xl mx-auto">
         <div
-          className={`bg-gradient-to-br ${gradeColor} border-4 border-black p-8 text-center mb-6 pop-in shadow-[8px_8px_0px_${shadowColor}]`}
-          style={{ boxShadow: `8px 8px 0px ${shadowColor}` }}
+          style={{ backgroundColor: gradeColor, boxShadow: "8px 8px 0px black" }}
+          className="border-4 border-black p-6 text-center mb-6 pop-in"
         >
-          <div className="text-6xl mb-4 animate-bounce">
+          <div className="text-5xl mb-3">
             {scorePercent >= 80 ? "🏆" : scorePercent >= 60 ? "👍" : "💪"}
           </div>
-          <h1 className={`font-black text-3xl uppercase mb-2 tracking-tight`} style={{ color: textColor }}>
-            {grade}
-          </h1>
-          <div className={`font-black text-6xl my-6 tracking-tighter`} style={{ color: textColor }}>
-            {scorePercent}%
-          </div>
-          <div className="font-bold text-sm" style={{ color: textColor, opacity: 0.8 }}>
-            {correctCount} out of {totalQ} correct answers
+          <h1 className="font-black text-black text-3xl uppercase mb-1">{grade}</h1>
+          <div className="font-black text-black text-6xl my-4">{scorePercent}%</div>
+          <div className="font-bold text-black/70 text-sm">
+            {correctCount} / {totalQ} correct answers
           </div>
         </div>
 
         {/* Per-question breakdown */}
-        <div className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,0.1)]">
-          <h2 className="font-black text-black text-sm uppercase tracking-wider mb-5">
+        <div className="bg-white border-4 border-black p-5 shadow-[6px_6px_0px_black] mb-6">
+          <h2 className="font-black text-black text-sm uppercase tracking-wide mb-4">
             📋 Question Breakdown
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filteredQuestions.map((q, i) => {
               const isCorrect = answers[i] === q.correctIndex;
               return (
                 <div
                   key={q.id}
-                  className="flex items-start gap-3 border-3 border-black p-4 hover:shadow-[3px_3px_0px_rgba(0,0,0,0.1)] transition-all duration-200"
+                  className="flex items-start gap-3 border-3 border-black p-3"
                   style={{ backgroundColor: isCorrect ? "#f0fff4" : "#fff5f5" }}
                 >
                   <div
-                    className="w-8 h-8 border-2 border-black flex items-center justify-center flex-shrink-0 transform hover:scale-110 transition-transform"
+                    className="w-7 h-7 border-2 border-black flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: isCorrect ? "#34C759" : "#FF3B30" }}
                   >
                     {isCorrect
@@ -320,18 +314,18 @@ export function Practice() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-black text-sm leading-tight">{q.question}</p>
                     {!isCorrect && answers[i] !== null && (
-                      <p className="text-[#FF3B30] font-bold text-xs mt-1">
-                        ✗ Your answer: {q.options[answers[i]!]}
+                      <p className="text-[#FF3B30] font-bold text-xs mt-0.5">
+                        Your answer: {q.options[answers[i]!]}
                       </p>
                     )}
                     {!isCorrect && (
-                      <p className="text-[#34C759] font-bold text-xs mt-0.5">
-                        ✓ Correct: {q.options[q.correctIndex]}
+                      <p className="text-[#34C759] font-bold text-xs">
+                        Correct: {q.options[q.correctIndex]}
                       </p>
                     )}
                   </div>
                   <span
-                    className="font-black text-xs px-2 py-1 border-2 border-black uppercase flex-shrink-0"
+                    className="font-black text-xs px-2 py-0.5 border-2 border-black uppercase flex-shrink-0"
                     style={{
                       backgroundColor: diffColor[q.difficulty],
                       color: q.difficulty === "Hard" ? "#fff" : "#000",
@@ -348,15 +342,15 @@ export function Practice() {
         <div className="flex gap-3">
           <button
             onClick={handleRestart}
-            className="flex-1 bg-gradient-to-r from-[#FFD60A] to-[#FFC700] border-3 border-black py-4 font-black text-black text-sm uppercase tracking-wider shadow-[5px_5px_0px_rgba(0,0,0,0.1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[3px_3px_0px_rgba(0,0,0,0.1)] transition-all duration-200 flex items-center justify-center gap-2 group"
+            className="flex-1 bg-[#FFD60A] border-3 border-black py-4 font-black text-black text-sm uppercase tracking-wide shadow-[5px_5px_0px_black] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2"
           >
-            <RotateCcw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" /> Try Again
+            <RotateCcw className="w-4 h-4" /> Try Again
           </button>
           <button
             onClick={() => setMode("select")}
-            className="flex-1 bg-gradient-to-r from-black to-[#1a1a1a] border-3 border-black py-4 font-black text-white text-sm uppercase tracking-wider shadow-[5px_5px_0px_rgba(52,199,89,0.2)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[3px_3px_0px_rgba(52,199,89,0.15)] transition-all duration-200 flex items-center justify-center gap-2 group"
+            className="flex-1 bg-black border-3 border-black py-4 font-black text-white text-sm uppercase tracking-wide shadow-[5px_5px_0px_#34C759] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2"
           >
-            <Target className="w-4 h-4 group-hover:scale-110 transition-transform" /> New Topic
+            <Target className="w-4 h-4" /> New Topic
           </button>
         </div>
       </div>
@@ -365,16 +359,16 @@ export function Practice() {
 
   // Quiz mode
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-5">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto">
       {/* Progress bar */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between mb-3">
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
           <div className="font-black text-black text-xs uppercase tracking-widest">
             Question {currentIndex + 1} of {totalQ}
           </div>
           <div className="flex items-center gap-2">
             <span
-              className="text-xs font-black px-2.5 py-1 border-2 border-black uppercase"
+              className="text-xs font-black px-2 py-0.5 border-2 border-black uppercase"
               style={{
                 backgroundColor: diffColor[currentQ.difficulty],
                 color: currentQ.difficulty === "Hard" ? "#fff" : "#000",
@@ -385,61 +379,51 @@ export function Practice() {
             <span className="text-xs font-bold text-black/50 uppercase">{currentQ.topic}</span>
           </div>
         </div>
-        <div className="h-6 bg-gray-300 border-3 border-black relative overflow-hidden shadow-[2px_2px_0px_rgba(0,0,0,0.05)]">
+        <div className="h-5 bg-[#F0F0F0] border-3 border-black relative overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-black to-[#1a1a1a] border-r-3 border-black/10 transition-all duration-500 flex items-center justify-end pr-2"
+            className="h-full bg-black border-r-3 border-black transition-all duration-500"
             style={{ width: `${((currentIndex + 1) / totalQ) * 100}%` }}
-          >
-            {((currentIndex + 1) / totalQ) * 100 > 10 && (
-              <span className="text-xs font-black text-white mix-blend-difference">
-                {Math.round(((currentIndex + 1) / totalQ) * 100)}%
-              </span>
-            )}
-          </div>
-          {((currentIndex + 1) / totalQ) * 100 <= 10 && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-black text-black">
-              {Math.round(((currentIndex + 1) / totalQ) * 100)}%
-            </span>
-          )}
+          />
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-black text-white mix-blend-difference">
+            {Math.round(((currentIndex + 1) / totalQ) * 100)}%
+          </span>
         </div>
       </div>
 
       {/* Question */}
       <div
-        className="bg-white border-4 border-black p-6 shadow-[6px_6px_0px_rgba(0,0,0,0.1)] hover:shadow-[7px_7px_0px_rgba(0,0,0,0.12)] transition-shadow duration-200"
+        className="bg-white border-4 border-black p-5 shadow-[8px_8px_0px_black] mb-4"
         key={`question-${currentQ.id}`}
       >
-        <div className="font-black text-black/50 text-sm uppercase mb-2 tracking-widest">
+        <div className="font-black text-black text-lg leading-snug mb-1">
           Q{currentIndex + 1}.
         </div>
-        <p className="font-bold text-black text-lg md:text-xl leading-relaxed">{currentQ.question}</p>
+        <p className="font-bold text-black text-base leading-relaxed">{currentQ.question}</p>
       </div>
 
       {/* Options */}
       <div
         key={`options-${currentQ.id}-${shakeKey}`}
-        className={`space-y-3 ${answerState === "wrong" ? "shake" : ""}`}
+        className={`space-y-3 mb-4 ${answerState === "wrong" ? "shake" : ""}`}
       >
         {currentQ.options.map((opt, i) => {
           let bg = "bg-white";
           let border = "border-black";
-          let shadow = "shadow-[4px_4px_0px_rgba(0,0,0,0.1)]";
+          let shadow = "shadow-[4px_4px_0px_black]";
           let textColor = "text-black";
-          let cursor = "cursor-pointer hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-[5px_5px_0px_rgba(0,0,0,0.12)]";
+          let cursor = "cursor-pointer hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none";
 
           if (answerState !== "idle") {
             cursor = "cursor-default";
-            shadow = "shadow-[3px_3px_0px_rgba(0,0,0,0.08)]";
+            shadow = "shadow-none";
             if (i === currentQ.correctIndex) {
-              bg = "bg-gradient-to-r from-[#34C759] to-[#29A14D]";
+              bg = "bg-[#34C759]";
               textColor = "text-black";
-              shadow = "shadow-[4px_4px_0px_rgba(52,199,89,0.15)]";
             } else if (i === selectedOption && selectedOption !== currentQ.correctIndex) {
-              bg = "bg-gradient-to-r from-[#FF3B30] to-[#E63B21]";
+              bg = "bg-[#FF3B30]";
               textColor = "text-white";
-              shadow = "shadow-[4px_4px_0px_rgba(255,59,48,0.15)]";
             } else {
-              bg = "bg-gray-100";
+              bg = "bg-[#F0F0F0]";
               textColor = "text-black/40";
               border = "border-black/30";
             }
@@ -450,17 +434,17 @@ export function Practice() {
               key={i}
               onClick={() => handleAnswer(i)}
               disabled={answerState !== "idle"}
-              className={`w-full flex items-center gap-4 border-3 ${border} ${bg} p-4 ${shadow} ${cursor} transition-all duration-150 text-left`}
+              className={`w-full flex items-center gap-4 border-3 ${border} ${bg} p-4 ${shadow} ${cursor} transition-all duration-100 text-left`}
             >
               <div
-                className={`w-9 h-9 flex-shrink-0 border-2 border-black flex items-center justify-center font-black text-sm
+                className={`w-8 h-8 flex-shrink-0 border-2 border-black flex items-center justify-center font-black text-sm
                   ${answerState !== "idle"
                     ? i === currentQ.correctIndex
                       ? "bg-black text-[#34C759]"
                       : i === selectedOption
                         ? "bg-black text-[#FF3B30]"
-                        : "bg-gray-300 text-black/40"
-                    : "bg-gradient-to-br from-black to-[#1a1a1a] text-[#FFD60A]"}`}
+                        : "bg-[#E0E0E0] text-black/40"
+                    : "bg-black text-white"}`}
               >
                 {answerState !== "idle" && i === currentQ.correctIndex
                   ? "✓"
@@ -468,12 +452,12 @@ export function Practice() {
                     ? "✗"
                     : String.fromCharCode(65 + i)}
               </div>
-              <span className={`font-bold text-sm md:text-base ${textColor} flex-1`}>{opt}</span>
+              <span className={`font-bold text-sm ${textColor}`}>{opt}</span>
               {answerState !== "idle" && i === currentQ.correctIndex && (
-                <CheckCircle2 className="w-5 h-5 text-black flex-shrink-0 animate-pulse" />
+                <CheckCircle2 className="w-5 h-5 text-black ml-auto flex-shrink-0" />
               )}
               {answerState !== "idle" && i === selectedOption && selectedOption !== currentQ.correctIndex && (
-                <XCircle className="w-5 h-5 text-white flex-shrink-0" />
+                <XCircle className="w-5 h-5 text-white ml-auto flex-shrink-0" />
               )}
             </button>
           );
@@ -483,22 +467,12 @@ export function Practice() {
       {/* Explanation */}
       {showExplanation && (
         <div
-          className={`border-4 border-black p-5 pop-in ${
-            answerState === "correct" 
-              ? "bg-gradient-to-r from-[#34C759] to-[#29A14D] shadow-[4px_4px_0px_rgba(52,199,89,0.15)]" 
-              : "bg-gradient-to-r from-[#FF3B30] to-[#E63B21] shadow-[4px_4px_0px_rgba(255,59,48,0.15)]"
-          }`}
+          className={`border-4 border-black p-4 mb-4 pop-in ${answerState === "correct" ? "bg-[#34C759]" : "bg-[#FF3B30]"}`}
         >
-          <div className={`font-black text-sm uppercase mb-2 tracking-wider ${
-            answerState === "correct" ? "text-black" : "text-white"
-          }`}>
+          <div className="font-black text-black text-sm uppercase mb-1">
             {answerState === "correct" ? "✅ Correct!" : "❌ Wrong!"}
           </div>
-          <p className={`font-bold text-sm leading-relaxed ${
-            answerState === "correct" ? "text-black" : "text-white"
-          }`}>
-            {currentQ.explanation}
-          </p>
+          <p className="font-bold text-black text-sm leading-relaxed">{currentQ.explanation}</p>
         </div>
       )}
 
@@ -506,22 +480,22 @@ export function Practice() {
       {answerState !== "idle" && (
         <button
           onClick={handleNext}
-          className="w-full bg-gradient-to-r from-black to-[#1a1a1a] border-3 border-black py-4 font-black text-white text-sm uppercase tracking-wider shadow-[6px_6px_0px_rgba(255,214,10,0.2)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_rgba(255,214,10,0.15)] transition-all duration-200 flex items-center justify-center gap-2 pop-in group"
+          className="w-full bg-black border-3 border-black py-4 font-black text-white text-sm uppercase tracking-wide shadow-[5px_5px_0px_#FFD60A] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2 pop-in"
         >
           {isLastQuestion ? (
-            <><Trophy className="w-5 h-5 group-hover:animate-bounce" /> See Results</>
+            <><Trophy className="w-5 h-5" /> See Results</>
           ) : (
-            <><ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /> Next Question</>
+            <><ArrowRight className="w-5 h-5" /> Next Question</>
           )}
         </button>
       )}
 
       {/* Score tracker */}
-      <div className="flex items-center gap-1.5">
+      <div className="mt-4 flex items-center gap-2">
         {filteredQuestions.map((_, i) => (
           <div
             key={i}
-            className="flex-1 h-2.5 border-2 border-black transition-all duration-300"
+            className="flex-1 h-2 border-2 border-black"
             style={{
               backgroundColor:
                 i < currentIndex
