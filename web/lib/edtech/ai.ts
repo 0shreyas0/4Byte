@@ -1,4 +1,9 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { YouTubeVideo } from "./youtube";
+
+const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey || "");
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export interface RefinedRecommendation {
   title: string;
@@ -6,6 +11,35 @@ export interface RefinedRecommendation {
   focus_concept: string;
   recommended_segment: string;
   why_this_video: string;
+}
+
+/**
+ * Generate a clean, high-relevance search query using AI.
+ */
+export async function generateOptimizedQuery(
+  concept: string, 
+  learningGap: string, 
+  difficulty: string
+): Promise<string> {
+  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
+    return `${concept} ${difficulty} explanation`;
+  }
+
+  const prompt = `
+    Generate a high-quality YouTube search query (max 6 words) for an educational video.
+    Topic: ${concept}
+    Student issue: ${learningGap}
+    Level: ${difficulty}
+    Query: 
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim().replace(/"/g, '');
+    return text;
+  } catch (error) {
+    return `${concept} ${difficulty} tutorial`;
+  }
 }
 
 /**
@@ -20,43 +54,57 @@ export async function refineRecommendations(
   mistake: string,
   difficulty: string
 ): Promise<RefinedRecommendation[]> {
-  // In a real implementation, this would call OpenAI/Gemini/Anthropic
-  // For now, we simulate the LLM logic by choosing the best matches from the provided list.
-  
   if (videos.length === 0) return [];
 
-  console.log("AI Layer: Refining videos for", { concept, mistake, difficulty });
-
-  // Simulate AI selection logic
-  // We'll pick the first 3 (or fewer) and generate "AI" explanations for them
-  return videos.slice(0, 3).map((v, i) => {
-    return {
+  // Fallback if no API key
+  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
+    console.warn("Gemini API Key missing. Returning unrefined data.");
+    return videos.slice(0, 3).map((v, i) => ({
       title: v.title,
       url: v.url,
-      focus_concept: `Mastering ${concept} through practical examples`,
-      recommended_segment: i === 0 ? "2:10 - 5:30" : i === 1 ? "1:15 - 4:00" : "3:45 - 7:20",
-      why_this_video: `This video directly addresses the struggle with ${mistake} by providing a clear, ${difficulty}-friendly walkthrough of the underlying logic.`,
-    };
-  });
+      focus_concept: `Mastering ${concept}`,
+      recommended_segment: "Start to middle",
+      why_this_video: `This video covers ${concept} in a way that addresses your current gap.`,
+    }));
+  }
+
+  console.log("AI Layer: Real refinement for", { concept, mistake, difficulty });
+
+  const videoList = videos.map(v => `- TITLE: "${v.title}" | URL: ${v.url}`).join('\n');
+  
+  const prompt = `
+    You are an AI Learning Assistant. Rank and select the top 2 best videos for:
+    CONCEPT: ${concept}
+    STUDENT ISSUE: ${mistake}
+    DIFFICULTY: ${difficulty}
+    
+    REAL VIDEOS:
+    ${videoList}
+    
+    TASK:
+    - Select EXACTLY from the list. DO NOT hallucinate.
+    - Identify the MOST RELEVANT PART (timestamp range if possible).
+    - Explain WHY it helps.
+    
+    RETURN ONLY CLEAN JSON ARRAY:
+    [{ "title": "...", "url": "...", "focus_concept": "...", "recommended_segment": "...", "why_this_video": "..." }]
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error("No JSON in AI response");
+    
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error("AI Refinement failed, using fallback:", error);
+    return videos.slice(0, 3).map(v => ({
+      title: v.title,
+      url: v.url,
+      focus_concept: concept,
+      recommended_segment: "Best available",
+      why_this_video: "Selected as a top match for your learning path."
+    }));
+  }
 }
-
-/**
- * Updated Prompt (for reference in backend/LLM calls)
- */
-export const REFINEMENT_PROMPT = `
-You are an intelligent learning recommendation system.
-You are given REAL YouTube videos.
-DO NOT create or hallucinate videos.
-Select ONLY from the provided list.
-
-VIDEOS:
-{{video_list}}
-
-TASK:
-1. Identify best 3 videos for the user's learning gap
-2. Explain WHY each video is useful
-3. Map each video to a specific concept
-4. Identify the MOST RELEVANT PART (timestamp range if possible)
-
-Return JSON only.
-`;

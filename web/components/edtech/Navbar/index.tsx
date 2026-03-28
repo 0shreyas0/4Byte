@@ -13,6 +13,7 @@ import {
   User,
   Trophy,
   Flame,
+  Sparkles,
   RotateCcw,
   HomeIcon,
 } from "lucide-react";
@@ -64,8 +65,8 @@ const NAV_ITEMS: {
     group: ["results"],
   },
   {
-    label: "Simulate",
-    icon: GitBranch,
+    label: "Deep Dive",
+    icon: Sparkles,
     screen: "simulation",
     group: ["simulation"],
   },

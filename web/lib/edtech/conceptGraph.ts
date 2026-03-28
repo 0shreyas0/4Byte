@@ -1,5 +1,5 @@
-import { fetchYouTubeVideos, constructSearchQuery } from "./youtube";
-import { refineRecommendations } from "./ai";
+import { fetchYouTubeVideos } from "./youtube";
+import { refineRecommendations, generateOptimizedQuery } from "./ai";
 
 export type TopicStatus = "weak" | "medium" | "strong";
 
@@ -417,7 +417,7 @@ export async function analyzePerformanceAsync(
   const enhancedPath = await Promise.all(result.learningPath.map(async (step, i) => {
     if (i > 1) return step; // Only fetch for first 2 critical steps
 
-    const query = constructSearchQuery(step.topic, step.fixes, "beginner");
+    const query = await generateOptimizedQuery(step.topic, step.fixes, "beginner");
     const rawVideos = await fetchYouTubeVideos(query);
     const refined = await refineRecommendations(rawVideos, step.topic, step.fixes, "beginner");
 

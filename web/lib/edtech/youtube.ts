@@ -31,6 +31,7 @@ export async function fetchYouTubeVideos(query: string): Promise<YouTubeVideo[]>
   const url = "https://www.googleapis.com/youtube/v3/search";
 
   try {
+    console.log(`YouTube Search Query: "${query}"`);
     const res = await axios.get(url, {
       params: {
         part: "snippet",
@@ -42,13 +43,13 @@ export async function fetchYouTubeVideos(query: string): Promise<YouTubeVideo[]>
     });
 
     const items = res.data.items;
+    console.log(`YouTube Fetched: ${items?.length || 0} videos`);
     if (!items || items.length === 0) return [];
 
     // Optional: Get more details (duration)
     const videoIds = items.map((i: any) => i.id.videoId).join(",");
     const detailsUrl = "https://www.googleapis.com/youtube/v3/videos";
     
-    // FETCH DURATION FILTER (Next level)
     const detailsRes = await axios.get(detailsUrl, {
       params: {
         part: "contentDetails",
@@ -68,17 +69,9 @@ export async function fetchYouTubeVideos(query: string): Promise<YouTubeVideo[]>
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
       channel: item.snippet.channelTitle,
       duration: durations[item.id.videoId],
-    })).filter((v: any) => {
-      // Filter out long videos if needed (e.g. over 30 mins)
-      // Duration is in ISO 8601 (e.g. PT15M10S). Simple check for H (hours)
-      return !v.duration.includes("H");
-    });
+    }));
   } catch (error) {
     console.error("Error fetching YouTube videos:", error);
     return [];
   }
-}
-
-export function constructSearchQuery(concept: string, mistake: string, difficulty: string): string {
-  return `${concept} ${mistake} ${difficulty} explanation`;
 }
