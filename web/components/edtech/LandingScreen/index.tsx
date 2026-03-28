@@ -72,7 +72,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
 
       {/* Nav */}
       <nav
-        className="relative flex items-center justify-between px-8 py-5"
+        className="relative mx-auto flex w-full max-w-[1600px] items-center justify-between px-4 py-4 sm:px-6 md:px-8 md:py-5"
         style={{ borderBottom: "2.5px solid #0D0D0D", background: "#F5F0E8" }}
       >
         <div className="flex items-center gap-3">
@@ -107,10 +107,10 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
       </nav>
 
       {/* Hero */}
-      <div className="relative max-w-7xl mx-auto px-6 md:px-12 pt-16 pb-8">
-        <div className="flex flex-col lg:flex-row items-start gap-12">
+      <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-14 sm:px-6 md:px-12 md:pt-16 md:pb-20">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12 xl:gap-16">
           {/* Left: Text */}
-          <div className="flex-1">
+          <div className="flex-1 max-w-3xl">
             {/* Tag */}
             <div className="inline-flex items-center gap-2 mb-6">
               <div
@@ -127,8 +127,8 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
                 fontSize: "clamp(2.8rem, 6vw, 5.5rem)",
                 fontWeight: 800,
                 letterSpacing: "-0.04em",
-                lineHeight: 1.0,
-                marginBottom: "1.5rem",
+                lineHeight: 0.96,
+                marginBottom: "2rem",
               }}
             >
               Understand
@@ -139,7 +139,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
                 style={{
                   background: "#0D0D0D",
                   color: "#FFD60A",
-                  padding: "0 12px",
+                  padding: "0.05em 0.18em",
                   display: "inline-block",
                 }}
               >
@@ -152,11 +152,11 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
             <p
               style={{
                 fontSize: "1.15rem",
-                maxWidth: "520px",
+                maxWidth: "620px",
                 lineHeight: 1.6,
                 color: "#333",
                 fontWeight: 500,
-                marginBottom: "2rem",
+                marginBottom: "2.5rem",
               }}
             >
               We don&apos;t just show weak topics. We trace concept dependencies,
@@ -164,7 +164,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
             </p>
 
             {/* CTA */}
-            <div className="flex flex-wrap gap-4 items-center mb-8">
+            <div className="mb-10 flex flex-wrap items-center gap-4">
               <button
                 onClick={onStart}
                 onMouseEnter={() => setHovered(true)}
@@ -190,35 +190,35 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap gap-4">
+            <div className="grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
               {STATS.map((s) => (
                 <div
                   key={s.value}
-                  className="px-5 py-3"
+                  className="px-5 py-4"
                   style={{ border: "2.5px solid #0D0D0D", background: "#FFFFFF", boxShadow: "3px 3px 0 #0D0D0D" }}
                 >
                   <div style={{ fontSize: "1.8rem", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#666", marginTop: "2px" }}>{s.label}</div>
+                  <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#666", marginTop: "6px", lineHeight: 1.35 }}>{s.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Right: Demo card */}
-          <div className="flex-1 max-w-lg w-full">
+          <div className="w-full flex-1 max-w-xl self-start lg:sticky lg:top-8">
             <DemoCard />
           </div>
         </div>
       </div>
 
       {/* Features */}
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-16">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-12 md:py-20">
         <h2
           style={{
             fontSize: "2rem",
             fontWeight: 800,
             letterSpacing: "-0.03em",
-            marginBottom: "2rem",
+            marginBottom: "2.5rem",
             borderBottom: "3px solid #0D0D0D",
             paddingBottom: "1rem",
           }}
@@ -234,7 +234,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
 
       {/* Bottom CTA */}
       <div
-        className="mx-6 md:mx-12 mb-12 p-10 flex flex-col md:flex-row items-center justify-between gap-6"
+        className="mx-auto mb-14 flex max-w-7xl flex-col items-start justify-between gap-6 px-6 py-8 sm:px-8 md:mb-20 md:flex-row md:items-center md:px-10 md:py-10"
         style={{ background: "#0D0D0D", border: "2.5px solid #0D0D0D", boxShadow: "6px 6px 0 #FFD60A" }}
       >
         <div>
@@ -287,7 +287,7 @@ function DemoCard() {
 
       {/* Content */}
       <div style={{ padding: "20px", fontFamily: "JetBrains Mono, monospace", fontSize: "0.82rem" }}>
-        <DemoLine color="#888">// NeuralPath Analysis Output</DemoLine>
+        <DemoLine color="#888">{`// NeuralPath Analysis Output`}</DemoLine>
         <br />
         <DemoLine color="#3B82F6">WEAK TOPICS:</DemoLine>
         <DemoLine color="#FF3B3B">  ▶ Loops (score: 35%)</DemoLine>

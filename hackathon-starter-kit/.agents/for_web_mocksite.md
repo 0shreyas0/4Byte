@@ -430,3 +430,6 @@ NOT just a quiz app
 NOT just an AI app
 
 A system that **explains learning itself**
+$$
+
+$$

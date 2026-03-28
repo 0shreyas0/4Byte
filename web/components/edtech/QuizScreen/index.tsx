@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle, XCircle, ChevronRight, AlertCircle } from "lucide-react";
-import { QUIZ_DATA, QuizQuestion } from "@/lib/edtech/quizData";
+import { QUIZ_DATA } from "@/lib/edtech/quizData";
 import { TopicScore } from "@/lib/edtech/conceptGraph";
 
 interface QuizScreenProps {
@@ -26,8 +26,8 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>("idle");
   const [results, setResults] = useState<QuestionResult[]>([]);
-  const [startTime] = useState(Date.now());
-  const [questionStart, setQuestionStart] = useState(Date.now());
+  const [startTime] = useState(() => Date.now());
+  const [questionStart, setQuestionStart] = useState(() => Date.now());
   const [showExplanation, setShowExplanation] = useState(false);
 
   const current = questions[currentIndex];
@@ -41,7 +41,8 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
     setAnswerState(isCorrect ? "correct" : "wrong");
     setShowExplanation(true);
 
-    const timeSpent = Math.round((Date.now() - questionStart) / 1000);
+    const now = new Date().getTime();
+    const timeSpent = Math.round((now - questionStart) / 1000);
     const qId = current.id;
     const qTopic = current.topic;
     setResults((prev) => [
@@ -78,7 +79,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
       setSelectedOption(null);
       setAnswerState("idle");
       setShowExplanation(false);
-      setQuestionStart(Date.now());
+      setQuestionStart(new Date().getTime());
     }
   };
 
