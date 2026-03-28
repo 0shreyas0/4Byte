@@ -1,16 +1,20 @@
 "use client";
 
-import { GraduationCap, Zap, ArrowRight, Target, BookOpen, Layers } from "lucide-react";
+import { Zap, ArrowRight, Code2, BookOpen, Layers, Terminal } from "lucide-react";
 
-export type LearningMode = "beginner" | "revision";
+export type QuizMode = "mcq" | "coding";
 
 interface ModeSelectionProps {
   domain: string;
-  onSelect: (mode: LearningMode) => void;
+  onSelect: (mode: QuizMode) => void;
   onBack: () => void;
 }
 
 export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectionProps) {
+  // Only show Coding option for supported domains
+  const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev"];
+  const supportsCoding = CODING_DOMAINS.includes(domain);
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
       <div className="mb-12 text-center">
@@ -18,17 +22,17 @@ export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectio
           Domain: {domain}
         </div>
         <h1 className="text-5xl font-black mb-4 tracking-tighter" style={{ lineHeight: 0.9 }}>
-          HOW DO YOU WANT <br /> TO LEARN?
+          PICK YOUR <br /> CHALLENGE MODE
         </h1>
         <p className="text-lg font-bold opacity-70">
-          Choose a path that fits your current knowledge level.
+          How do you want to test and improve your knowledge today?
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Beginner Mode */}
+      <div className={`grid grid-cols-1 ${supportsCoding ? 'md:grid-cols-2' : ''} gap-8`}>
+        {/* MCQ Mode */}
         <button
-          onClick={() => onSelect("beginner")}
+          onClick={() => onSelect("mcq")}
           className="group relative flex flex-col items-start p-8 text-left transition-all hover:-translate-x-2 hover:-translate-y-2"
           style={{
             background: "#FFFFFF",
@@ -37,16 +41,16 @@ export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectio
           }}
         >
           <div className="mb-6 p-4 bg-[#8B5CF6] border-4 border-black group-hover:rotate-6 transition-transform">
-            <GraduationCap size={44} color="white" />
+            <Zap size={44} color="white" />
           </div>
-          <h2 className="text-3xl font-black mb-3 text-black">BEGINNER MODE</h2>
+          <h2 className="text-3xl font-black mb-3 text-black">MCQ PATH</h2>
           <p className="text-base font-bold text-gray-600 mb-8 leading-relaxed">
-            Start from absolute basics. We&apos;ll guide you through concepts, 
-            interactive visuals, and structured quizzes. No prior knowledge needed.
+            Test your theoretical understanding with 10 rapid-fire questions. 
+            Perfect for identifying conceptual gaps and fixing foundations.
           </p>
           
           <div className="mt-auto flex items-center gap-2 text-sm font-black uppercase tracking-wider text-[#8B5CF6]">
-            Structured Journey <ArrowRight size={18} />
+            Start Quiz <ArrowRight size={18} />
           </div>
 
           <div className="absolute top-4 right-4 flex gap-1">
@@ -55,33 +59,35 @@ export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectio
           </div>
         </button>
 
-        {/* Revision Mode */}
-        <button
-          onClick={() => onSelect("revision")}
-          className="group relative flex flex-col items-start p-8 text-left transition-all hover:-translate-x-2 hover:-translate-y-2"
-          style={{
-            background: "#FFD60A",
-            border: "4px solid #0D0D0D",
-            boxShadow: "12px 12px 0 #0D0D0D",
-          }}
-        >
-          <div className="mb-6 p-4 bg-black border-4 border-[#FFD60A] group-hover:-rotate-6 transition-transform">
-            <Zap size={44} color="#FFD60A" />
-          </div>
-          <h2 className="text-3xl font-black mb-3 text-black">REVISION MODE</h2>
-          <p className="text-base font-bold text-gray-900 mb-8 leading-relaxed">
-            Already studied? Quickly test your knowledge with adaptive quizzes. 
-            We&apos;ll identify your gaps and help you fix them instantly.
-          </p>
-          
-          <div className="mt-auto flex items-center gap-2 text-sm font-black uppercase tracking-wider text-black">
-            Fast Recovery <ArrowRight size={18} />
-          </div>
+        {/* Coding Mode */}
+        {supportsCoding && (
+          <button
+            onClick={() => onSelect("coding")}
+            className="group relative flex flex-col items-start p-8 text-left transition-all hover:-translate-x-2 hover:-translate-y-2"
+            style={{
+              background: "#FFD60A",
+              border: "4px solid #0D0D0D",
+              boxShadow: "12px 12px 0 #0D0D0D",
+            }}
+          >
+            <div className="mb-6 p-4 bg-black border-4 border-[#FFD60A] group-hover:-rotate-6 transition-transform">
+              <Code2 size={44} color="#FFD60A" />
+            </div>
+            <h2 className="text-3xl font-black mb-3 text-black">CODING LAB</h2>
+            <p className="text-base font-bold text-gray-900 mb-8 leading-relaxed">
+              Solve real-world coding problems in our integrated IDE. 
+              We&apos;ll run your code against test cases and provide deep analysis.
+            </p>
+            
+            <div className="mt-auto flex items-center gap-2 text-sm font-black uppercase tracking-wider text-black">
+              Enter Lab <ArrowRight size={18} />
+            </div>
 
-          <div className="absolute top-4 right-4">
-             <Target size={18} className="opacity-40" />
-          </div>
-        </button>
+            <div className="absolute top-4 right-4">
+               <Terminal size={18} className="opacity-40" />
+            </div>
+          </button>
+        )}
       </div>
 
       <div className="mt-12 text-center">
@@ -94,8 +100,8 @@ export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectio
       </div>
 
       {/* Aesthetic Accents */}
-      <div className="fixed bottom-10 left-10 pointer-events-none opacity-10 font-black text-8xl">LEARN</div>
-      <div className="fixed top-20 right-10 pointer-events-none opacity-10 font-black text-8xl rotate-90">QUIZ</div>
+      <div className="fixed bottom-10 left-10 pointer-events-none opacity-10 font-black text-8xl">TEST</div>
+      <div className="fixed top-20 right-10 pointer-events-none opacity-10 font-black text-8xl rotate-90">CODE</div>
     </div>
   );
 }
