@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { ArrowLeft, Play, CheckCircle, XCircle, Terminal, Code2, ChevronRight, Code } from "lucide-react";
 import { TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
+import { compileAndRun, Language } from "@/lib/edtech/compiler";
 
 interface CodingProblem {
   id: string;
@@ -12,6 +13,7 @@ interface CodingProblem {
   starterCode: string;
   testCases: { input: string; expectedOutput: string; label: string }[];
   hint: string;
+  functionName: string; // 🔥 Added
 }
 
 const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
@@ -32,6 +34,7 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
         { input: "[42]", expectedOutput: "42", label: "Single element" },
       ],
       hint: "Try iterating through the array and keeping track of the largest value seen so far.",
+      functionName: "findMax",
     },
     {
       id: "dsa-code-2",
@@ -49,6 +52,7 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
         { input: "[-1, 1, -2, 2]", expectedOutput: "0", label: "Mixed signs" },
       ],
       hint: "Use a loop to iterate through the array and accumulate a running total.",
+      functionName: "sumArray",
     },
     {
       id: "dsa-code-3",
@@ -66,6 +70,7 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
         { input: "1", expectedOutput: "1", label: "n = 1" },
       ],
       hint: "Every recursive function needs a base case. What should factorial(0) return?",
+      functionName: "factorial",
     },
   ],
   "Web Dev": [
@@ -85,6 +90,7 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
         { input: "''", expectedOutput: "''", label: "Empty string" },
       ],
       hint: "Try splitting the string into characters, reversing the array, and joining it back.",
+      functionName: "reverseString",
     },
   ],
   Python: [
@@ -104,6 +110,7 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
         { input: "7", expectedOutput: "7", label: "Neither" },
       ],
       hint: "Check for the most specific condition (FizzBuzz) first, then individual ones.",
+      functionName: "fizzbuzz",
     },
   ],
   "App Dev": [
@@ -123,6 +130,7 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
         { input: "'aeiou'", expectedOutput: "5", label: "All vowels" },
       ],
       hint: "Create a string of all vowels and check each character against it.",
+      functionName: "countVowels",
     },
   ],
 };
@@ -186,46 +194,63 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
   }, [currentProblem]);
 
   const runCode = useCallback(() => {
+  const runCode = useCallback(async () => {
     setIsRunning(true);
     setOutput("");
     setShowHint(false);
 
+    const lang: Language = domain === "Python" ? "python" : "javascript";
+    const inputs = currentProblem.testCases.map(tc => tc.input);
+
     try {
-      // eslint-disable-next-line no-new-func
-      const fn = new Function(`return (${code})`)();
-      const results: TestStatus[] = [];
-      let outputLines: string[] = [];
+      const result = await compileAndRun(lang, code, currentProblem.functionName, inputs);
 
-      currentProblem.testCases.forEach((tc, i) => {
-        try {
-          // A bit hacky but works for simple JS types in browser
-          const inputVal = eval(tc.input); 
-          const actual = fn(inputVal);
-          const expected = eval(tc.expectedOutput);
-          const passed = JSON.stringify(actual) === JSON.stringify(expected);
-          results.push(passed ? "pass" : "fail");
-          outputLines.push(
-            `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`}`
-          );
-        } catch {
-          results.push("fail");
-          outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — Check your function signature`);
+      if (!result.success) {
+        setOutput(`❌ Error:\n${result.error}`);
+        setTestStatuses(currentProblem.testCases.map(() => "fail"));
+      } else {
+        const statuses: TestStatus[] = [];
+        const outputLines: string[] = [];
+
+        currentProblem.testCases.forEach((tc, i) => {
+          const actualRaw = result.outputs[i];
+          let passed = false;
+          let actualDisplay = actualRaw;
+
+          if (actualRaw && actualRaw.startsWith("ERROR_MARKER:")) {
+            outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — ${actualRaw.replace("ERROR_MARKER:", "")}`);
+          } else {
+            try {
+              // Standardize JSON comparison for robustness
+              const actual = JSON.parse(actualRaw || "null");
+              const expected = eval(tc.expectedOutput);
+              passed = JSON.stringify(actual) === JSON.stringify(expected);
+              actualDisplay = JSON.stringify(actual);
+            } catch {
+              passed = false;
+            }
+
+            outputLines.push(
+              `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${actualDisplay}, expected ${tc.expectedOutput}`}`
+            );
+          }
+          statuses.push(passed ? "pass" : "fail");
+        });
+
+        setTestStatuses(statuses);
+        setOutput(outputLines.join("\n"));
+
+        if (statuses.every(s => s === "pass")) {
+          setCompletedProblems((prev) => new Set([...prev, currentIndex]));
         }
-      });
-
-      setTestStatuses(results);
-      setOutput(outputLines.join("\n"));
-
-      if (results.every((r) => r === "pass")) {
-        setCompletedProblems((prev) => new Set([...prev, currentIndex]));
       }
     } catch (err: any) {
-      setOutput(`❌ Syntax Error: ${err.message}`);
+      setOutput(`❌ Unexpected Error: ${err.message}`);
       setTestStatuses(currentProblem.testCases.map(() => "fail"));
     }
 
     setIsRunning(false);
-  }, [code, currentProblem, currentIndex]);
+  }, [code, currentProblem, currentIndex, domain]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < problems.length - 1) {

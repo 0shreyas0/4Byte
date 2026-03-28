@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, BookOpen, Eye, EyeOff, Zap, Brain, GitBranch } from "lucide-react";
+import { ArrowRight, BookOpen, Eye, EyeOff, Zap, Brain, GitBranch, Globe } from "lucide-react";
+import { auth } from "@/lib/firebase";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider 
+} from "firebase/auth";
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -16,15 +23,40 @@ export default function LoginScreen({ onLogin, onGetStarted }: LoginScreenProps)
   const [showPass, setShowPass] = useState(false);
   const [hoveredCta, setHoveredCta] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate auth delay, then jump into the app
-    setTimeout(() => {
-      setLoading(false);
+    setError("");
+    try {
+      if (mode === "login") {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+        // Note: Name saving would require updating user profile or firestore, 
+        // but for now we'll just handle the auth.
+      }
       onLogin();
-    }, 900);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      onLogin();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -309,6 +341,12 @@ export default function LoginScreen({ onLogin, onGetStarted }: LoginScreenProps)
             </p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border-2 border-black text-xs font-bold shadow-[3px_3px_0px_#000]">
+              {error}
+            </div>
+          )}
+
           {/* Mode tabs */}
           <div
             style={{
@@ -481,7 +519,7 @@ export default function LoginScreen({ onLogin, onGetStarted }: LoginScreenProps)
                       animation: "spin-slow 0.7s linear infinite",
                     }}
                   />
-                  Signing {mode === "login" ? "in" : "up"}…
+                  Processing…
                 </span>
               ) : (
                 <>
@@ -505,6 +543,28 @@ export default function LoginScreen({ onLogin, onGetStarted }: LoginScreenProps)
             <span style={{ color: "#999", fontSize: "0.8rem", fontWeight: 700 }}>OR</span>
             <div style={{ flex: 1, height: 2, background: "#E5E5E5" }} />
           </div>
+
+          {/* Google Login */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="brutal-btn"
+            style={{
+              width: "100%",
+              padding: "13px",
+              background: "#fff",
+              color: "#0D0D0D",
+              fontSize: "0.95rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              marginBottom: 12
+            }}
+          >
+            <Globe size={17} />
+            Continue with Google
+          </button>
 
           {/* Get Started CTA (no-auth) */}
           <button

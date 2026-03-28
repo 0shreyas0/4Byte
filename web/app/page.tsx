@@ -14,18 +14,23 @@ import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
 import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
+
 import WebPlayground from "@/components/edtech/WebPlayground";
+
+import { useAuth } from "@/lib/AuthContext";
+
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [domain, setDomain] = useState<string>("DSA");
   const [quizMode, setQuizMode] = useState<QuizMode>("mcq");
   const [mode, setMode] = useState<LearningMode>("beginner");
   const [scores, setScores] = useState<Record<string, TopicScore>>({});
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+
+  const { user } = useAuth();
 
   // Linear Step-by-Step Navigation
   const navigate = useCallback((next: Screen) => {
@@ -48,6 +53,13 @@ export default function Home() {
   // Handlers for Linear Flow
   const handleDomainSelect = useCallback((d: string) => {
     setDomain(d);
+    
+    // Auth Check
+    if (!user) {
+      navigate("auth");
+      return;
+    }
+
     // Non-coding-capable domains go straight to timeline
     const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev"];
     if (CODING_DOMAINS.includes(d)) {
@@ -56,7 +68,7 @@ export default function Home() {
       setQuizMode("mcq");
       navigate("timeline");
     }
-  }, [navigate]);
+  }, [navigate, user]);
 
   const handleModeSelect = useCallback((m: QuizMode) => {
     setQuizMode(m);
@@ -96,11 +108,6 @@ export default function Home() {
     navigate("landing");
   }, [navigate]);
 
-  const handleLogin = useCallback(() => {
-    setIsLoggedIn(true);
-    navigate("landing");
-  }, [navigate]);
-
   return (
     <div
       style={{
@@ -111,30 +118,24 @@ export default function Home() {
       }}
     >
       {/* Global sticky navbar */}
-      {screen !== "login" && (
-        <Navbar
-          screen={screen}
-          domain={domain}
-          isLoggedIn={isLoggedIn}
-          onNavigate={navigate}
-          onRestart={handleRestart}
-          onGetStarted={() => navigate("login")}
-        />
-      )}
+      <Navbar
+        screen={screen}
+        domain={domain}
+        onNavigate={navigate}
+        onRestart={handleRestart}
+        onGetStarted={() => navigate("auth")}
+      />
 
       <main>
-        {screen === "login" && (
-          <LoginScreen
-            onLogin={handleLogin}
-            onGetStarted={() => {
-              setIsLoggedIn(false);
-              navigate("domain-select");
-            }}
-          />
-        )}
-
         {screen === "landing" && (
           <LandingScreen onStart={() => navigate("domain-select")} />
+        )}
+
+        {screen === "auth" && (
+          <LoginScreen 
+            onLogin={() => navigate("mode-select")} 
+            onGetStarted={() => navigate("domain-select")} 
+          />
         )}
 
         {screen === "domain-select" && (
@@ -205,7 +206,7 @@ export default function Home() {
             originalScores={scores}
             originalAnalysis={analysis}
             onBack={() => navigate("results")}
-            onPractice={() => navigate("sandbox")}
+            onPractice={() => navigate("coding-lab")}
           />
         )}
 
