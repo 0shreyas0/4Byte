@@ -36,9 +36,9 @@ const inputs = [${inputs.join(", ")}];
 inputs.forEach(input => {
   try {
     const result = ${functionName}(input);
-    process.stdout.write(JSON.stringify(result) + "\\n");
+    process.stdout.write("RESULT_MARKER:" + JSON.stringify(result) + "\\n");
   } catch (e) {
-    process.stdout.write("ERROR_MARKER:" + e.message + "\\n");
+    process.stdout.write("RESULT_MARKER:ERROR_MARKER:" + e.message + "\\n");
   }
 });
     `;
@@ -51,9 +51,9 @@ inputs = [${inputs.join(", ")}]
 for i in inputs:
     try:
         res = ${functionName}(i)
-        print(json.dumps(res))
+        print(f"RESULT_MARKER:{json.dumps(res)}")
     except Exception as e:
-        print(f"ERROR_MARKER:{str(e)}")
+        print(f"RESULT_MARKER:ERROR_MARKER:{str(e)}")
     `;
   } else if (language === "cpp") {
     // Basic C++ wrapper assuming int input/output for simplicity in demo

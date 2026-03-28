@@ -13,7 +13,7 @@ interface CodingProblem {
   starterCode: string;
   testCases: { input: string; expectedOutput: string; label: string }[];
   hint: string;
-  functionName: string; // 🔥 Added
+  functionName: string;
 }
 
 const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
@@ -135,26 +135,18 @@ const CODING_PROBLEMS: Record<string, CodingProblem[]> = {
   ],
 };
 
-const LANGUAGES = ["JavaScript", "Python", "C++", "C", "Java", "Go", "Rust"];
+const LANGUAGES = ["JavaScript", "Python", "C++"];
 
 const LANG_EXT: Record<string, string> = {
   JavaScript: "js",
   Python: "py",
   "C++": "cpp",
-  C: "c",
-  Java: "java",
-  Go: "go",
-  Rust: "rs",
 };
 
 const LANG_TEMPLATES: Record<string, (funcName: string) => string> = {
   JavaScript: (f) => `function ${f}() {\n  // Write your solution here\n  \n}`,
   Python: (f) => `def ${f}():\n    # Write your solution here\n    pass`,
   "C++": () => `#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    return 0;\n}`,
-  C: () => `#include <stdio.h>\n\nint main() {\n    // Write your solution here\n    return 0;\n}`,
-  Java: () => `import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // Write your solution here\n    }\n}`,
-  Go: () => `package main\n\nimport "fmt"\n\nfunc main() {\n    // Write your solution here\n}`,
-  Rust: () => `fn main() {\n    // Write your solution here\n}`,
 };
 
 interface CodingLabScreenProps {
@@ -168,7 +160,7 @@ type TestStatus = "idle" | "pass" | "fail";
 export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLabScreenProps) {
   const problems = CODING_PROBLEMS[domain] || CODING_PROBLEMS["DSA"];
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [language, setLanguage] = useState("JavaScript");
+  const [language, setLanguage] = useState(domain === "Python" ? "Python" : "JavaScript");
   const [code, setCode] = useState(problems[0].starterCode);
   const [testStatuses, setTestStatuses] = useState<TestStatus[]>([]);
   const [output, setOutput] = useState<string>("");
@@ -181,60 +173,77 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
 
   const handleLanguageChange = useCallback((lang: string) => {
     setLanguage(lang);
-    if (lang === "JavaScript") {
-      setCode(currentProblem.starterCode);
+    if (lang === "JavaScript" && currentProblem.id.startsWith("dsa")) {
+       setCode(currentProblem.starterCode);
     } else {
-      const funcMatch = currentProblem.starterCode.match(/function\s+([a-zA-Z0-9_]+)/) ||
-        currentProblem.starterCode.match(/def\s+([a-zA-Z0-9_]+)/);
-      const funcName = funcMatch ? funcMatch[1] : "solution";
-      setCode(LANG_TEMPLATES[lang](funcName));
+      setCode(LANG_TEMPLATES[lang](currentProblem.functionName));
     }
     setTestStatuses([]);
     setOutput("");
   }, [currentProblem]);
 
-  const runCode = useCallback(() => {
+  const runCode = useCallback(async () => {
     setIsRunning(true);
     setOutput("");
     setShowHint(false);
 
+    const lang: Language = language.toLowerCase() as Language;
+    const inputs = currentProblem.testCases.map(tc => tc.input);
+
     try {
-      // eslint-disable-next-line no-new-func
-      const fn = new Function(`return (${code})`)();
-      const results: TestStatus[] = [];
-      const outputLines: string[] = [];
+      const result = await compileAndRun(lang, code, currentProblem.functionName, inputs);
 
-      currentProblem.testCases.forEach((tc, i) => {
-        try {
-          // eslint-disable-next-line no-eval
-          const inputVal = eval(tc.input);
-          const actual = fn(inputVal);
-          // eslint-disable-next-line no-eval
-          const expected = eval(tc.expectedOutput);
-          const passed = JSON.stringify(actual) === JSON.stringify(expected);
-          results.push(passed ? "pass" : "fail");
-          outputLines.push(
-            `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`}`
-          );
-        } catch {
-          results.push("fail");
-          outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — Check your function signature`);
+      if (!result.success) {
+        setOutput(`❌ Error:\n${result.error}`);
+        setTestStatuses(currentProblem.testCases.map(() => "fail"));
+      } else {
+        const statuses: TestStatus[] = [];
+        const outputLines: string[] = [];
+        
+        // Extract result lines
+        const resultLines = result.outputs
+          .filter(l => l.startsWith("RESULT_MARKER:"))
+          .map(l => l.replace("RESULT_MARKER:", ""));
+
+        currentProblem.testCases.forEach((tc, i) => {
+          const actualRaw = resultLines[i];
+          let passed = false;
+          let actualDisplay = actualRaw;
+
+          if (actualRaw && actualRaw.startsWith("ERROR_MARKER:")) {
+            outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — ${actualRaw.replace("ERROR_MARKER:", "")}`);
+          } else {
+            try {
+              const actual = JSON.parse(actualRaw || "null");
+              // eslint-disable-next-line no-eval
+              const expected = eval(tc.expectedOutput);
+              passed = JSON.stringify(actual) === JSON.stringify(expected);
+              actualDisplay = JSON.stringify(actual);
+            } catch {
+              passed = false;
+            }
+
+            outputLines.push(
+              `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${actualDisplay}, expected ${tc.expectedOutput}`}`
+            );
+          }
+          statuses.push(passed ? "pass" : "fail");
+        });
+
+        setTestStatuses(statuses);
+        setOutput(outputLines.join("\n"));
+
+        if (statuses.every(s => s === "pass")) {
+          setCompletedProblems((prev) => new Set([...prev, currentIndex]));
         }
-      });
-
-      setTestStatuses(results);
-      setOutput(outputLines.join("\n"));
-
-      if (results.every((r) => r === "pass")) {
-        setCompletedProblems((prev) => new Set([...prev, currentIndex]));
       }
     } catch (err: any) {
-      setOutput(`❌ Syntax Error: ${err.message}`);
+      setOutput(`❌ Unexpected Error: ${err.message}`);
       setTestStatuses(currentProblem.testCases.map(() => "fail"));
     }
 
     setIsRunning(false);
-  }, [code, currentProblem, currentIndex]);
+  }, [code, currentProblem, currentIndex, language]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < problems.length - 1) {
@@ -501,7 +510,6 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
             </div>
           </div>
 
-          {/* Simple Code Edit Area (Mock Monaco for now to avoid dependency noise in rebase) */}
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
