@@ -16,6 +16,7 @@ import SimulationMode from "@/components/edtech/SimulationMode";
 import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
 import WebPlayground from "@/components/edtech/WebPlayground";
 import OnboardingSurvey from "@/components/edtech/OnboardingSurvey";
+import UserProfilePage from "@/components/edtech/UserProfilePage";
 import { useAuth } from "@/lib/AuthContext";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
@@ -158,6 +159,13 @@ export default function Home() {
 
         {screen === "onboarding" && (
           <OnboardingSurvey onComplete={() => navigate("domain-select")} />
+        )}
+
+        {screen === "profile" && (
+          <UserProfilePage
+            onBack={() => navigate("landing")}
+            onNavigateToDomain={(d) => { setDomain(d); navigate("domain-select"); }}
+          />
         )}
 
         {screen === "domain-select" && (

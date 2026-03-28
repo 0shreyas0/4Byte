@@ -64,7 +64,7 @@ const DOMAIN_COLORS: Record<string, string> = {
   Aptitude: "#34C759",
 };
 
-export default function ProfilePanel({ open, onClose }: ProfilePanelProps) {
+export default function ProfilePanel({ open, onClose, onNavigate }: ProfilePanelProps) {
   const { user, profile, logout, saveProfile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.displayName ?? user?.displayName ?? "");
@@ -358,6 +358,21 @@ export default function ProfilePanel({ open, onClose }: ProfilePanelProps) {
             background: "#FFFFFF",
           }}
         >
+          <button
+            onClick={() => { onNavigate?.("profile"); onClose(); }}
+            className="brutal-btn flex items-center justify-center gap-2"
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "#FFD60A",
+              color: "#0D0D0D",
+              fontWeight: 800,
+              fontSize: "0.88rem",
+              letterSpacing: "0.04em",
+            }}
+          >
+            View Full Profile
+          </button>
           <button
             onClick={handleLogout}
             className="brutal-btn flex items-center justify-center gap-2"

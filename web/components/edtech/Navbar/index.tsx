@@ -22,6 +22,7 @@ export type Screen =
   | "auth"
   | "landing"
   | "onboarding"
+  | "profile"
   | "domain-select"
   | "mode-select"
   | "timeline"
