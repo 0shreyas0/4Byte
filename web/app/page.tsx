@@ -11,6 +11,7 @@ import QuizScreen from "@/components/edtech/QuizScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
+import SandboxIDE from "@/components/edtech/SandboxIDE"; // 🔥 Added
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
 // Screens that show the global navbar
@@ -165,6 +166,15 @@ export default function Home() {
             originalScores={scores}
             originalAnalysis={analysis}
             onBack={() => setScreen("results")}
+            onPractice={() => setScreen("sandbox")}
+          />
+        )}
+
+        {screen === "sandbox" && (
+          <SandboxIDE 
+            domain={domain}
+            mode={mode}
+            onExit={() => setScreen("simulation")}
           />
         )}
       </main>

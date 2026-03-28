@@ -8,12 +8,14 @@ interface SimulationModeProps {
   originalScores: Record<string, TopicScore>;
   originalAnalysis: AnalysisResult;
   onBack: () => void;
+  onPractice: () => void; // 🔥 Added
 }
 
 export default function SimulationMode({
   domain,
   originalAnalysis,
   onBack,
+  onPractice,
 }: SimulationModeProps) {
   // Get all weak topics (score < 45)
   const weakTopics = originalAnalysis.learningPath.filter(step => originalAnalysis.topicStatuses[step.topic] === "weak");
@@ -204,6 +206,7 @@ export default function SimulationMode({
               </p>
 
               <button
+                onClick={onPractice}
                 className="mt-auto flex items-center justify-center gap-4 py-6 bg-[#FFD60A] text-black text-sm font-black uppercase tracking-widest hover:bg-white transition-all brutal-btn"
                 style={{ boxShadow: "0 0 0 transparent" }}
               >

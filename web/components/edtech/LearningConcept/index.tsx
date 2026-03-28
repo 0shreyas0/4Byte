@@ -12,34 +12,172 @@ interface LearningConceptProps {
 const CONCEPT_DATA: Record<string, any[]> = {
   DSA: [
     {
+      title: "Variables & Memory",
+      concept: "Storing Data",
+      content: "Variables are named boxes in your computer's memory. When you define `x = 5`, you allocate a box, label it 'x', and drop the value '5' inside. Knowing how memory is allocated is the first step to optimizing code.",
+      visual: "📦 x -> [ 5 ]",
+      example: "let x = 5;\nconst y = 10;"
+    },
+    {
       title: "The Logic of Loops",
-      concept: "What is an iteration?",
+      concept: "Iteration",
       content: "Think of a loop as a 'repeat instruction'. If you want to clap 5 times, you don't write 'clap' 5 times. You tell the computer: 'Start at clap 0, keep going while claps < 5, and add 1 clap each time.'",
-      visual: "🔄 Loop cycle: Setup -> Condition -> Code -> Update",
-      example: "for (i=0; i<5; i++) { clap(); }"
+      visual: "🔄 cycle: Setup -> Condition -> Code -> Update",
+      example: "for (let i=0; i<5; i++) { clap(); }"
     },
     {
       title: "Navigating Arrays",
       concept: "Contiguous Memory",
       content: "An array is like a street with houses. Each house has an address (index). Addresses start at 0. Accessing a house is instant (O(1)) if you have the address.",
-      visual: "[ House 0 | House 1 | House 2 | House 3 ]",
+      visual: "🏘️ [ House 0 | House 1 | House 2 | House 3 ]",
       example: "strangers_things[4] = 'Eddie';"
+    },
+    {
+      title: "Sorting Algorithms",
+      concept: "Organizing Chaos",
+      content: "Sorting puts elements in a specific order (e.g., ascending). While simple sorting checks neighbors (O(n²)), fast sorting like QuickSort divides and conquers (O(n log n)).",
+      visual: "📊 [3,1,2] -> [1,2,3]",
+      example: "arr.sort((a,b) => a - b);"
     }
   ],
   "Web Dev": [
     {
       title: "HTML: The Skeleton",
       concept: "Tags and Elements",
-      content: "HTML describes the structure of a page. Tags like <h1> or <a> are the building blocks. Every tag has a purpose.",
+      content: "HTML describes the structure of a page using tags. Tags like <h1> or <a> are the building blocks. Every single element on the web is housed inside these structural frames.",
       visual: "🧱 <h1> = Header | <a> = Link",
-      example: "<a href='...'>Click Me</a>"
+      example: "<a href='https://google.com'>Click Me</a>"
+    },
+    {
+      title: "CSS: The Styling",
+      concept: "Visual Rules",
+      content: "CSS targets HTML elements and applies rules dictating color, size, positioning, and animation. It turns a boring document into a beautiful interface.",
+      visual: "🎨 body { background: black; color: white; }",
+      example: "h1 { font-size: 2rem; color: #8B5CF6; }"
+    },
+    {
+      title: "JavaScript: The Brain",
+      concept: "Interactivity",
+      content: "JavaScript is the logic that lives in the browser. It responds to clicks, fetches data, and changes the HTML/CSS on the fly without reloading the page.",
+      visual: "🧠 Listen -> React -> Update",
+      example: "btn.addEventListener('click', () => alert('Hello'))"
+    }
+  ],
+  Aptitude: [
+    {
+      title: "Percentages Demystified",
+      concept: "Per Cent (Out of 100)",
+      content: "A percentage is simply a fraction scaled to exactly 100. '15%' literally means '15 out of 100'. Mastering this ratio makes profit, loss, and probability trivial.",
+      visual: "💯 25% = 25/100 = 1/4",
+      example: "15% of 200 = (15 / 100) * 200 = 30"
+    },
+    {
+      title: "Ratios & Proportions",
+      concept: "Comparative Scaling",
+      content: "A ratio defines the relationship in size between two amounts. If a recipe calls for 2 cups flour to 1 cup sugar, the ratio 2:1 remains constant whether you make 1 cake or 50.",
+      visual: "⚖️ A : B = 2 : 1",
+      example: "If A:B = 2:3 and B:C = 3:4, then A:C = 2:4"
+    }
+  ],
+  "App Dev": [
+    {
+      title: "React Native: Hybrid Magic",
+      concept: "Write Once, Run Anywhere",
+      content: "Instead of writing Java for Android and Swift for iOS, React Native bridges JavaScript directly to native mobile components. One codebase builds two real apps.",
+      visual: "📱 JS Code -> Native Bridge -> iOS / Android",
+      example: "import { View, Text } from 'react-native';"
+    },
+    {
+      title: "Component State",
+      concept: "Dynamic Data",
+      content: "In apps, data changes rapidly (likes, texts, clicks). 'State' is a variable that, when updated, automatically forces the UI component to redraw itself with the new data.",
+      visual: "⚙️ State changes = Screen repaints",
+      example: "const [likes, setLikes] = useState(0);"
+    }
+  ],
+  "Data Science": [
+    {
+      title: "The Python Ecosystem",
+      concept: "Data Tools",
+      content: "Python rules data science because of its explosive ecosystem. Libraries like Pandas let you manipulate millions of rows of data like an ultra-powerful, programmable Excel spreadsheet.",
+      visual: "🐍 Python + Pandas + Scikit-Learn",
+      example: "import pandas as pd \ndf = pd.read_csv('data.csv')"
+    },
+    {
+      title: "Machine Learning Basics",
+      concept: "Pattern Recognition",
+      content: "Traditional programming uses rules to get answers (Data + Rules = Answers). Machine learning reverses this. You provide data and answers to uncover the hidden rules.",
+      visual: "🤖 Data + Answers -> ML Model -> Rules",
+      example: "model = LinearRegression()\nmodel.fit(X_train, y_train)"
+    }
+  ],
+  Cybersecurity: [
+    {
+      title: "Network Fundamentals",
+      concept: "Ports and Protocols",
+      content: "A computer has an IP address (like a street address), but it uses Ports (like apartment numbers) to direct incoming traffic to the right app. Port 80 is HTTP, Port 443 is HTTPS.",
+      visual: "🚪 192.168.1.5 : 443 (HTTPS)",
+      example: "nmap -p 80,443 target.com"
+    },
+    {
+      title: "Input Validation",
+      concept: "Never Trust the User",
+      content: "The golden rule of hacking defense: all input is evil. If a user enters malicious database queries (SQL Injection) instead of a username, unvalidated systems will execute it.",
+      visual: "🛡️ Filter -> Sanitize -> Execute",
+      example: "name = escape_string(user_input);"
+    }
+  ],
+  IoT: [
+    {
+      title: "The Hardware Bridge",
+      concept: "Sensors to Software",
+      content: "IoT connects the physical world to the digital. Microcontrollers (like Arduino) read electrical signals from sensors (temperature, light) and convert them to data.",
+      visual: "🌡️ Sensor -> Microcontroller -> Network",
+      example: "int temp = analogRead(A0);"
+    },
+    {
+      title: "MQTT Messaging",
+      concept: "Lightweight Telemetry",
+      content: "IoT devices have weak batteries and bad internet. HTTP is too heavy. MQTT is a lightweight 'publish-subscribe' protocol built specifically for tiny hardware chips.",
+      visual: "📡 Device -> Publisher -> Broker -> Subscriber",
+      example: "client.publish('home/temp', '24.5');"
+    }
+  ],
+  Python: [
+    {
+      title: "Python Syntax",
+      concept: "Indentations not Brackets",
+      content: "Unlike C++ or JavaScript, Python enforces readability by using whitespace (indentation) instead of curly braces to define scope and code blocks.",
+      visual: "📏 4 Spaces = 1 Block",
+      example: "if True:\n    print('Hello World')"
+    },
+    {
+      title: "Lists vs Tuples",
+      concept: "Mutability",
+      content: "A List is a dynamic array you can change (mutable). A Tuple is locked data you cannot change (immutable), making it faster and memory-efficient for fixed structures.",
+      visual: "🔒 Tuple: (1, 2) | 🔓 List: [1, 2]",
+      example: "my_list = [1,2]\nmy_tuple = (1,2)"
     }
   ]
 };
 
+// Fallback logic for unsupported domains
+const getDomainConcepts = (domain: string) => {
+  if (CONCEPT_DATA[domain]) return CONCEPT_DATA[domain];
+  return [
+    {
+      title: `Introduction to ${domain}`,
+      concept: "Foundations",
+      content: `Welcome to ${domain}. Before you dive into the deep end, it is critical to understand the foundational principles that govern this field. Master the basics, and the complex topics will become trivial.`,
+      visual: "🏗️ Foundation -> Structure -> Mastery",
+      example: `// Example placeholder for ${domain}`
+    }
+  ];
+};
+
 export default function LearningConcept({ domain, onComplete, onBack }: LearningConceptProps) {
   const [step, setStep] = useState(0);
-  const data = CONCEPT_DATA[domain] || CONCEPT_DATA["DSA"];
+  const data = getDomainConcepts(domain);
   const current = data[step];
 
   const handleNext = () => {

@@ -27,7 +27,8 @@ export type Screen =
   | "quiz"
   | "processing"
   | "results"
-  | "simulation";
+  | "simulation"
+  | "sandbox";
 
 interface NavbarProps {
   screen: Screen;
