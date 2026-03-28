@@ -1,7 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Code2, Calculator, Cpu, ChevronRight, Zap } from "lucide-react";
+import {
+  Code2,
+  Globe,
+  Brain,
+  Smartphone,
+  BarChart3,
+  Shield,
+  Cpu,
+  Database,
+  ChevronRight,
+  Zap,
+} from "lucide-react";
 
 interface DomainSelectionProps {
   onSelect: (domain: string) => void;
@@ -12,55 +23,129 @@ const DOMAINS = [
   {
     id: "DSA",
     name: "DSA",
-    fullName: "Data Structures & Algorithms",
-    icon: Cpu,
+    fullName: "Competitive Programming Style",
+    icon: Code2,
     emoji: "💻",
-    color: "#FF3B3B",
-    textColor: "#fff",
-    shadow: "#cc2e25",
-    bg: "#FFF0F0",
-    description: "Arrays, loops, sorting, searching, trees, recursion and more.",
-    topics: ["Loops", "Arrays", "Sorting", "Searching", "Recursion"],
-    tag: "MOST POPULAR",
+    color: "#FFD60A",
+    textColor: "#0D0D0D",
+    shadow: "#ccaa00",
+    description: "Arrays, recursion, trees, graphs, dynamic programming, and interview-heavy problem solving.",
+    topics: ["Arrays", "Loops", "Recursion", "Sorting", "Trees"],
+    tag: "CORE",
     difficulty: "Hard",
-    insight: "Learn how concepts connect, not just how to solve problems",
     level: "Beginner → Advanced",
     questions: 8,
   },
   {
     id: "Web Dev",
     name: "Web Dev",
-    fullName: "Web Development",
-    icon: Code2,
+    fullName: "Full Stack Development",
+    icon: Globe,
     emoji: "🌐",
-    color: "#3B82F6",
-    textColor: "#fff",
-    shadow: "#2563EB",
-    bg: "#EFF6FF",
-    description: "HTML, CSS, JavaScript, DOM, React and modern web tooling.",
-    topics: ["HTML", "CSS", "JavaScript", "DOM", "React"],
-    tag: "TRENDING",
+    color: "#0A84FF",
+    textColor: "#FFFFFF",
+    shadow: "#0060CC",
+    description: "HTML, CSS, JavaScript, React, APIs, databases, and deployment workflows.",
+    topics: ["HTML", "CSS", "JavaScript", "React", "APIs"],
+    tag: "POPULAR",
     difficulty: "Medium",
-    insight: "Understand how frontend layers depend on each other",
     level: "Beginner → Intermediate",
     questions: 8,
   },
   {
     id: "Aptitude",
     name: "Aptitude",
-    fullName: "Quantitative Aptitude",
-    icon: Calculator,
+    fullName: "Placement Prep",
+    icon: Brain,
     emoji: "🧠",
-    color: "#1DB954",
-    textColor: "#000",
-    shadow: "#17a348",
-    bg: "#F0FDF4",
-    description: "Percentages, ratios, algebra, geometry, time & work.",
-    topics: ["Arithmetic", "Percentages", "Ratios", "Algebra", "Probability"],
-    tag: "EXAM READY",
+    color: "#34C759",
+    textColor: "#0D0D0D",
+    shadow: "#229A43",
+    description: "Quant, reasoning, verbal, DI, and placement-round fundamentals.",
+    topics: ["Arithmetic", "Ratios", "Algebra", "Probability", "Puzzles"],
+    tag: "PLACEMENT",
     difficulty: "Medium",
-    insight: "Map your math fundamentals to crack any aptitude test",
     level: "Basic → Expert",
+    questions: 8,
+  },
+  {
+    id: "App Dev",
+    name: "App Dev",
+    fullName: "Mobile Development",
+    icon: Smartphone,
+    emoji: "📱",
+    color: "#FF3B30",
+    textColor: "#FFFFFF",
+    shadow: "#cc2e25",
+    description: "React Native, navigation, native APIs, Firebase, and shipping mobile apps.",
+    topics: ["React Native", "Routing", "State", "Native APIs", "Firebase"],
+    tag: "MOBILE",
+    difficulty: "Medium",
+    level: "Intermediate",
+    questions: 8,
+  },
+  {
+    id: "Data Science",
+    name: "Data Science",
+    fullName: "ML / AI Track",
+    icon: BarChart3,
+    emoji: "📊",
+    color: "#AF52DE",
+    textColor: "#FFFFFF",
+    shadow: "#8e3db3",
+    description: "Python data workflows, visualization, ML, deep learning, and model deployment.",
+    topics: ["Python", "Pandas", "Viz", "ML", "Deployment"],
+    tag: "TRENDING",
+    difficulty: "Hard",
+    level: "Intermediate → Advanced",
+    questions: 8,
+  },
+  {
+    id: "Cybersecurity",
+    name: "Cybersecurity",
+    fullName: "Ethical Hacking",
+    icon: Shield,
+    emoji: "🔒",
+    color: "#FF9F0A",
+    textColor: "#0D0D0D",
+    shadow: "#cc7f00",
+    description: "Networking, Linux, OWASP, scanning, pentesting, and security tooling.",
+    topics: ["Networking", "Linux", "OWASP", "Nmap", "CTF"],
+    tag: "SPECIALIZED",
+    difficulty: "Hard",
+    level: "Intermediate → Advanced",
+    questions: 8,
+  },
+  {
+    id: "IoT",
+    name: "IoT",
+    fullName: "Embedded Systems",
+    icon: Cpu,
+    emoji: "🔌",
+    color: "#5AC8FA",
+    textColor: "#0D0D0D",
+    shadow: "#3da8d8",
+    description: "Microcontrollers, sensors, protocols, edge workflows, and cloud-connected hardware.",
+    topics: ["Arduino", "Sensors", "MQTT", "Edge", "Security"],
+    tag: "NICHE",
+    difficulty: "Medium",
+    level: "Intermediate",
+    questions: 8,
+  },
+  {
+    id: "Python",
+    name: "Python",
+    fullName: "Core to Advanced Python",
+    icon: Database,
+    emoji: "🐍",
+    color: "#0D0D0D",
+    textColor: "#FFD60A",
+    shadow: "#333333",
+    description: "Syntax, OOP, modules, automation, debugging, and practical scripting foundations.",
+    topics: ["Syntax", "Functions", "OOP", "Modules", "Testing"],
+    tag: "BEGINNER",
+    difficulty: "Easy",
+    level: "Beginner → Advanced",
     questions: 8,
   },
 ];
@@ -79,46 +164,79 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8" }}>
-
-      {/* ── Hero header — black with yellow shadow ─────────────────────── */}
       <div
         style={{
           background: "#0D0D0D",
-          border: "none",
           borderBottom: "4px solid #0D0D0D",
           padding: "24px 32px 28px",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Decorative watermark */}
-        <div style={{
-          position: "absolute", top: 0, right: 0,
-          fontSize: "140px", fontWeight: 900, opacity: 0.04,
-          lineHeight: 1, color: "#fff", userSelect: "none",
-          pointerEvents: "none",
-        }}>∞</div>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            fontSize: "140px",
+            fontWeight: 900,
+            opacity: 0.04,
+            lineHeight: 1,
+            color: "#fff",
+            userSelect: "none",
+            pointerEvents: "none",
+          }}
+        >
+          ∞
+        </div>
 
         <div style={{ position: "relative", zIndex: 10 }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#FFD60A", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+          <div
+            style={{
+              fontSize: "0.7rem",
+              fontWeight: 800,
+              color: "#FFD60A",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              marginBottom: 10,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
             <ChevronRight size={14} /> Choose Your Domain
           </div>
-          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#FFFFFF", marginBottom: 12 }}>
+          <h1
+            style={{
+              fontSize: "clamp(2rem, 5vw, 3.5rem)",
+              fontWeight: 800,
+              letterSpacing: "-0.04em",
+              lineHeight: 1.05,
+              color: "#FFFFFF",
+              marginBottom: 12,
+            }}
+          >
             What do you want
             <br />
             <span style={{ color: "#FFD60A" }}>to master?</span>
           </h1>
-          <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.65)", fontWeight: 600, maxWidth: 480, lineHeight: 1.6 }}>
-            Pick a domain — we&apos;ll trace your weak spots, map your concepts,
-            and build a personalized path to get you job-ready.
+          <p
+            style={{
+              fontSize: "0.95rem",
+              color: "rgba(255,255,255,0.65)",
+              fontWeight: 600,
+              maxWidth: 560,
+              lineHeight: 1.6,
+            }}
+          >
+            Pick a domain and we&apos;ll trace weak spots, map concept dependencies,
+            and generate a personalized recovery path.
           </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-10">
-
-        {/* ── Domain grid ───────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
           {DOMAINS.map((domain) => {
             const Icon = domain.icon;
             const isSelected = selected === domain.id;
@@ -128,7 +246,7 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                 onClick={() => setSelected(domain.id)}
                 className="text-left flex flex-col gap-3 p-5"
                 style={{
-                  border: `4px solid #0D0D0D`,
+                  border: "4px solid #0D0D0D",
                   background: isSelected ? domain.color : "#FFFFFF",
                   boxShadow: isSelected
                     ? `3px 3px 0px ${domain.shadow}`
@@ -138,6 +256,7 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                   cursor: "pointer",
                   position: "relative",
                   overflow: "hidden",
+                  minHeight: 280,
                 }}
                 onMouseEnter={(e) => {
                   if (isSelected) return;
@@ -150,12 +269,14 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                   e.currentTarget.style.transform = "translate(0, 0)";
                 }}
               >
-                {/* Tag + difficulty */}
                 <div className="flex items-center justify-between">
                   <span
                     style={{
-                      fontSize: "0.62rem", fontWeight: 800, letterSpacing: "0.08em",
-                      textTransform: "uppercase", padding: "2px 8px",
+                      fontSize: "0.62rem",
+                      fontWeight: 800,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      padding: "2px 8px",
                       border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
                       color: isSelected ? domain.textColor : "#0D0D0D",
                     }}
@@ -164,7 +285,9 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                   </span>
                   <span
                     style={{
-                      fontSize: "0.62rem", fontWeight: 700, padding: "2px 8px",
+                      fontSize: "0.62rem",
+                      fontWeight: 700,
+                      padding: "2px 8px",
                       border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
                       color: isSelected ? domain.textColor : "#0D0D0D",
                       background: "rgba(0,0,0,0.08)",
@@ -174,59 +297,102 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                   </span>
                 </div>
 
-                {/* Emoji + icon */}
-                <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>{domain.emoji}</div>
+                <div className="flex items-center justify-between">
+                  <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>{domain.emoji}</div>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: `3px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
+                      color: isSelected ? domain.textColor : "#0D0D0D",
+                    }}
+                  >
+                    <Icon size={18} />
+                  </div>
+                </div>
 
-                {/* Name */}
                 <div>
-                  <div style={{
-                    fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.1,
-                    color: isSelected ? domain.textColor : "#0D0D0D",
-                  }}>
+                  <div
+                    style={{
+                      fontSize: "1.4rem",
+                      fontWeight: 800,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1.1,
+                      color: isSelected ? domain.textColor : "#0D0D0D",
+                    }}
+                  >
                     {domain.name}
                   </div>
-                  <div style={{ fontSize: "0.78rem", fontWeight: 600, opacity: 0.7, marginTop: 2, color: isSelected ? domain.textColor : "#444" }}>
+                  <div
+                    style={{
+                      fontSize: "0.78rem",
+                      fontWeight: 600,
+                      opacity: 0.7,
+                      marginTop: 2,
+                      color: isSelected ? domain.textColor : "#444",
+                    }}
+                  >
                     {domain.fullName}
                   </div>
                 </div>
 
-                {/* Description */}
-                <p style={{ fontSize: "0.85rem", lineHeight: 1.55, fontWeight: 500, color: isSelected ? domain.textColor : "#555" }}>
+                <p
+                  style={{
+                    fontSize: "0.85rem",
+                    lineHeight: 1.55,
+                    fontWeight: 500,
+                    color: isSelected ? domain.textColor : "#555",
+                  }}
+                >
                   {domain.description}
                 </p>
 
-                {/* Topic chips */}
                 <div className="flex flex-wrap gap-1.5">
-                  {domain.topics.map((t) => (
+                  {domain.topics.map((topic) => (
                     <span
-                      key={t}
+                      key={topic}
                       style={{
-                        fontSize: "0.68rem", fontWeight: 700,
+                        fontSize: "0.68rem",
+                        fontWeight: 700,
                         padding: "2px 7px",
                         border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
                         background: isSelected ? "rgba(255,255,255,0.15)" : "#F5F0E8",
                         color: isSelected ? domain.textColor : "#0D0D0D",
                       }}
                     >
-                      {t}
+                      {topic}
                     </span>
                   ))}
                 </div>
 
-                {/* Footer */}
                 <div className="flex items-center justify-between mt-auto">
-                  <span style={{ fontSize: "0.75rem", fontWeight: 700, color: isSelected ? domain.textColor : "#888" }}>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: isSelected ? domain.textColor : "#888",
+                    }}
+                  >
                     {domain.questions} questions · {domain.level}
                   </span>
                   {isSelected && (
-                    <div style={{
-                      background: domain.textColor === "#fff" ? "#fff" : "#0D0D0D",
-                      color: isSelected ? domain.color : "#fff",
-                      border: "2px solid currentColor",
-                      width: 28, height: 28,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 800, fontSize: "1rem",
-                    }}>
+                    <div
+                      style={{
+                        background: domain.textColor === "#FFFFFF" ? "#FFFFFF" : "#0D0D0D",
+                        color: isSelected ? domain.color : "#FFFFFF",
+                        border: "2px solid currentColor",
+                        width: 28,
+                        height: 28,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: 800,
+                        fontSize: "1rem",
+                      }}
+                    >
                       ✓
                     </div>
                   )}
@@ -236,8 +402,15 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
           })}
         </div>
 
-        {/* ── Confirm button ─────────────────────────────────────────────── */}
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-4">
+          <button
+            onClick={onBack}
+            className="brutal-btn px-5 py-3 text-sm"
+            style={{ background: "#FFFFFF" }}
+          >
+            ← Back
+          </button>
+
           <button
             onClick={handleConfirm}
             disabled={!selected || confirming}
@@ -257,9 +430,8 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
             {confirming
               ? "Loading..."
               : selected
-              ? `Start ${selected} Quiz`
-              : "Select a domain first"}
-            {!confirming && selected && <ChevronRight size={20} />}
+                ? `Start ${selected} Quiz`
+                : "Choose a Domain"}
           </button>
         </div>
       </div>
