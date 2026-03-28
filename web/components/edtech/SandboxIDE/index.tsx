@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Terminal, Play, CheckCircle2, XCircle, Code, ArrowLeft } from "lucide-react";
-import { LearningMode } from "@/components/edtech/ModeSelection";
+
+export type LearningMode = "beginner" | "revision";
 
 interface SandboxIDEProps {
   domain: string;

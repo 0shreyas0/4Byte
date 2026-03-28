@@ -1,85 +1,104 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Navbar, { Screen } from "@/components/edtech/Navbar";
 import LandingScreen from "@/components/edtech/LandingScreen";
 import DomainSelection from "@/components/edtech/DomainSelection";
-import ModeSelection, { LearningMode } from "@/components/edtech/ModeSelection"; // 🔥 Added
+import LoginScreen from "@/components/edtech/LoginScreen";
+import ModeSelection, { QuizMode } from "@/components/edtech/ModeSelection";
 import LearningTimeline from "@/components/edtech/LearningTimeline";
-import LearningConcept from "@/components/edtech/LearningConcept"; // 🔥 Added
+import LearningConcept from "@/components/edtech/LearningConcept";
 import QuizScreen from "@/components/edtech/QuizScreen";
+import CodingLabScreen from "@/components/edtech/CodingLabScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
-import SandboxIDE from "@/components/edtech/SandboxIDE"; // 🔥 Added
+import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
-
-// Screens that show the global navbar
-const NAVBAR_SCREENS: Screen[] = [
-  "landing",
-  "domain-select",
-  "mode-select",
-  "timeline",
-  "learning-concept", // 🔥 Sync
-  "quiz",
-  "processing",
-  "results",
-  "simulation",
-];
 
 export default function Home() {
   const [screen, setScreen] = useState<Screen>("landing");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [domain, setDomain] = useState<string>("DSA");
-  const [mode, setMode] = useState<LearningMode>("beginner"); // 🔥 Added: mode state
+  const [quizMode, setQuizMode] = useState<QuizMode>("mcq");
+  const [mode, setMode] = useState<LearningMode>("beginner");
   const [scores, setScores] = useState<Record<string, TopicScore>>({});
-  const [results, setResults] = useState<QuestionResult[]>([]); // 🔥 Added: raw results state
+  const [results, setResults] = useState<QuestionResult[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
+  // Linear Step-by-Step Navigation
+  const navigate = useCallback((next: Screen) => {
+    window.history.pushState({ screen: next }, "", `#${next}`);
+    setScreen(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  // History entry and back-support
+  useEffect(() => {
+    window.history.replaceState({ screen: "landing" }, "", "#landing");
+    const onPop = (e: PopStateEvent) => {
+      const s: Screen = (e.state?.screen as Screen) ?? "landing";
+      setScreen(s);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // Handlers for Linear Flow
   const handleDomainSelect = useCallback((d: string) => {
     setDomain(d);
-    setScreen("mode-select"); // 🔥 Next step: Choose mode
-  }, []);
-
-  const handleModeSelect = useCallback((m: LearningMode) => {
-    setMode(m);
-    // Beginner Flow -> Start learning journey
-    // Revision Flow -> Jump straight to testing
-    if (m === "beginner") {
-      setScreen("timeline");
+    // Non-coding-capable domains go straight to timeline
+    const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev"];
+    if (CODING_DOMAINS.includes(d)) {
+      navigate("mode-select");
     } else {
-      setScreen("quiz");
+      setQuizMode("mcq");
+      navigate("timeline");
     }
-  }, []);
+  }, [navigate]);
 
-  const handleQuizComplete = useCallback(
-    (quizScores: Record<string, TopicScore>, rawResults: QuestionResult[]) => {
-      setScores(quizScores);
-      setResults(rawResults); // 🔥 Now storing micro-gap data
-      setScreen("processing");
-    },
-    []
-  );
+  const handleModeSelect = useCallback((m: QuizMode) => {
+    setQuizMode(m);
+    // Map quiz mode to IDE difficulty mode
+    setMode(m === "coding" ? "revision" : "beginner");
+    navigate("timeline"); // 100% Linear
+  }, [navigate]);
+
+  const handleTimelineStart = useCallback(() => {
+    navigate("learning-concept");
+  }, [navigate]);
+
+  const handleConceptComplete = useCallback(() => {
+    if (quizMode === "coding") {
+      navigate("coding-lab");
+    } else {
+      navigate("quiz");
+    }
+  }, [quizMode, navigate]);
+
+  const handleQuizComplete = useCallback((quizScores: Record<string, TopicScore>, rawResults: QuestionResult[]) => {
+    setScores(quizScores);
+    setResults(rawResults);
+    navigate("processing");
+  }, [navigate]);
 
   const handleProcessingComplete = useCallback(async () => {
-    // 🔥 New: Passing raw results to trigger mistake-driven analysis
     const result = await analyzePerformanceAsync(scores, domain, results);
     setAnalysis(result);
-    setScreen("results");
-  }, [scores, domain, results]);
+    navigate("results");
+  }, [scores, domain, results, navigate]);
 
   const handleRestart = useCallback(() => {
     setScores({});
+    setResults([]);
     setAnalysis(null);
-    setScreen("landing");
-  }, []);
+    navigate("landing");
+  }, [navigate]);
 
-  // Navbar navigation — only allow jumping to screens that have been reached
-  const handleNavNavigate = useCallback(
-    (target: Screen) => {
-      setScreen(target);
-    },
-    []
-  );
+  const handleLogin = useCallback(() => {
+    setIsLoggedIn(true);
+    navigate("landing");
+  }, [navigate]);
 
   return (
     <div
@@ -91,22 +110,36 @@ export default function Home() {
       }}
     >
       {/* Global sticky navbar */}
-      <Navbar
-        screen={screen}
-        domain={domain}
-        onNavigate={handleNavNavigate}
-        onRestart={handleRestart}
-      />
+      {screen !== "login" && (
+        <Navbar
+          screen={screen}
+          domain={domain}
+          isLoggedIn={isLoggedIn}
+          onNavigate={navigate}
+          onRestart={handleRestart}
+          onGetStarted={() => navigate("login")}
+        />
+      )}
 
       <main>
+        {screen === "login" && (
+          <LoginScreen
+            onLogin={handleLogin}
+            onGetStarted={() => {
+              setIsLoggedIn(false);
+              navigate("domain-select");
+            }}
+          />
+        )}
+
         {screen === "landing" && (
-          <LandingScreen onStart={() => setScreen("domain-select")} />
+          <LandingScreen onStart={() => navigate("domain-select")} />
         )}
 
         {screen === "domain-select" && (
           <DomainSelection
             onSelect={handleDomainSelect}
-            onBack={() => setScreen("landing")}
+            onBack={() => navigate("landing")}
           />
         )}
 
@@ -114,27 +147,23 @@ export default function Home() {
           <ModeSelection
             domain={domain}
             onSelect={handleModeSelect}
-            onBack={() => setScreen("domain-select")}
+            onBack={() => navigate("domain-select")}
           />
         )}
 
         {screen === "timeline" && (
           <LearningTimeline
             domain={domain}
-            onStart={() => {
-              // Beginner Mode -> Goes to Concept first
-              // Revision Mode -> (Already skips timeline)
-              setScreen("learning-concept");
-            }}
-            onBack={() => setScreen("mode-select")}
+            onStart={handleTimelineStart}
+            onBack={() => navigate("mode-select")}
           />
         )}
 
         {screen === "learning-concept" && (
           <LearningConcept
             domain={domain}
-            onComplete={() => setScreen("quiz")}
-            onBack={() => setScreen("mode-select")}
+            onComplete={handleConceptComplete}
+            onBack={() => navigate("timeline")}
           />
         )}
 
@@ -142,7 +171,15 @@ export default function Home() {
           <QuizScreen
             domain={domain}
             onComplete={handleQuizComplete}
-            onBack={() => setScreen("timeline")}
+            onBack={() => navigate("learning-concept")}
+          />
+        )}
+
+        {screen === "coding-lab" && (
+          <CodingLabScreen
+            domain={domain}
+            onComplete={handleQuizComplete}
+            onBack={() => navigate("learning-concept")}
           />
         )}
 
@@ -155,8 +192,8 @@ export default function Home() {
             domain={domain}
             scores={scores}
             analysis={analysis}
-            onSimulate={() => setScreen("simulation")}
-            onPractice={() => setScreen("sandbox")} // 🔥 Added
+            onSimulate={() => navigate("simulation")}
+            onPractice={() => navigate("sandbox")}
             onRestart={handleRestart}
           />
         )}
@@ -166,16 +203,16 @@ export default function Home() {
             domain={domain}
             originalScores={scores}
             originalAnalysis={analysis}
-            onBack={() => setScreen("results")}
-            onPractice={() => setScreen("sandbox")}
+            onBack={() => navigate("results")}
+            onPractice={() => navigate("sandbox")}
           />
         )}
 
         {screen === "sandbox" && (
-          <SandboxIDE 
+          <SandboxIDE
             domain={domain}
             mode={mode}
-            onExit={() => setScreen("simulation")}
+            onExit={() => navigate("simulation")}
           />
         )}
       </main>

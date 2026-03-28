@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   BookOpen,
   Layers,
-  GitBranch,
   Zap,
   BarChart3,
   Menu,
@@ -19,12 +18,14 @@ import {
 } from "lucide-react";
 
 export type Screen =
+  | "login"
   | "landing"
   | "domain-select"
   | "mode-select"
   | "timeline"
-  | "learning-concept" // 🔥 Added
+  | "learning-concept"
   | "quiz"
+  | "coding-lab"
   | "processing"
   | "results"
   | "simulation"
@@ -33,8 +34,10 @@ export type Screen =
 interface NavbarProps {
   screen: Screen;
   domain: string;
+  isLoggedIn: boolean;
   onNavigate: (screen: Screen) => void;
   onRestart: () => void;
+  onGetStarted: () => void;
 }
 
 const NAV_ITEMS: {
@@ -53,9 +56,10 @@ const NAV_ITEMS: {
     label: "Domains",
     icon: Layers,
     screen: "domain-select",
-    group: ["domain-select", "timeline"],
+    group: ["domain-select", "mode-select", "timeline", "learning-concept"],
   },
   {
+
     label: "Results",
     icon: BarChart3,
     screen: "results",
@@ -69,7 +73,14 @@ const NAV_ITEMS: {
   },
 ];
 
-export default function Navbar({ screen, domain, onNavigate, onRestart }: NavbarProps) {
+export default function Navbar({ 
+  screen, 
+  domain, 
+  isLoggedIn, 
+  onNavigate, 
+  onRestart, 
+  onGetStarted 
+}: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (item: (typeof NAV_ITEMS)[0]) =>
@@ -145,102 +156,129 @@ export default function Navbar({ screen, domain, onNavigate, onRestart }: Navbar
         {/* ── Right actions ───────────────────────────────────────────── */}
         <div className="ml-auto flex items-stretch" style={{ borderLeft: "4px solid #0D0D0D" }}>
 
-          {/* Active domain badge */}
-          {domain && (
-            <div
-              className="hidden md:flex items-center gap-2 px-4"
-              style={{ borderRight: "4px solid #0D0D0D" }}
-            >
+          {isLoggedIn ? (
+            <>
+              {/* Active domain badge */}
+              {domain && (
+                <div
+                  className="hidden md:flex items-center gap-2 px-4"
+                  style={{ borderRight: "4px solid #0D0D0D" }}
+                >
+                  <div
+                    className="flex items-center justify-center"
+                    style={{
+                      width: 32, height: 32,
+                      background: "#0D0D0D",
+                      color: "#FFD60A",
+                      fontWeight: 800,
+                      fontSize: "0.7rem",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {domain.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ lineHeight: 1.2 }}>
+                    <div style={{ fontWeight: 800, fontSize: "0.75rem", textTransform: "uppercase", color: "#0D0D0D" }}>
+                      {domain}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Trophy size={10} color="#0D0D0D" />
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#0D0D0D" }}>
+                        Active Domain
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Streak badge */}
               <div
-                className="flex items-center justify-center"
-                style={{
-                  width: 32, height: 32,
-                  background: "#0D0D0D",
-                  color: "#FFD60A",
-                  fontWeight: 800,
-                  fontSize: "0.7rem",
-                  letterSpacing: "0.04em",
-                }}
+                className="hidden sm:flex items-center gap-1.5 px-4"
+                style={{ borderRight: "4px solid #0D0D0D", background: "#0D0D0D" }}
               >
-                {domain.slice(0, 2).toUpperCase()}
+                <Flame size={14} color="#FFD60A" />
+                <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>7</span>
+                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  Streak
+                </span>
               </div>
-              <div style={{ lineHeight: 1.2 }}>
-                <div style={{ fontWeight: 800, fontSize: "0.75rem", textTransform: "uppercase", color: "#0D0D0D" }}>
-                  {domain}
-                </div>
-                <div className="flex items-center gap-1">
-                  <Trophy size={10} color="#0D0D0D" />
-                  <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#0D0D0D" }}>
-                    Active Domain
-                  </span>
-                </div>
-              </div>
-            </div>
+
+              {/* Restart */}
+              <button
+                onClick={onRestart}
+                title="Restart"
+                className="flex items-center justify-center transition-colors duration-100"
+                style={{
+                  width: 56,
+                  borderRight: "4px solid #0D0D0D",
+                  background: "transparent",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <RotateCcw size={18} color="#0D0D0D" />
+              </button>
+
+              {/* Bell */}
+              <button
+                title="Notifications"
+                className="flex items-center justify-center relative group transition-colors duration-100"
+                style={{
+                  width: 56,
+                  borderRight: "4px solid #0D0D0D",
+                  background: "transparent",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Bell size={18} color="#0D0D0D" />
+                <span
+                  className="absolute animate-pulse"
+                  style={{ top: 10, right: 12, width: 8, height: 8, background: "#FF3B3B", borderRadius: "50%", border: "2px solid #FFD60A" }}
+                />
+              </button>
+
+              {/* Profile */}
+              <button
+                title="Profile"
+                className="flex items-center justify-center transition-colors duration-100"
+                style={{
+                  width: 56,
+                  background: "#0D0D0D",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a1a")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#0D0D0D")}
+              >
+                <User size={18} color="#FFD60A" />
+              </button>
+            </>
+          ) : (
+            /* ── Guest CTA ── */
+            <button
+              onClick={onGetStarted}
+              className="flex items-center gap-2 px-5 transition-colors duration-100"
+              style={{
+                background: "#0D0D0D",
+                color: "#FFD60A",
+                fontWeight: 900,
+                fontSize: "0.82rem",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                border: "none",
+                height: "100%",
+                whiteSpace: "nowrap",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a1a")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#0D0D0D")}
+            >
+              Get Started
+              <Sparkles size={15} color="#FFD60A" />
+            </button>
           )}
-
-          {/* Streak badge */}
-          <div
-            className="hidden sm:flex items-center gap-1.5 px-4"
-            style={{ borderRight: "4px solid #0D0D0D", background: "#0D0D0D" }}
-          >
-            <Flame size={14} color="#FFD60A" />
-            <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>7</span>
-            <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Streak
-            </span>
-          </div>
-
-          {/* Restart */}
-          <button
-            onClick={onRestart}
-            title="Restart"
-            className="flex items-center justify-center group transition-colors duration-100"
-            style={{
-              width: 56,
-              borderRight: "4px solid #0D0D0D",
-              background: "transparent",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <RotateCcw size={18} color="#0D0D0D" />
-          </button>
-
-          {/* Bell */}
-          <button
-            title="Notifications"
-            className="flex items-center justify-center relative group transition-colors duration-100"
-            style={{
-              width: 56,
-              borderRight: "4px solid #0D0D0D",
-              background: "transparent",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#0D0D0D")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <Bell size={18} color="#0D0D0D" />
-            <span
-              className="absolute animate-pulse"
-              style={{ top: 10, right: 12, width: 8, height: 8, background: "#FF3B3B", borderRadius: "50%", border: "2px solid #FFD60A" }}
-            />
-          </button>
-
-          {/* Profile */}
-          <button
-            title="Profile"
-            className="flex items-center justify-center transition-colors duration-100"
-            style={{
-              width: 56,
-              background: "#0D0D0D",
-              cursor: "pointer",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#1a1a1a")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#0D0D0D")}
-          >
-            <User size={18} color="#FFD60A" />
-          </button>
 
           {/* Mobile hamburger */}
           <button
@@ -290,14 +328,6 @@ export default function Navbar({ screen, domain, onNavigate, onRestart }: Navbar
               </button>
             );
           })}
-          {/* Mobile streak */}
-          <div
-            className="flex items-center gap-2 px-6 py-3"
-            style={{ background: "#0D0D0D", borderBottom: "3px solid #0D0D0D" }}
-          >
-            <Flame size={16} color="#FFD60A" />
-            <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>7 Day Streak</span>
-          </div>
         </div>
       )}
     </header>
