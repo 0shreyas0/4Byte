@@ -5,8 +5,10 @@ import { AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
 import {
   LayoutDashboard, BarChart3, GitBranch, Zap, BookOpen,
   Bell, User, Menu, X, TrendingUp, AlertTriangle, CheckCircle2,
-  Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info, Terminal, Sparkles, Brain
+  Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info, Terminal,
+  Brain, Sparkles, ChevronUp, ChevronDown
 } from "lucide-react";
+import { tutorSpeak } from "../Avatar";
 
 /* ─── Types ─── */
 interface Props {
@@ -83,6 +85,9 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
       {/* Hero */}
       <div style={{ background: "#0D0D0D", border: "4px solid #0D0D0D", padding: "28px", boxShadow: "8px 8px 0 #FFD60A", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", right: -20, top: -20, width: 160, height: 160, background: "#FFD60A", opacity: 0.08, borderRadius: "50%" }} />
+        
+        <CapsuleCard analysis={analysis} />
+
         <div style={{ position: "relative" }}>
           <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.7rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>
             📍 Quiz Complete — {domain}
@@ -279,6 +284,107 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── AI LEARNING CAPSULE ─── */
+function CapsuleCard({ analysis }: { analysis: AnalysisResult }) {
+  const capsule = analysis.capsule;
+  const [expanded, setExpanded] = useState(false);
+
+  if (!capsule) return null;
+
+  return (
+    <div style={{ 
+      background: "#fff", 
+      border: "4px solid #0D0D0D", 
+      boxShadow: "8px 8px 0 #AF52DE", 
+      padding: "20px",
+      marginBottom: "24px",
+      position: "relative",
+      zIndex: 10
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ background: "#AF52DE", color: "#fff", padding: "8px", border: "2px solid #0D0D0D" }}>
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h3 style={{ fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "#AF52DE" }}>AI_LEARNING_CAPSULE</h3>
+            <p style={{ fontWeight: 800, fontSize: "1rem", margin: 0, color: "#0D0D0D" }}>{capsule.learning_gap}</p>
+          </div>
+        </div>
+        <button 
+           onClick={() => setExpanded(!expanded)}
+           style={{ background: "#0D0D0D", color: "#fff", border: "none", padding: "6px 16px", borderRadius: "20px", fontSize: "0.7rem", fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {expanded ? "HIDE INSIGHTS" : "TALK TO TUTOR"}
+        </button>
+      </div>
+
+      {expanded && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 24 }} className="lg:grid-cols-[1fr_300px] grid-cols-1">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {capsule.topics.map((topic, i) => (
+              <div key={i} style={{ padding: "16px", border: "3px solid #0D0D0D", background: "#f8f8f8", boxShadow: "4px 4px 0 #0D0D0D" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <Brain size={16} color="#AF52DE" />
+                  <h4 style={{ fontWeight: 900, fontSize: "0.9rem", textTransform: "uppercase", color: "#0D0D0D" }}>{topic.name}</h4>
+                </div>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", fontWeight: 900, color: "#999", textTransform: "uppercase", marginBottom: 4 }}>THE_MISTAKE</div>
+                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#FF3B3B", margin: 0 }}>{topic.mistake}</p>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "0.65rem", fontWeight: 900, color: "#999", textTransform: "uppercase", marginBottom: 4 }}>THE_RULE</div>
+                    <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#1DB954", margin: 0 }}>{topic.rule}</p>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "2px dashed #DDD" }}>
+                   <div style={{ fontSize: "0.65rem", fontWeight: 900, color: "#AF52DE", textTransform: "uppercase", marginBottom: 4 }}>PRO_TIP</div>
+                   <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "#555", fontStyle: "italic", margin: 0 }}>"{topic.mnemonic}"</p>
+                </div>
+              </div>
+            ))}
+            
+            <div style={{ background: "#F0FDF4", border: "3px solid #1DB954", padding: "16px", fontWeight: 800, fontSize: "0.85rem" }}>
+               🎯 NEXT ACTION: {capsule.next_action}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16, borderLeft: "4px solid #F5F0E8", paddingLeft: "24px" }} className="lg:border-l-4 border-l-0 lg:pl-6 pl-0">
+             <div style={{ fontWeight: 900, fontSize: "0.7rem", textTransform: "uppercase", color: "#AF52DE", marginBottom: -8 }}>AI Tutor Assistant</div>
+             
+             <button
+               onClick={() => {
+                 const fullText = capsule.topics.map(t => `${t.name}: ${t.summary}. Your mistake was ${t.mistake}. Remember: ${t.rule}`).join(". ");
+                 tutorSpeak(`Let me explain your results. ${fullText} Your next move should be ${capsule.next_action}`);
+               }}
+               style={{
+                 width: "100%",
+                 padding: "20px",
+                 background: "#FFD60A",
+                 border: "4px solid #0D0D0D",
+                 boxShadow: "6px 6px 0 #0D0D0D",
+                 fontWeight: 900,
+                 textTransform: "uppercase",
+                 cursor: "pointer",
+               }}
+             >
+               🔊 Explain Highlights
+             </button>
+
+             <p style={{ fontSize: "0.7rem", fontWeight: 600, textAlign: "center", color: "#666", lineHeight: 1.4 }}>
+               "I can explain your mistakes in detail. Just click the button to hear my reasoning!"
+             </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -520,7 +626,7 @@ function ConceptMapTab({ domain, scores, analysis }: {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: "1.5rem", marginBottom: 4 }}>
-                    {analysis.topicStatuses[selected] === "weak" ? "⚠️" : analysis.topicStatuses[selected] === "strong" ? "✅" : "🔵"}
+                     {analysis.topicStatuses[selected] === "weak" ? "⚠️" : analysis.topicStatuses[selected] === "strong" ? "✅" : "🔵"}
                   </div>
                   <h3 style={{ fontWeight: 900, fontSize: "1.1rem", textTransform: "uppercase" }}>{selected}</h3>
                   <div style={{ fontSize: "0.7rem", fontWeight: 700, opacity: 0.7, marginTop: 2 }}>
@@ -672,8 +778,7 @@ export default function MainDashboard({ domain, scores, analysis, onRestart, onS
   const [tab, setTab] = useState<Tab>("dashboard");
 
   if (!analysis) {
-    // ... missing data state ...
-    return <div style={{ padding: 40 }}>Missing Analysis</div>; // Simplified for brevity in chunk
+    return <div style={{ padding: 40 }}>Missing Analysis</div>;
   }
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
@@ -727,11 +832,11 @@ export default function MainDashboard({ domain, scores, analysis, onRestart, onS
         </button>
       </div>
 
-      <main style={{ flex: 1, overflowY: "auto" }}>
+      <main style={{ flex: 1 }}>
         {tab === "dashboard"  && <DashboardTab  domain={domain} scores={scores} analysis={analysis} onSimulate={onSimulate} onPractice={onPractice} />}
         {tab === "analytics"  && <AnalyticsTab  scores={scores} analysis={analysis} />}
         {tab === "conceptmap" && <ConceptMapTab domain={domain} scores={scores} analysis={analysis} />}
-        {tab === "deepdive"   && <DeepDiveTab    analysis={analysis} />}
+        {tab === "deepdive"   && <DeepDiveTab   analysis={analysis} />}
       </main>
     </div>
   );

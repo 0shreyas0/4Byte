@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { ArrowRight, Brain, Target, Zap, GitBranch, BookOpen, TrendingUp } from "lucide-react";
+import { LearningPersona } from "@/lib/edtech/conceptGraph";
 
 interface LandingScreenProps {
-  onStart: () => void;
+  onStart: (persona: LearningPersona) => void;
 }
 
 const FEATURES = [
@@ -54,6 +55,7 @@ const STATS = [
 
 export default function LandingScreen({ onStart }: LandingScreenProps) {
   const [hovered, setHovered] = useState(false);
+  const [persona, setPersona] = useState<LearningPersona>("ENGINEERING");
 
   return (
     <div
@@ -93,7 +95,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
                 fontWeight: 800,
                 letterSpacing: "-0.04em",
                 lineHeight: 0.96,
-                marginBottom: "2rem",
+                marginBottom: "1.5rem",
               }}
             >
               Understand
@@ -121,17 +123,47 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
                 lineHeight: 1.6,
                 color: "#333",
                 fontWeight: 500,
-                marginBottom: "2.5rem",
+                marginBottom: "1.5rem",
               }}
             >
               We don&apos;t just show weak topics. We trace concept dependencies,
               find the root cause of failure, and build your personalized recovery plan.
             </p>
 
+            {/* Persona Selector */}
+            <div className="mb-8 p-6 bg-white border-4 border-black shadow-[8px_8px_0_#0D0D0D] relative z-20">
+               <h3 className="text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                 <Zap size={14} className="text-[#FFD60A]" /> Choose Your Learning Style
+               </h3>
+               <div className="flex flex-wrap gap-4">
+                  {(["KINDER", "SCHOOL", "ENGINEERING"] as LearningPersona[]).map((p) => (
+                    <button
+                       key={p}
+                       onClick={() => setPersona(p)}
+                       className="px-6 py-3 text-xs font-black uppercase tracking-widest transition-all"
+                       style={{
+                         border: "3px solid #0D0D0D",
+                         background: persona === p ? "#0D0D0D" : "#FFF",
+                         color: persona === p ? "#FFF" : "#0D0D0D",
+                         boxShadow: persona === p ? "none" : "4px 4px 0 #0D0D0D",
+                         transform: persona === p ? "translate(4px, 4px)" : "none",
+                       }}
+                    >
+                      {p === "KINDER" ? "👶 Kinder" : p === "SCHOOL" ? "🎒 School" : "⚡ Engineering"}
+                    </button>
+                  ))}
+               </div>
+               <p className="mt-4 text-[11px] uppercase font-black opacity-50 italic">
+                 {persona === "KINDER" && "Analogies with toys & games. Simple words. Visual loops."}
+                 {persona === "SCHOOL" && "Step-by-step academic logic. Formulas & clear rules."}
+                 {persona === "ENGINEERING" && "Deep technical roots. Edge cases & professional tracing."}
+               </p>
+            </div>
+
             {/* CTA */}
             <div className="mb-10 flex flex-wrap items-center gap-4">
               <button
-                onClick={onStart}
+                onClick={() => onStart(persona)}
                 onMouseEnter={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
                 className="brutal-btn flex items-center gap-3 px-8 py-4 text-lg"
@@ -175,6 +207,51 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
         </div>
       </div>
 
+      {/* Learning Styles Summary Section */}
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 sm:px-6 md:px-12">
+        <div 
+          style={{ 
+            background: "#0D0D0D", 
+            color: "#FFF", 
+            padding: "48px", 
+            border: "4px solid #0D0D0D",
+            boxShadow: "10px 10px 0 #AF52DE" 
+          }}
+        >
+          <div className="max-w-3xl">
+            <h2 className="text-4xl font-black mb-4 tracking-tighter">NEURO-DIVERSE <br /><span className="text-[#AF52DE]">LEARNING STYLES</span></h2>
+            <p className="text-lg font-bold opacity-70 mb-10">
+              One size doesn&apos;t fit all. Pick the mode that matches how your brain works. 
+              Our AI rewrites the entire curriculum, logic, and feedback to fit your persona.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+             <div className="p-6 border-2 border-[#AF52DE] bg-[#1A1A1A]">
+                <div className="text-3xl mb-4">👶</div>
+                <h3 className="text-xl font-black mb-2 text-[#AF52DE]">KINDER MODE</h3>
+                <p className="text-sm font-medium opacity-60">
+                  Concept analogies using everyday objects. Short, playful instructions and visual-first logic builders.
+                </p>
+             </div>
+             <div className="p-6 border-2 border-[#AF52DE] bg-[#1A1A1A]">
+                <div className="text-3xl mb-4">🎒</div>
+                <h3 className="text-xl font-black mb-2 text-[#AF52DE]">SCHOOL MODE</h3>
+                <p className="text-sm font-medium opacity-60">
+                   Traditional step-by-step academic structure. Focus on formulas, definitions, and clear progression.
+                </p>
+             </div>
+             <div className="p-6 border-2 border-[#AF52DE] bg-[#1A1A1A]">
+                <div className="text-3xl mb-4">⚡</div>
+                <h3 className="text-xl font-black mb-2 text-[#AF52DE]">ENGINEERING MODE</h3>
+                <p className="text-sm font-medium opacity-60">
+                   Deep technical roots. Rules, edge cases, machine-level tracing, and professional best practices.
+                </p>
+             </div>
+          </div>
+        </div>
+      </div>
+
       {/* Features */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-12 md:py-20">
         <h2
@@ -210,7 +287,7 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
           </p>
         </div>
         <button
-          onClick={onStart}
+          onClick={() => onStart(persona)}
           className="brutal-btn px-8 py-4 text-lg whitespace-nowrap"
           style={{ background: "#FFD60A", color: "#0D0D0D", flexShrink: 0 }}
         >

@@ -155,3 +155,142 @@ export interface RefinedRecommendation {
   recommended_segment: string;
   why_this_video: string;
 }
+
+export interface LearningCapsule {
+  learning_gap: string;
+  topics: {
+    name: string;
+    summary: string;
+    mistake: string;
+    rule: string;
+    example: string;
+    mnemonic: string;
+    recall_question: string;
+  }[];
+  next_action: string;
+}
+
+/**
+ * 🔥 NEW: Generate a personalized Learning Capsule based on student analysis.
+ */
+export async function generateLearningCapsule(
+  mode: "KINDER" | "SCHOOL" | "ENGINEERING",
+  weakTopics: string[],
+  mistakes: string[],
+  conceptChain: string[],
+  level: string
+): Promise<LearningCapsule | null> {
+  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
+    return null;
+  }
+
+  const prompt = `
+    You are an advanced AI Learning Engine.
+
+    Your task is to convert student performance analysis into a personalized, high-quality learning output.
+
+    DO NOT give generic explanations.
+    DO NOT output random theory.
+    Your response must be tailored to the student's mistakes, level, and learning needs.
+
+    ========================
+    INPUT
+    ========================
+
+    Mode: ${mode}  
+    (KINDER / SCHOOL / ENGINEERING)
+
+    Weak Topics: ${weakTopics.join(", ")}
+
+    Mistakes: ${mistakes.join("; ")}
+
+    Concept Chain: ${conceptChain.join(" -> ")}
+
+    User Level: ${level}
+
+    ========================
+    YOUR TASK
+    ========================
+
+    1. Identify the EXACT learning gaps
+       - Be specific (e.g., "loop boundary condition", not just "loops")
+
+    2. Adapt explanation BASED ON MODE:
+
+       If KINDER:
+       - Use simple words
+       - Use examples, visuals, or analogies
+       - Keep it playful and short
+
+       If SCHOOL:
+       - Use step-by-step explanations
+       - Focus on clarity and correctness
+       - Add examples and formulas
+
+       If ENGINEERING:
+       - Be precise and technical
+       - Include rules, edge cases, and best practices
+       - Focus on reasoning
+
+    3. Generate a structured "Learning Capsule" including:
+
+       - Concept Summary
+       - What the student did wrong (personalized)
+       - Correct Rule / Insight
+       - Example (simple but clear)
+       - Memory Aid (mnemonic or trick)
+       - Quick Recall Question
+
+    4. Make content:
+       - concise
+       - scannable
+       - useful for revision
+
+    5. Keep tone:
+       - supportive
+       - clear
+       - slightly engaging (not robotic)
+
+    ========================
+    OUTPUT FORMAT (STRICT JSON)
+    ========================
+
+    {
+      "learning_gap": "...",
+      "topics": [
+        {
+          "name": "...",
+          "summary": "...",
+          "mistake": "...",
+          "rule": "...",
+          "example": "...",
+          "mnemonic": "...",
+          "recall_question": "..."
+        }
+      ],
+      "next_action": "..."
+    }
+
+    ========================
+    IMPORTANT RULES
+    ========================
+
+    - NO generic textbook definitions
+    - MUST reference user's mistakes
+    - MUST adapt to learning mode
+    - KEEP output clean and structured
+    - Avoid long paragraphs
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON in AI response");
+    
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    console.error("Learning Capsule failure:", error);
+    return null;
+  }
+}

@@ -19,8 +19,9 @@ import WebPlayground from "@/components/edtech/WebPlayground";
 import OnboardingSurvey from "@/components/edtech/OnboardingSurvey";
 import UserProfilePage from "@/components/edtech/UserProfilePage";
 import ResourceLibrary from "@/components/edtech/ResourceLibrary";
+import Avatar from "@/components/edtech/Avatar";
 import { useAuth } from "@/lib/AuthContext";
-import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
+import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult, LearningPersona } from "@/lib/edtech/conceptGraph";
 import { recordSession } from "@/lib/edtech/streakService";
 
 export default function Home() {
@@ -30,6 +31,7 @@ export default function Home() {
   const [mode, setMode] = useState<LearningMode>("beginner");
   const [scores, setScores] = useState<Record<string, TopicScore>>({});
   const [results, setResults] = useState<QuestionResult[]>([]);
+  const [aiPersona, setAiPersona] = useState<LearningPersona>("ENGINEERING");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
   // Whether we're waiting for the profile to load after a login event
@@ -83,7 +85,7 @@ export default function Home() {
     }
 
     // Non-coding-capable domains go straight to timeline
-    const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev"];
+    const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev", "IoT", "Cybersecurity", "Data Science"];
     if (CODING_DOMAINS.includes(d)) {
       navigate("mode-select");
     } else {
@@ -92,8 +94,9 @@ export default function Home() {
     }
   }, [navigate, user]);
 
-  const handleModeSelect = useCallback((m: QuizMode) => {
+  const handleModeSelect = useCallback((m: QuizMode, p: LearningPersona) => {
     setQuizMode(m);
+    setAiPersona(p);
     // Map quiz mode to IDE difficulty mode
     setMode(m === "coding" ? "revision" : "beginner");
     navigate("timeline"); // 100% Linear
@@ -118,26 +121,27 @@ export default function Home() {
   }, [navigate]);
 
   const handleProcessingComplete = useCallback(async (aiResult: AIRagResponse | null) => {
-    const result = await analyzePerformanceAsync(scores, domain, results);
+    const result = await analyzePerformanceAsync(scores, domain, results, aiPersona);
     
     // Inject Ollama-generated summary if available
     if (aiResult) {
       result.explanation = [aiResult.summary, ...(aiResult.reasoning_chain || [])];
       result.detailedAiReport = aiResult.detailed_report;
     }
-    
+
     setAnalysis(result);
+
     // Record the completed session → updates streak, totalSessions, activityLog, topicMastery & latestAnalysis
     if (user) {
       try {
         await recordSession(user.uid, domain, scores, result);
-        await refreshProfile(); // pull fresh data so everything is in sync
+        await refreshProfile?.(); // pull fresh data so everything is in sync
       } catch (e) {
         console.error("Failed to record session:", e);
       }
     }
     navigate("results");
-  }, [scores, domain, results, navigate, user, refreshProfile]);
+  }, [scores, domain, results, aiPersona, navigate, user, refreshProfile]);
 
   const handleRestart = useCallback(() => {
     setScores({});
@@ -166,7 +170,7 @@ export default function Home() {
 
       <main>
         {screen === "landing" && (
-          <LandingScreen onStart={() => navigate("domain-select")} />
+          <LandingScreen onStart={(p) => { setAiPersona(p); navigate("domain-select"); }} />
         )}
 
         {screen === "auth" && (
@@ -290,6 +294,9 @@ export default function Home() {
           />
         )}
       </main>
+
+      {/* Persistent AI Tutor Avatar */}
+      <Avatar />
     </div>
   );
 }

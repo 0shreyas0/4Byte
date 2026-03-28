@@ -1,18 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { Zap, ArrowRight, Code2, BookOpen, Layers, Terminal } from "lucide-react";
 
 export type QuizMode = "mcq" | "coding";
+export type LearningPersona = "KINDER" | "SCHOOL" | "ENGINEERING";
 
 interface ModeSelectionProps {
   domain: string;
-  onSelect: (mode: QuizMode) => void;
+  onSelect: (mode: QuizMode, persona: LearningPersona) => void;
   onBack: () => void;
 }
 
 export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectionProps) {
+  const [persona, setPersona] = useState<LearningPersona>("ENGINEERING");
+
   // Only show Coding option for supported domains
-  const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev"];
+  const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev", "IoT", "Cybersecurity", "Data Science"];
   const supportsCoding = CODING_DOMAINS.includes(domain);
 
   return (
@@ -27,12 +31,32 @@ export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectio
         <p className="text-lg font-bold opacity-70">
           How do you want to test and improve your knowledge today?
         </p>
+
+        {/* Persona Toggle */}
+        <div className="mt-8 flex justify-center gap-4">
+          {(["KINDER", "SCHOOL", "ENGINEERING"] as LearningPersona[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPersona(p)}
+              className="px-4 py-2 text-xs font-black uppercase tracking-widest transition-all"
+              style={{
+                border: "3px solid #0D0D0D",
+                background: persona === p ? "#0D0D0D" : "#FFF",
+                color: persona === p ? "#FFF" : "#0D0D0D",
+                boxShadow: persona === p ? "none" : "4px 4px 0 #0D0D0D",
+                transform: persona === p ? "translate(4px, 4px)" : "none",
+              }}
+            >
+              {p} Mode
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={`grid grid-cols-1 ${supportsCoding ? 'md:grid-cols-2' : ''} gap-8`}>
         {/* MCQ Mode */}
         <button
-          onClick={() => onSelect("mcq")}
+          onClick={() => onSelect("mcq", persona)}
           className="group relative flex flex-col items-start p-8 text-left transition-all hover:-translate-x-2 hover:-translate-y-2"
           style={{
             background: "#FFFFFF",
@@ -62,7 +86,7 @@ export default function ModeSelection({ domain, onSelect, onBack }: ModeSelectio
         {/* Coding Mode */}
         {supportsCoding && (
           <button
-            onClick={() => onSelect("coding")}
+            onClick={() => onSelect("coding", persona)}
             className="group relative flex flex-col items-start p-8 text-left transition-all hover:-translate-x-2 hover:-translate-y-2"
             style={{
               background: "#FFD60A",

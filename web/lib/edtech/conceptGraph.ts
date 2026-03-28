@@ -1,6 +1,7 @@
 import { fetchYouTubeVideos } from "./youtube";
-import { refineRecommendations, generateOptimizedQuery, filterVideosByDomain } from "./ai";
+import { refineRecommendations, generateOptimizedQuery, filterVideosByDomain, generateLearningCapsule, LearningCapsule } from "./ai";
 
+export type LearningPersona = "KINDER" | "SCHOOL" | "ENGINEERING";
 export type TopicStatus = "weak" | "medium" | "strong";
 
 export interface YouTubeRecommendation {
@@ -13,7 +14,7 @@ export interface YouTubeRecommendation {
 
 export interface LearningStep {
   topic: string;
-  concept?: string; // 🔥 Added: micro-gap concept
+  concept?: string;
   action: string;
   why: string;
   fixes: string;
@@ -23,7 +24,7 @@ export interface LearningStep {
 export interface QuestionResult {
   questionId: string;
   topic: string;
-  concept?: string; // 🔥 Added: concept-level tracking
+  concept?: string;
   isCorrect: boolean;
   timeSpent: number;
 }
@@ -39,8 +40,9 @@ export interface AnalysisResult {
   explanation: string[];
   learningPath: LearningStep[];
   topicStatuses: Record<string, TopicStatus>;
-  microGaps: string[]; // 🔥 Added: list of specific concept mistakes
+  microGaps: string[];
   detailedAiReport?: QuestionAnalysis[];
+  capsule?: LearningCapsule | null;
 }
 
 export interface TopicScore {
@@ -52,52 +54,86 @@ export const DOMAIN_DATA: Record<string, { topics: string[]; graph: Record<strin
   DSA: {
     topics: ["Variables", "Loops", "Arrays", "Sorting", "Searching", "Recursion"],
     graph: {
-      Variables: [],
-      Loops: ["Variables"],
-      Arrays: ["Variables", "Loops"],
-      Sorting: ["Arrays", "Loops"],
-      Searching: ["Arrays", "Loops"],
-      Recursion: ["Variables", "Loops"],
-    },
+      "Variables": [],
+      "Loops": ["Variables"],
+      "Arrays": ["Loops", "Variables"],
+      "Sorting": ["Arrays", "Loops"],
+      "Searching": ["Sorting", "Arrays"],
+      "Recursion": ["Loops"]
+    }
   },
   "Web Dev": {
-    topics: ["HTML Basics", "CSS Basics", "JS Basics", "DOM", "Events", "Fetch/API", "Flexbox", "React Basics"],
+    topics: ["HTML", "CSS", "JS Basics", "DOM", "React Basics", "State", "Hooks"],
     graph: {
-      "HTML Basics": [],
-      "CSS Basics": ["HTML Basics"],
-      "JS Basics": ["HTML Basics"],
-      DOM: ["HTML Basics", "JS Basics"],
-      Events: ["DOM"],
-      "Fetch/API": ["JS Basics"],
-      Flexbox: ["CSS Basics"],
-      "React Basics": ["JS Basics", "DOM", "Events"],
-    },
+      "HTML": [],
+      "CSS": ["HTML"],
+      "JS Basics": ["HTML"],
+      "DOM": ["JS Basics", "HTML"],
+      "React Basics": ["DOM", "JS Basics"],
+      "State": ["React Basics"],
+      "Hooks": ["State", "React Basics"]
+    }
   },
   Aptitude: {
-    topics: ["Arithmetic", "Percentages", "Ratios", "Algebra", "Time & Work", "Profit & Loss", "Time & Distance", "Probability"],
+    topics: ["Arithmetic", "Algebra", "Geometry", "Probability", "Logic"],
     graph: {
-      Arithmetic: [],
-      Percentages: ["Arithmetic"],
-      Ratios: ["Arithmetic"],
-      Algebra: ["Arithmetic"],
-      "Profit & Loss": ["Percentages"],
-      "Time & Work": ["Ratios"],
-      "Time & Distance": ["Ratios", "Algebra"],
-      Probability: ["Percentages", "Ratios"],
-    },
+      "Arithmetic": [],
+      "Algebra": ["Arithmetic"],
+      "Geometry": ["Arithmetic", "Algebra"],
+      "Probability": ["Arithmetic", "Algebra"],
+      "Logic": ["Arithmetic"]
+    }
+  },
+  "Data Science": {
+    topics: ["Python", "Pandas", "NumPy", "ML Basics", "Regression", "Classification"],
+    graph: {
+      "Python": [],
+      "NumPy": ["Python"],
+      "Pandas": ["NumPy", "Python"],
+      "ML Basics": ["Pandas", "NumPy"],
+      "Regression": ["ML Basics"],
+      "Classification": ["ML Basics"]
+    }
+  },
+  Cybersecurity: {
+    topics: ["Networking", "Encryption", "OWASP", "PenTesting", "Firewalls"],
+    graph: {
+      "Networking": [],
+      "Encryption": ["Networking"],
+      "OWASP": ["Networking"],
+      "PenTesting": ["OWASP", "Encryption", "Networking"],
+      "Firewalls": ["Networking"]
+    }
+  },
+  IoT: {
+    topics: ["Circuits", "Arduino", "Sensors", "MQTT", "Cloud Connect"],
+    graph: {
+      "Circuits": [],
+      "Arduino": ["Circuits"],
+      "Sensors": ["Arduino", "Circuits"],
+      "MQTT": ["Sensors", "Arduino"],
+      "Cloud Connect": ["MQTT", "Sensors"]
+    }
   },
   "App Dev": {
-    topics: ["React Native Basics", "Navigation & Routing", "UI Components", "State Management", "Native APIs", "Firebase Integration", "App Store Deployment", "Performance Optimization"],
+    topics: ["JS Setup", "RN Components", "Navigation", "API Fetch", "Persistence"],
     graph: {
-      "React Native Basics": [],
-      "UI Components": ["React Native Basics"],
-      "Navigation & Routing": ["UI Components"],
-      "State Management": ["React Native Basics"],
-      "Native APIs": ["React Native Basics"],
-      "Firebase Integration": ["State Management"],
-      "App Store Deployment": ["UI Components"],
-      "Performance Optimization": ["State Management", "Native APIs"],
-    },
+      "JS Setup": [],
+      "RN Components": ["JS Setup"],
+      "Navigation": ["RN Components"],
+      "API Fetch": ["Navigation", "RN Components"],
+      "Persistence": ["API Fetch"]
+    }
+  },
+  Python: {
+    topics: ["Syntax", "Control Flow", "Functions", "OOP Basics", "Modules"],
+    graph: {
+      "Syntax": [],
+      "Control Flow": ["Syntax"],
+      "Functions": ["Control Flow", "Syntax"],
+      "OOP Basics": ["Functions"],
+      "Modules": ["Functions"]
+    }
   }
 };
 
@@ -119,7 +155,6 @@ export function analyzePerformance(
   const topicStatuses: Record<string, TopicStatus> = {};
   const microGaps: string[] = [];
 
-  // 1. Identify Micro-Gaps (Mistake-Driven)
   rawResults.forEach(res => {
     if (!res.isCorrect && res.concept) {
       if (!microGaps.includes(res.concept)) {
@@ -128,7 +163,6 @@ export function analyzePerformance(
     }
   });
 
-  // 2. Identify Macro-Gaps (Score-Driven)
   topics.forEach((t) => {
     const s = scores[t]?.score || 0;
     if (s < 45) {
@@ -138,7 +172,6 @@ export function analyzePerformance(
       mediumTopics.push(t);
       topicStatuses[t] = "medium";
     } else {
-      // 💡 NEW: Even if strong, if mistakes exist in this topic, it remains a focus
       const hasConceptMistakeInTopic = rawResults.some(r => r.topic === t && !r.isCorrect);
       if (hasConceptMistakeInTopic) {
         mediumTopics.push(t);
@@ -150,7 +183,6 @@ export function analyzePerformance(
     }
   });
 
-  // 3. Find Root Cause among Weak Topics
   let rootCause = weakTopics.length > 0 ? weakTopics[0] : microGaps.length > 0 ? microGaps[0] : topics[0];
   if (weakTopics.length > 0) {
     for (const t of weakTopics) {
@@ -163,7 +195,6 @@ export function analyzePerformance(
     }
   }
 
-  // 4. Build Dependency Chain
   const chain: string[] = [];
   let current = rootCause;
   const visited = new Set();
@@ -179,10 +210,7 @@ export function analyzePerformance(
     }
   }
 
-  // 5. Generate Micro-Gap Learning Steps
   const learningPath: LearningStep[] = [];
-  
-  // First, address micro-gaps (specific conceptual mistakes)
   microGaps.forEach(concept => {
     const parentTopic = rawResults.find(r => r.concept === concept)?.topic || "General";
     learningPath.push({
@@ -194,7 +222,6 @@ export function analyzePerformance(
     });
   });
 
-  // Then add macro steps if not already covered
   const seenTopics = new Set(learningPath.map(s => s.topic));
   chain.forEach((t) => {
     if (!seenTopics.has(t)) {
@@ -207,6 +234,11 @@ export function analyzePerformance(
     }
   });
 
+  const topicStatusesResult: Record<string, TopicStatus> = {};
+  topics.forEach(t => {
+     topicStatusesResult[t] = topicStatuses[t] || "strong";
+  });
+
   return {
     weakTopics,
     mediumTopics,
@@ -217,8 +249,8 @@ export function analyzePerformance(
       `Our analysis identified ${microGaps.length} conceptual micro-gaps.`,
       `Root cause: ${rootCause}`
     ],
-    learningPath: learningPath.slice(0, 5), // Keep it concise
-    topicStatuses,
+    learningPath: learningPath.slice(0, 5),
+    topicStatuses: topicStatusesResult,
     microGaps,
   };
 }
@@ -229,24 +261,30 @@ export function analyzePerformance(
 export async function analyzePerformanceAsync(
   scores: Record<string, TopicScore>,
   domain: string,
-  rawResults: QuestionResult[] = []
+  rawResults: QuestionResult[] = [],
+  persona: LearningPersona = "ENGINEERING"
 ): Promise<AnalysisResult> {
   const result = analyzePerformance(scores, domain, rawResults);
   
   const enhancedPath = await Promise.all(result.learningPath.map(async (step, i) => {
-    // Only fetch for first 3 critical steps (micro or macro)
     if (i > 2) return step; 
-
     const focalPoint = step.concept || step.topic;
     const query = await generateOptimizedQuery(focalPoint, step.fixes, "beginner", domain);
     const rawVideos = await fetchYouTubeVideos(query);
     const filteredVideos = filterVideosByDomain(rawVideos, domain);
     const refined = await refineRecommendations(filteredVideos, focalPoint, step.fixes, "beginner", domain);
-
     return { ...step, recommendations: refined };
   }));
 
-  return { ...result, learningPath: enhancedPath };
+  const capsule = await generateLearningCapsule(
+    persona,
+    result.weakTopics,
+    rawResults.filter(r => !r.isCorrect).map(r => r.concept || r.topic),
+    result.dependencyChain,
+    "beginner"
+  );
+
+  return { ...result, learningPath: enhancedPath, capsule };
 }
 
 export function simulateImprovement(
@@ -257,16 +295,12 @@ export function simulateImprovement(
 ): Record<string, number> {
   const result: Record<string, number> = {};
   Object.entries(originalScores).forEach(([t, v]) => (result[t] = v.score));
-
   result[improvedTopic] = newScore;
-
   const queue = [improvedTopic];
   const visited = new Set();
-
   while (queue.length > 0) {
     const current = queue.shift()!;
     visited.add(current);
-
     const dependents = Object.entries(graph).filter(([t, deps]) => deps.includes(current));
     for (const [depName] of dependents) {
       if (!visited.has(depName)) {
@@ -277,6 +311,5 @@ export function simulateImprovement(
       }
     }
   }
-
   return result;
 }
