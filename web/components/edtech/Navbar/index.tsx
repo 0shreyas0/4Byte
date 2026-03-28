@@ -12,7 +12,7 @@ import {
   Bell,
   User,
   Trophy,
-  Sparkles,
+  Flame,
   RotateCcw,
   HomeIcon,
 } from "lucide-react";
@@ -185,7 +185,8 @@ export default function Navbar({ screen, domain, onNavigate, onRestart }: Navbar
             className="hidden sm:flex items-center gap-1.5 px-4"
             style={{ borderRight: "4px solid #0D0D0D", background: "#0D0D0D" }}
           >
-            <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>🔥 7</span>
+            <Flame size={14} color="#FFD60A" />
+            <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>7</span>
             <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
               Streak
             </span>
@@ -296,8 +297,8 @@ export default function Navbar({ screen, domain, onNavigate, onRestart }: Navbar
             className="flex items-center gap-2 px-6 py-3"
             style={{ background: "#0D0D0D", borderBottom: "3px solid #0D0D0D" }}
           >
-            <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>🔥 7 Day Streak</span>
-            <Sparkles size={16} color="#FFD60A" style={{ marginLeft: "auto" }} />
+            <Flame size={16} color="#FFD60A" />
+            <span style={{ fontWeight: 800, color: "#FFD60A", fontSize: "0.9rem" }}>7 Day Streak</span>
           </div>
         </div>
       )}

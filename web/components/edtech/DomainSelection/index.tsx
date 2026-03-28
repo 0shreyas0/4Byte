@@ -14,6 +14,37 @@ import {
   Zap,
 } from "lucide-react";
 
+function PythonLogoMark({
+  size = 26,
+  color = "currentColor",
+}: {
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M35 8H23C16.373 8 11 13.373 11 20V27H35V31H7C5.343 31 4 32.343 4 34V43C4 50.18 9.82 56 17 56H26V47C26 40.373 31.373 35 38 35H48C54.627 35 60 29.627 60 23V20C60 13.373 54.627 8 48 8H41V17C41 23.627 35.627 29 29 29H19V25H29C33.418 25 37 21.418 37 17V10C37 8.895 36.105 8 35 8Z"
+        fill={color}
+      />
+      <circle cx="24" cy="16" r="3" fill="#F5F0E8" />
+      <path
+        d="M29 56H41C47.627 56 53 50.627 53 44V37H29V33H57C58.657 33 60 31.657 60 30V21C60 13.82 54.18 8 47 8H38V17C38 23.627 32.627 29 26 29H16C9.373 29 4 34.373 4 41V44C4 50.627 9.373 56 16 56H23V47C23 40.373 28.373 35 35 35H45V39H35C30.582 39 27 42.582 27 47V54C27 55.105 27.895 56 29 56Z"
+        fill={color}
+        opacity="0.92"
+      />
+      <circle cx="40" cy="48" r="3" fill="#F5F0E8" />
+    </svg>
+  );
+}
+
 interface DomainSelectionProps {
   onSelect: (domain: string) => void;
   onBack: () => void;
@@ -25,7 +56,6 @@ const DOMAINS = [
     name: "DSA",
     fullName: "Competitive Programming Style",
     icon: Code2,
-    emoji: "💻",
     color: "#FFD60A",
     textColor: "#0D0D0D",
     shadow: "#ccaa00",
@@ -41,7 +71,6 @@ const DOMAINS = [
     name: "Web Dev",
     fullName: "Full Stack Development",
     icon: Globe,
-    emoji: "🌐",
     color: "#0A84FF",
     textColor: "#FFFFFF",
     shadow: "#0060CC",
@@ -57,7 +86,6 @@ const DOMAINS = [
     name: "Aptitude",
     fullName: "Placement Prep",
     icon: Brain,
-    emoji: "🧠",
     color: "#34C759",
     textColor: "#0D0D0D",
     shadow: "#229A43",
@@ -73,7 +101,6 @@ const DOMAINS = [
     name: "App Dev",
     fullName: "Mobile Development",
     icon: Smartphone,
-    emoji: "📱",
     color: "#FF3B30",
     textColor: "#FFFFFF",
     shadow: "#cc2e25",
@@ -89,7 +116,6 @@ const DOMAINS = [
     name: "Data Science",
     fullName: "ML / AI Track",
     icon: BarChart3,
-    emoji: "📊",
     color: "#AF52DE",
     textColor: "#FFFFFF",
     shadow: "#8e3db3",
@@ -105,7 +131,6 @@ const DOMAINS = [
     name: "Cybersecurity",
     fullName: "Ethical Hacking",
     icon: Shield,
-    emoji: "🔒",
     color: "#FF9F0A",
     textColor: "#0D0D0D",
     shadow: "#cc7f00",
@@ -121,7 +146,6 @@ const DOMAINS = [
     name: "IoT",
     fullName: "Embedded Systems",
     icon: Cpu,
-    emoji: "🔌",
     color: "#5AC8FA",
     textColor: "#0D0D0D",
     shadow: "#3da8d8",
@@ -137,7 +161,6 @@ const DOMAINS = [
     name: "Python",
     fullName: "Core to Advanced Python",
     icon: Database,
-    emoji: "🐍",
     color: "#0D0D0D",
     textColor: "#FFD60A",
     shadow: "#333333",
@@ -240,6 +263,7 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
           {DOMAINS.map((domain) => {
             const Icon = domain.icon;
             const isSelected = selected === domain.id;
+            const usePythonMark = domain.id === "Python";
             return (
               <button
                 key={domain.id}
@@ -298,7 +322,25 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div style={{ fontSize: "2.5rem", lineHeight: 1 }}>{domain.emoji}</div>
+                  <div
+                    style={{
+                      width: 52,
+                      height: 52,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: `3px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
+                      background: isSelected ? "rgba(255,255,255,0.12)" : "#F5F0E8",
+                      color: isSelected ? domain.textColor : "#0D0D0D",
+                      boxShadow: isSelected ? "none" : "2px 2px 0 rgba(0,0,0,0.12)",
+                    }}
+                  >
+                    {usePythonMark ? (
+                      <PythonLogoMark size={28} color={isSelected ? domain.textColor : "#0D0D0D"} />
+                    ) : (
+                      <Icon size={26} strokeWidth={2.25} />
+                    )}
+                  </div>
                   <div
                     style={{
                       width: 40,
@@ -310,7 +352,11 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                       color: isSelected ? domain.textColor : "#0D0D0D",
                     }}
                   >
-                    <Icon size={18} />
+                    {usePythonMark ? (
+                      <PythonLogoMark size={18} color={isSelected ? domain.textColor : "#0D0D0D"} />
+                    ) : (
+                      <Icon size={18} />
+                    )}
                   </div>
                 </div>
 
