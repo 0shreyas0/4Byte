@@ -5,8 +5,7 @@ import { AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
 import {
   LayoutDashboard, BarChart3, GitBranch, Zap, BookOpen,
   Bell, User, Menu, X, TrendingUp, AlertTriangle, CheckCircle2,
-  Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info, Terminal,
-  Brain
+  Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info, Terminal, Sparkles, Brain
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -19,7 +18,7 @@ interface Props {
   onPractice: () => void; // 🔥 Added
 }
 
-type Tab = "dashboard" | "analytics" | "conceptmap";
+type Tab = "dashboard" | "analytics" | "conceptmap" | "deepdive";
 
 /* ─── Helpers ─── */
 function statusColor(score: number) {
@@ -29,7 +28,7 @@ function statusLabel(score: number) {
   return score >= 70 ? "Strong ✅" : score >= 45 ? "Weak ⚠️" : "Critical ❌";
 }
 
-/* ─── Sidebar removed in favor of unified layout ─── */
+/* ─── Sidebar removed ─── */
 
 /* ─── DASHBOARD TAB ─── */
 function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
@@ -40,6 +39,7 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
   const overallScore = Math.round(entries.reduce((s, [, t]) => s + t.score, 0) / Math.max(entries.length, 1));
   const weak = analysis.weakTopics;
   const strong = analysis.strongTopics;
+  const [showDeepDive, setShowDeepDive] = useState(false);
 
   return (
     <div style={{ padding: "32px", maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: "column", gap: 24 }}>
@@ -107,6 +107,82 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
           </div>
         </div>
       </div>
+
+      {/* AI Insight Section */}
+      {analysis.explanation && analysis.explanation.length > 0 && (
+        <div style={{ 
+          background: "#fff", 
+          border: "4px solid #0D0D0D", 
+          padding: "24px", 
+          boxShadow: "6px 6px 0 #0D0D0D",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}>
+          <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+            <div style={{ 
+              width: 48, height: 48, 
+              background: "#0D0D0D", 
+              border: "3px solid #FFD60A",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+              fontSize: "1.4rem"
+            }}>
+              🧠
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                fontWeight: 900, 
+                fontSize: "0.75rem", 
+                color: "#888", 
+                textTransform: "uppercase", 
+                letterSpacing: "0.1em",
+                marginBottom: 6,
+                display: "flex",
+                alignItems: "center",
+                gap: 8
+              }}>
+                Mental Mentor Report <span style={{ background: "#FFD60A", color: "#0D0D0D", padding: "1px 6px", borderRadius: 4, fontSize: "0.6rem", fontWeight: 900 }}>PERSONALIZED</span>
+              </div>
+              <h2 style={{ fontWeight: 900, fontSize: "1.1rem", lineHeight: 1.4, marginBottom: 10, color: "#1A1A1A" }}>
+                {analysis.explanation[0]}
+              </h2>
+              
+              {!showDeepDive ? (
+                <button 
+                  onClick={() => setShowDeepDive(true)}
+                  style={{ background: "transparent", border: "none", color: "#3B82F6", fontWeight: 800, fontSize: "0.8rem", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  <TrendingUp size={14} /> View Mentor's Thought Process →
+                </button>
+              ) : (
+                <div style={{ marginTop: 20, borderTop: "2px solid #F0EBE0", paddingTop: 20 }}>
+                   <div style={{ fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", color: "#FF3B3B", marginBottom: 12 }}>
+                     🧭 Recommended Thought Process:
+                   </div>
+                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                     {analysis.explanation.slice(1, 4).map((step, i) => (
+                       <div key={i} style={{ display: "flex", gap: 12, alignItems: "center", background: "#F9FAFB", border: "2px solid #0D0D0D", padding: "10px 14px" }}>
+                         <div style={{ width: 24, height: 24, background: "#0D0D0D", color: "#FFD60A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: "0.7rem", flexShrink: 0 }}>
+                           {i + 1}
+                         </div>
+                         <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "#333" }}>{step}</span>
+                       </div>
+                     ))}
+                   </div>
+                   <button 
+                    onClick={() => setShowDeepDive(false)}
+                    style={{ marginTop: 16, background: "transparent", border: "none", color: "#888", fontWeight: 800, fontSize: "0.7rem", cursor: "pointer", padding: 0 }}
+                  >
+                    Close Deep-Dive
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16 }}>
@@ -512,6 +588,85 @@ function ConceptMapTab({ domain, scores, analysis }: {
   );
 }
 
+/* ─── DEEP DIVE TAB ─── */
+function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
+  if (!analysis.detailedAiReport || analysis.detailedAiReport.length === 0) {
+    return (
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        <Sparkles size={48} color="#FFD60A" strokeWidth={1} style={{ margin: "0 auto 20px" }} />
+        <h2 style={{ fontWeight: 900, fontSize: "1.5rem", textTransform: "uppercase" }}>Analysis in Progress…</h2>
+        <p style={{ fontWeight: 700, color: "#666", marginTop: 10 }}>Your mentor is reviewing your thought process. Check back in a few seconds!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "24px", maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
+       <div style={{ background: "#0D0D0D", border: "4px solid #0D0D0D", padding: "32px", boxShadow: "8px 8px 0 #FFD60A" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+            <div style={{ width: 56, height: 56, background: "#FFD60A", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #fff" }}>
+              <Sparkles size={28} color="#0D0D0D" />
+            </div>
+            <div>
+              <h1 style={{ color: "#fff", fontWeight: 900, fontSize: "1.8rem", textTransform: "uppercase", letterSpacing: "-0.02em" }}>Mentor Deep-Dive Analysis</h1>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", fontWeight: 700 }}>A psychological breakdown of your learning patterns and conceptual gaps.</p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            {analysis.detailedAiReport.map((q, i) => (
+              <div key={q.question_id} style={{ background: "#1A1A1A", border: "3px solid #333", padding: "28px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 20, borderBottom: "1px solid #333", paddingBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 32, height: 32, background: "#333", border: "2px solid #555", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: "0.8rem" }}>{i+1}</div>
+                    <span style={{ color: "#fff", fontWeight: 900, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{q.concept}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                     <span style={{ background: q.is_correct ? "#1DB954" : "#FF3B3B", color: q.is_correct ? "#0D0D0D" : "#fff", padding: "4px 12px", fontWeight: 900, fontSize: "0.7rem", textTransform: "uppercase", border: "2px solid #000" }}>
+                        {q.is_correct ? "MASTERED ✅" : "MISSED ⚠️"}
+                     </span>
+                     <span style={{ border: "2px solid #555", color: "#888", padding: "4px 12px", fontWeight: 900, fontSize: "0.7rem", textTransform: "uppercase" }}>ID: {q.question_id}</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 32 }} className="md:grid-cols-2 grid-cols-1">
+                  <div>
+                    <div style={{ color: "#FF3B3B", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                      <Zap size={16} /> Mentor's Mental Mapping:
+                    </div>
+                    <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.95rem", lineHeight: 1.7, fontWeight: 700 }}>
+                      {q.mentor_thought_process}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    <div style={{ background: "rgba(29, 185, 84, 0.05)", borderLeft: "4px solid #1DB954", padding: "20px" }}>
+                      <div style={{ color: "#1DB954", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 8 }}>💡 Professional Insight</div>
+                      <p style={{ color: "#fff", fontSize: "0.95rem", fontWeight: 800, fontStyle: "italic" }}>
+                        "{q.key_takeaway}"
+                      </p>
+                    </div>
+                    <div style={{ background: "rgba(255, 214, 10, 0.05)", borderLeft: "4px solid #FFD60A", padding: "20px" }}>
+                      <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 8 }}>🛠 Recommended Drill</div>
+                      <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 700 }}>
+                        Practice {q.topic} labs with a focus on {q.concept} edge cases.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginTop: 40, borderTop: "2px solid #333", paddingTop: 20, textAlign: "center" }}>
+            <p style={{ color: "#666", fontSize: "0.8rem", fontWeight: 700 }}>
+              This Deep-Dive was synthetically reconstructed using your session time vectors and conceptual entropy.
+            </p>
+          </div>
+       </div>
+    </div>
+  );
+}
+
 /* ─── MAIN EXPORT ─── */
 export default function MainDashboard({ domain, scores, analysis, onRestart, onSimulate, onPractice }: Props) {
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -525,6 +680,7 @@ export default function MainDashboard({ domain, scores, analysis, onRestart, onS
     { id: "dashboard",  label: "Behavioral Insight", icon: LayoutDashboard },
     { id: "analytics",  label: "Performance Map",   icon: BarChart3 },
     { id: "conceptmap", label: "Knowledge Graph",    icon: GitBranch },
+    { id: "deepdive",   label: "AI Mentor",         icon: Sparkles },
   ];
 
   return (
@@ -571,10 +727,11 @@ export default function MainDashboard({ domain, scores, analysis, onRestart, onS
         </button>
       </div>
 
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, overflowY: "auto" }}>
         {tab === "dashboard"  && <DashboardTab  domain={domain} scores={scores} analysis={analysis} onSimulate={onSimulate} onPractice={onPractice} />}
         {tab === "analytics"  && <AnalyticsTab  scores={scores} analysis={analysis} />}
         {tab === "conceptmap" && <ConceptMapTab domain={domain} scores={scores} analysis={analysis} />}
+        {tab === "deepdive"   && <DeepDiveTab    analysis={analysis} />}
       </main>
     </div>
   );

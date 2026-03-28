@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { analyzePerformanceAI, AnalysisResponse } from "@/lib/rag";
+import { TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
 interface AIProcessingScreenProps {
-  onComplete: () => void;
+  onComplete: (aiResult: AnalysisResponse | null) => void;
+  scores: Record<string, TopicScore>;
+  results: QuestionResult[];
+  domain: string;
 }
 
 const MESSAGES = [
@@ -26,12 +31,39 @@ const STEPS = [
   { label: "Learning Path", detail: "Ordered recovery steps" },
 ];
 
-export default function AIProcessingScreen({ onComplete }: AIProcessingScreenProps) {
+export default function AIProcessingScreen({ onComplete, scores, results, domain }: AIProcessingScreenProps) {
   const [messageIndex, setMessageIndex] = useState(0);
   const [stepsDone, setStepsDone] = useState(0);
   const [dots, setDots] = useState("");
+  const aiResultRef = useRef<AnalysisResponse | null>(null);
 
   useEffect(() => {
+    // 1. Start AI Analysis in background
+    const runAnalysis = async () => {
+      try {
+        const weakTopics = Object.entries(scores)
+          .filter(([_, s]) => s.score < 60)
+          .map(([t]) => t);
+        const microGaps = results.filter(r => !r.isCorrect && r.concept).map(r => r.concept!);
+        const rootCause = weakTopics.length > 0 ? weakTopics[0] : (microGaps[0] || "Foundations");
+
+        const mappedResults = results.map(r => ({
+          question_id: r.questionId,
+          topic: r.topic,
+          concept: r.concept || "General",
+          is_correct: r.isCorrect,
+          time_spent: r.timeSpent
+        }));
+
+        const res = await analyzePerformanceAI(domain, weakTopics, microGaps, rootCause, mappedResults);
+        aiResultRef.current = res;
+      } catch (err) {
+        console.error("AI Analysis failed:", err);
+      }
+    };
+
+    runAnalysis();
+
     const msgInterval = setInterval(() => {
       setMessageIndex((i) => {
         if (i >= MESSAGES.length - 1) {
@@ -57,8 +89,8 @@ export default function AIProcessingScreen({ onComplete }: AIProcessingScreenPro
     }, 400);
 
     const done = setTimeout(() => {
-      onComplete();
-    }, 5200);
+      onComplete(aiResultRef.current);
+    }, 5500);
 
     return () => {
       clearInterval(msgInterval);
@@ -66,7 +98,7 @@ export default function AIProcessingScreen({ onComplete }: AIProcessingScreenPro
       clearInterval(dotInterval);
       clearTimeout(done);
     };
-  }, [onComplete]);
+  }, [onComplete, scores, results, domain]);
 
   const progress = ((messageIndex + 1) / MESSAGES.length) * 100;
 

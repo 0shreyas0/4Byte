@@ -28,6 +28,8 @@ export interface QuestionResult {
   timeSpent: number;
 }
 
+import { QuestionAnalysis } from "@/lib/rag";
+
 export interface AnalysisResult {
   weakTopics: string[];
   mediumTopics: string[];
@@ -38,6 +40,7 @@ export interface AnalysisResult {
   learningPath: LearningStep[];
   topicStatuses: Record<string, TopicStatus>;
   microGaps: string[]; // 🔥 Added: list of specific concept mistakes
+  detailedAiReport?: QuestionAnalysis[];
 }
 
 export interface TopicScore {

@@ -121,6 +121,8 @@ const CHALLENGES: Record<string, CodeChallenge[]> = {
 
 const LANGUAGES = ["JavaScript", "Python", "C++", "C", "Java", "Go", "Rust"];
 
+const SUPPORTED_RUNTIME_LANGUAGES = new Set(["JavaScript"]);
+
 const LANGUAGE_TEMPLATES: Record<string, string> = {
   JavaScript: `// Write your code here...\n`,
   Python: `def main():\n    # Write your code here\n    pass\n\nif __name__ == "__main__":\n    main()`,
@@ -160,17 +162,14 @@ export default function SandboxIDE({ domain, mode, onExit }: SandboxIDEProps) {
     setErrorMsg("");
 
     setTimeout(() => {
-      // ── Non-JS: heuristic only ─────────────────────────────────────────
-      if (language !== "JavaScript") {
-        const hasLogic = code.includes("return") || code.includes("print") ||
-          code.includes("cout") || code.includes("fmt") || code.includes("printf");
-        const changedEnough = code.length > LANGUAGE_TEMPLATES[language].length + 15;
-        if (!hasLogic || !changedEnough) {
-          setTestResult("fail");
-          setErrorMsg("Test Case 1 Failed.\nYou haven't implemented the algorithm yet.\nMake sure to write logic beyond the template.");
-        } else {
-          setTestResult("pass");
-        }
+      // Only JavaScript has a real in-browser test runner right now.
+      // Failing fast here is better than falsely passing incorrect code.
+      if (!SUPPORTED_RUNTIME_LANGUAGES.has(language)) {
+        setTestResult("fail");
+        setErrorMsg(
+          `${language} validation is not wired up yet.\n` +
+          "Use JavaScript for now so your solution is checked against the actual test cases."
+        );
         return;
       }
 

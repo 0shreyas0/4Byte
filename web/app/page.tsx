@@ -11,6 +11,7 @@ import LearningConcept from "@/components/edtech/LearningConcept";
 import QuizScreen from "@/components/edtech/QuizScreen";
 import CodingLabScreen from "@/components/edtech/CodingLabScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
+import { AnalysisResponse as AIRagResponse } from "@/lib/rag";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
 import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
@@ -116,8 +117,15 @@ export default function Home() {
     navigate("processing");
   }, [navigate]);
 
-  const handleProcessingComplete = useCallback(async () => {
+  const handleProcessingComplete = useCallback(async (aiResult: AIRagResponse | null) => {
     const result = await analyzePerformanceAsync(scores, domain, results);
+    
+    // Inject Ollama-generated summary if available
+    if (aiResult) {
+      result.explanation = [aiResult.summary, ...(aiResult.reasoning_chain || [])];
+      result.detailedAiReport = aiResult.detailed_report;
+    }
+    
     setAnalysis(result);
     // Record the completed session → updates streak, totalSessions, activityLog, topicMastery & latestAnalysis
     if (user) {
@@ -255,7 +263,12 @@ export default function Home() {
         )}
 
         {screen === "processing" && (
-          <AIProcessingScreen onComplete={handleProcessingComplete} />
+          <AIProcessingScreen 
+            onComplete={handleProcessingComplete} 
+            scores={scores}
+            results={results}
+            domain={domain}
+          />
         )}
 
         {screen === "library" && (

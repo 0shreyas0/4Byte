@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { ArrowLeft, Play, CheckCircle, XCircle, Terminal, Code2, ChevronRight, Code } from "lucide-react";
 import { TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 import { compileAndRun, Language } from "@/lib/edtech/compiler";
+import { compileAndExplain, CompileResponse as RagResponse } from "@/lib/rag";
 
 interface CodingProblem {
   id: string;
@@ -164,6 +165,7 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
   const [code, setCode] = useState(problems[0].starterCode);
   const [testStatuses, setTestStatuses] = useState<TestStatus[]>([]);
   const [output, setOutput] = useState<string>("");
+  const [ragResult, setRagResult] = useState<RagResponse | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [completedProblems, setCompletedProblems] = useState<Set<number>>(new Set());
@@ -180,14 +182,35 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
     }
     setTestStatuses([]);
     setOutput("");
+    setRagResult(null);
   }, [currentProblem]);
 
   const runCode = useCallback(async () => {
     setIsRunning(true);
     setOutput("");
+    setRagResult(null);
     setShowHint(false);
 
+    const userId = "current-user"; // In a real app, this would come from AuthContext
     const lang: Language = language.toLowerCase() as Language;
+
+    // Phase 1: RAG Check (Python only feature for now)
+    if (lang === "python") {
+      try {
+        const ragRes = await compileAndExplain(userId, code, "python");
+        setRagResult(ragRes);
+
+        // If it's a syntax error, stop and show the personalized explanation
+        if (!ragRes.success) {
+          setOutput(`❌ Compiler Error:\n${ragRes.raw_error || ragRes.error_type}\n\n💡 Personalized Guide:\n${ragRes.explanation}`);
+          setTestStatuses(currentProblem.testCases.map(() => "fail"));
+          setIsRunning(false);
+          return;
+        }
+      } catch (err: any) {
+        console.error("RAG Service failed, falling back to basic compiler:", err);
+      }
+    }
     const inputs = currentProblem.testCases.map(tc => tc.input);
 
     try {
@@ -210,22 +233,27 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
           let passed = false;
           let actualDisplay = actualRaw;
 
-          if (actualRaw && actualRaw.startsWith("ERROR_MARKER:")) {
-            outputLines.push(`Test ${i + 1} (${tc.label}): ❌ ERROR — ${actualRaw.replace("ERROR_MARKER:", "")}`);
+          if (!actualRaw) {
+            outputLines.push(`Test ${i + 1} (${tc.label}): ❌ NO OUTPUT — Server returned nothing for this case.`);
+          } else if (actualRaw.startsWith("ERROR_MARKER:")) {
+            outputLines.push(`Test ${i + 1} (${tc.label}): ❌ RUNTIME ERROR — ${actualRaw.replace("ERROR_MARKER:", "")}`);
           } else {
             try {
-              const actual = JSON.parse(actualRaw || "null");
-              // eslint-disable-next-line no-eval
+              const actual = JSON.parse(actualRaw);
               const expected = eval(tc.expectedOutput);
               passed = JSON.stringify(actual) === JSON.stringify(expected);
-              actualDisplay = JSON.stringify(actual);
-            } catch {
-              passed = false;
-            }
+              
+              const typeLabel = Array.isArray(actual) ? "array" : typeof actual;
+              actualDisplay = `${JSON.stringify(actual)} (${typeLabel})`;
+              const expectedDisplay = `${JSON.stringify(expected)} (${Array.isArray(expected) ? "array" : typeof expected})`;
 
-            outputLines.push(
-              `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL — got ${actualDisplay}, expected ${tc.expectedOutput}`}`
-            );
+              outputLines.push(
+                `Test ${i + 1} (${tc.label}): ${passed ? "✅ PASS" : `❌ FAIL\n   Got: ${actualDisplay}\n   Expected: ${expectedDisplay}`}`
+              );
+            } catch (err: any) {
+              passed = false;
+              outputLines.push(`Test ${i + 1} (${tc.label}): ❌ PARSE ERROR — Failed to parse result: ${actualRaw}`);
+            }
           }
           statuses.push(passed ? "pass" : "fail");
         });
@@ -536,6 +564,27 @@ export default function CodingLabScreen({ domain, onComplete, onBack }: CodingLa
               <pre style={{ margin: 0, fontFamily: "monospace", fontSize: "0.82rem", color: "#d4d4d4", whiteSpace: "pre-wrap" }}>
                 {output}
               </pre>
+
+              {/* RAG-specific personalized feedback */}
+              {ragResult && (
+                <div style={{ marginTop: "1rem", borderTop: "1px dashed #333", paddingTop: "0.75rem" }}>
+                  <div style={{ color: "#8B5CF6", fontSize: "0.65rem", fontWeight: 800, letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                    AI DIAGNOSTICS & PERSONALIZATION
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    {ragResult.weak_topics?.length > 0 && (
+                      <div style={{ fontSize: "0.6rem", background: "#3B2A56", color: "#C084FC", border: "1px solid #C084FC", padding: "1px 6px", fontWeight: 700 }}>
+                        WEAK TOPICS: {ragResult.weak_topics.slice(0, 2).join(", ")}
+                      </div>
+                    )}
+                    {ragResult.suggestions?.slice(0, 1).map((s, i) => (
+                      <div key={i} style={{ fontSize: "0.6rem", background: "#2A3B31", color: "#4ADE80", border: "1px solid #4ADE80", padding: "1px 6px", fontWeight: 700 }}>
+                        HINT: {s}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
