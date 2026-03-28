@@ -16,3 +16,5 @@ To ensure consistency, high-quality aesthetics, and maintainability across the a
 - [component_structure.md](./component_structure.md): Best practices for React components.
 - [documentation_workflow.md](./documentation_workflow.md): Mandatory steps to register components in the library.
 - [smart_edtech_conventions.md](./smart_edtech_conventions.md): Naming, structure, and taxonomy for the new smart EdTech product.
+- [web_platform_standards.md](./web_platform_standards.md): Next.js standards for the web EdTech experience.
+- [flutter_platform_standards.md](./flutter_platform_standards.md): Flutter app standards for the smart EdTech platform.
