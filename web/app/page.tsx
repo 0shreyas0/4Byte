@@ -14,11 +14,9 @@ import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
 import SandboxIDE, { LearningMode } from "@/components/edtech/SandboxIDE";
-
 import WebPlayground from "@/components/edtech/WebPlayground";
-
+import OnboardingSurvey from "@/components/edtech/OnboardingSurvey";
 import { useAuth } from "@/lib/AuthContext";
-
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
 export default function Home() {
@@ -30,7 +28,10 @@ export default function Home() {
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
 
-  const { user } = useAuth();
+  // Whether we're waiting for the profile to load after a login event
+  const [awaitingPostLogin, setAwaitingPostLogin] = useState(false);
+
+  const { user, profile, profileLoading } = useAuth();
 
   // Linear Step-by-Step Navigation
   const navigate = useCallback((next: Screen) => {
@@ -50,10 +51,27 @@ export default function Home() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  // After login: once profile finishes loading, route to onboarding or domain-select
+  useEffect(() => {
+    if (awaitingPostLogin && !profileLoading) {
+      setAwaitingPostLogin(false);
+      if (!profile?.onboardingComplete) {
+        navigate("onboarding");
+      } else {
+        navigate("domain-select");
+      }
+    }
+  }, [awaitingPostLogin, profileLoading, profile, navigate]);
+
+  // Called by LoginScreen after successful auth
+  const handlePostLogin = useCallback(() => {
+    setAwaitingPostLogin(true);
+  }, []);
+
   // Handlers for Linear Flow
   const handleDomainSelect = useCallback((d: string) => {
     setDomain(d);
-    
+
     // Auth Check
     if (!user) {
       navigate("auth");
@@ -132,10 +150,14 @@ export default function Home() {
         )}
 
         {screen === "auth" && (
-          <LoginScreen 
-            onLogin={() => navigate("mode-select")} 
-            onGetStarted={() => navigate("domain-select")} 
+          <LoginScreen
+            onLogin={handlePostLogin}
+            onGetStarted={() => navigate("domain-select")}
           />
+        )}
+
+        {screen === "onboarding" && (
+          <OnboardingSurvey onComplete={() => navigate("domain-select")} />
         )}
 
         {screen === "domain-select" && (

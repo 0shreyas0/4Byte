@@ -4,24 +4,24 @@ import { useState } from "react";
 import {
   BookOpen,
   Layers,
-  Zap,
   BarChart3,
   Menu,
   X,
   Bell,
-  User,
   Trophy,
   Flame,
   Sparkles,
   RotateCcw,
   HomeIcon,
-  LogOut
+  User,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import ProfilePanel from "@/components/edtech/ProfilePanel";
 
 export type Screen =
   | "auth"
   | "landing"
+  | "onboarding"
   | "domain-select"
   | "mode-select"
   | "timeline"
@@ -83,7 +83,8 @@ export default function Navbar({
   onGetStarted 
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { user, profile } = useAuth();
 
   const isActive = (item: (typeof NAV_ITEMS)[0]) =>
     item.group.includes(screen);
@@ -226,18 +227,32 @@ export default function Navbar({
                 />
               </button>
 
-              {/* Logout */}
+              {/* Profile button */}
               <button
-                title={`Log out (${user.email})`}
-                onClick={() => { if(confirm("Log out?")) logout(); }}
-                className="flex items-center justify-center transition-colors duration-100"
+                title="My Profile"
+                onClick={() => setProfileOpen(true)}
+                className="flex items-center justify-center gap-1.5 px-3 transition-colors duration-100"
                 style={{
-                  width: 56,
-                  background: "#0D0D0D",
+                  background: "#FFD60A",
+                  borderLeft: "4px solid #0D0D0D",
                   cursor: "pointer",
+                  height: "100%",
                 }}
               >
-                <LogOut size={18} color="#FFD60A" />
+                <div
+                  style={{
+                    width: 32, height: 32,
+                    background: "#0D0D0D",
+                    border: "2px solid #0D0D0D",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontWeight: 900, fontSize: "0.7rem", color: "#FFD60A",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {profile?.displayName
+                    ? profile.displayName.slice(0, 2).toUpperCase()
+                    : user.email?.slice(0, 2).toUpperCase() ?? <User size={14} />}
+                </div>
               </button>
             </>
           ) : (
@@ -311,6 +326,8 @@ export default function Navbar({
           })}
         </div>
       )}
+
+      <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} onNavigate={onNavigate} />
     </header>
   );
 }
