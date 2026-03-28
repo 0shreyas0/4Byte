@@ -9,7 +9,7 @@ import QuizScreen from "@/components/edtech/QuizScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
 import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
-import { analyzePerformance, AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
+import { analyzePerformanceAsync, AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
 
 type Screen =
   | "landing"
@@ -50,8 +50,8 @@ export default function Home() {
     []
   );
 
-  const handleProcessingComplete = useCallback(() => {
-    const result = analyzePerformance(scores, domain);
+  const handleProcessingComplete = useCallback(async () => {
+    const result = await analyzePerformanceAsync(scores, domain);
     setAnalysis(result);
     setScreen("results");
   }, [scores, domain]);
