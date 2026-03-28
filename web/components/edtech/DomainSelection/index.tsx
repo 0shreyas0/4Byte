@@ -192,7 +192,7 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
                       style={{
                         fontSize: "0.7rem",
                         fontWeight: 700,
-                        border: "1.5px solid #0D0D0D",
+                        border: "2px solid #0D0D0D",
                         padding: "2px 8px",
                         background: isSelected ? domain.color + "22" : "#F5F0E8",
                       }}

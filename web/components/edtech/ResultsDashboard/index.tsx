@@ -86,25 +86,50 @@ export default function ResultsDashboard({
           borderBottom: "2.5px solid #FFD60A",
           padding: "16px 24px",
           display: "flex",
-          gap: 24,
+          gap: 16,
           flexWrap: "wrap",
           alignItems: "center",
         }}
       >
-        <div>
-          <div style={{ color: "#888", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Domain</div>
-          <div style={{ color: "#FFD60A", fontWeight: 800, fontSize: "1.1rem" }}>{domain}</div>
+        <div
+          style={{
+            background: "#FFD60A",
+            color: "#0D0D0D",
+            border: "2.5px solid #FFD60A",
+            padding: "6px 14px",
+            fontWeight: 800,
+            fontSize: "1rem",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {domain}
         </div>
         <div style={{ width: 1, height: 36, background: "#333" }} />
         {[
-          { label: "Overall Score", value: `${overallScore}%`, color: overallScore >= 70 ? "#1DB954" : overallScore >= 45 ? "#FFD60A" : "#FF3B3B" },
-          { label: "Root Cause", value: analysis.rootCause, color: "#FF3B3B" },
-          { label: "Weak Topics", value: String(weakCount), color: "#FF3B3B" },
-          { label: "Strong Topics", value: String(strongCount), color: "#1DB954" },
+          { label: "Overall Score", value: `${overallScore}%`, color: overallScore >= 70 ? "#1DB954" : overallScore >= 45 ? "#FFD60A" : "#FF3B3B", textColor: overallScore >= 45 ? "#0D0D0D" : "#FFFFFF" },
+          { label: "Root Cause", value: analysis.rootCause, color: "#FF3B3B", textColor: "#FFFFFF" },
+          { label: "Weak Topics", value: String(weakCount), color: "#FF3B3B", textColor: "#FFFFFF" },
+          { label: "Strong Topics", value: String(strongCount), color: "#1DB954", textColor: "#0D0D0D" },
         ].map((s) => (
           <div key={s.label}>
-            <div style={{ color: "#888", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>{s.label}</div>
-            <div style={{ color: s.color, fontWeight: 800, fontSize: "1.1rem" }}>{s.value}</div>
+            <div style={{ color: "#666", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{s.label}</div>
+            <div
+              style={{
+                background: s.color,
+                color: s.textColor,
+                border: `2px solid ${s.color}`,
+                boxShadow: `3px 3px 0 ${s.textColor === "#0D0D0D" ? "#0D0D0D" : s.color}`,
+                padding: "3px 10px",
+                fontWeight: 800,
+                fontSize: "1rem",
+                maxWidth: 160,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap" as const,
+              }}
+            >
+              {s.value}
+            </div>
           </div>
         ))}
       </div>

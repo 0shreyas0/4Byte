@@ -6,7 +6,7 @@ import DomainSelection from "@/components/edtech/DomainSelection";
 import LearningTimeline from "@/components/edtech/LearningTimeline";
 import QuizScreen from "@/components/edtech/QuizScreen";
 import AIProcessingScreen from "@/components/edtech/AIProcessingScreen";
-import ResultsDashboard from "@/components/edtech/ResultsDashboard";
+import MainDashboard from "@/components/edtech/MainDashboard";
 import SimulationMode from "@/components/edtech/SimulationMode";
 import { analyzePerformance, AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
 
@@ -84,7 +84,7 @@ export default function Home() {
       )}
 
       {screen === "results" && analysis && (
-        <ResultsDashboard
+        <MainDashboard
           domain={domain}
           scores={scores}
           analysis={analysis}

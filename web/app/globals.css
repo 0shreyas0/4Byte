@@ -12,15 +12,20 @@
   --border: #0D0D0D;
   --card: #FFFFFF;
   --surface: #FAFAF5;
+  --sidebar: #FFD60A;
 
   --success: #1DB954;
   --danger: #FF3B3B;
   --warning: #FFD60A;
   --info: #3B82F6;
 
-  --shadow-brutal: 4px 4px 0px #0D0D0D;
-  --shadow-brutal-lg: 6px 6px 0px #0D0D0D;
-  --shadow-brutal-xl: 8px 8px 0px #0D0D0D;
+  /* Bigger, bolder shadows matching the redesign */
+  --shadow-brutal:    5px 5px 0px #0D0D0D;
+  --shadow-brutal-lg: 7px 7px 0px #0D0D0D;
+  --shadow-brutal-xl: 10px 10px 0px #0D0D0D;
+  --shadow-yellow: 6px 6px 0px #FFD60A;
+  --shadow-red:    6px 6px 0px #FF3B3B;
+  --shadow-green:  6px 6px 0px #1DB954;
 }
 
 /* ─── Base ─── */
@@ -39,22 +44,28 @@ body {
 }
 
 /* ─── Neo-Brutalism Classes ─── */
-.brutal-border        { border: 2.5px solid var(--border); }
-.brutal-border-thick  { border: 3.5px solid var(--border); }
+.brutal-border        { border: 3px solid var(--border); }
+.brutal-border-thick  { border: 4px solid var(--border); }
 .brutal-shadow        { box-shadow: var(--shadow-brutal); }
 .brutal-shadow-lg     { box-shadow: var(--shadow-brutal-lg); }
 .brutal-shadow-xl     { box-shadow: var(--shadow-brutal-xl); }
 
 .brutal-card {
-  border: 2.5px solid var(--border);
+  border: 3px solid var(--border);
   box-shadow: var(--shadow-brutal);
   background: var(--card);
 }
 
 .brutal-card-accent {
-  border: 2.5px solid var(--border);
+  border: 3px solid var(--border);
   box-shadow: var(--shadow-brutal);
   background: var(--accent);
+}
+
+.brutal-hero {
+  border: 4px solid var(--border);
+  box-shadow: var(--shadow-brutal-xl);
+  background: var(--card);
 }
 
 .brutal-btn {
@@ -95,8 +106,8 @@ body {
 /* ─── Progress Bar ─── */
 .progress-bar-bg {
   background: var(--secondary);
-  border: 2px solid var(--border);
-  height: 12px;
+  border: 3px solid var(--border);
+  height: 14px;
   overflow: hidden;
 }
 
@@ -137,7 +148,22 @@ body {
   50%       { opacity: 1;   transform: scale(1.2); }
 }
 
+/* ─── Neo-Brutalism Micro-Interactions (from redesign) ─── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+  20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+@keyframes pop-in {
+  0%   { transform: scale(0.8); opacity: 0; }
+  80%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
 .animate-slide-in     { animation: slide-in-up 0.35s ease forwards; }
 .animate-bounce-subtle{ animation: bounce-subtle 2s ease-in-out infinite; }
 .animate-spin-slow    { animation: spin-slow 3s linear infinite; }
 .animate-blink        { animation: blink 1s ease-in-out infinite; }
+.shake                { animation: shake 0.5s ease; }
+.pop-in               { animation: pop-in 0.3s ease forwards; }

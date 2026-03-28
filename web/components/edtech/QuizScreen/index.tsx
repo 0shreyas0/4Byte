@@ -29,6 +29,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
   const [startTime] = useState(() => Date.now());
   const [questionStart, setQuestionStart] = useState(() => Date.now());
   const [showExplanation, setShowExplanation] = useState(false);
+  const [shakeKey, setShakeKey] = useState(0);
 
   const current = questions[currentIndex];
   const progress = ((currentIndex) / questions.length) * 100;
@@ -39,6 +40,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
     setSelectedOption(idx);
     const isCorrect = idx === current.correctIndex;
     setAnswerState(isCorrect ? "correct" : "wrong");
+    if (!isCorrect) setShakeKey((k: number) => k + 1);
     setShowExplanation(true);
 
     const now = new Date().getTime();
@@ -130,7 +132,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                 fontSize: "0.75rem",
                 fontWeight: 800,
                 background: getTopicColor(current.topic),
-                border: "1.5px solid #0D0D0D",
+                border: "2px solid #0D0D0D",
                 padding: "2px 8px",
               }}
             >
@@ -194,7 +196,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               marginBottom: 12,
             }}
           >
-            Topic: {current.topic}
+            Q{currentIndex + 1} &middot; Topic: {current.topic}
           </div>
           <h2
             style={{
@@ -205,12 +207,18 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               fontFamily: "JetBrains Mono, monospace",
             }}
           >
+            <span style={{ fontWeight: 800, color: "#FFD60A", background: "#0D0D0D", padding: "2px 8px", marginRight: 8, fontSize: "0.9rem" }}>
+              Q{currentIndex + 1}
+            </span>
             {current.question}
           </h2>
         </div>
 
         {/* Options */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div
+          key={`options-${currentIndex}-${shakeKey}`}
+          className={`grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 ${answerState === "wrong" ? "shake" : ""}`}
+        >
           {current.options.map((opt, idx) => (
             <button
               key={idx}
@@ -270,7 +278,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
         {/* Explanation (Brilliant-style) */}
         {showExplanation && (
           <div
-            className="p-6 mb-6 animate-slide-in"
+            className="p-6 mb-6 pop-in"
             style={{
               border: `2.5px solid ${answerState === "correct" ? "#1DB954" : "#FF3B3B"}`,
               background: answerState === "correct" ? "#F0FDF4" : "#FFF0F0",
@@ -307,7 +315,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
           <div className="flex justify-end">
             <button
               onClick={handleNext}
-              className="brutal-btn flex items-center gap-3 px-8 py-4 text-base"
+              className="brutal-btn flex items-center gap-3 px-8 py-4 text-base pop-in"
               style={{ background: "#FFD60A" }}
             >
               {isLast ? "View My Results →" : "Next Question"}
