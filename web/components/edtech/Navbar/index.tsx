@@ -56,12 +56,6 @@ const NAV_ITEMS: {
     group: ["domain-select", "timeline"],
   },
   {
-    label: "Quiz",
-    icon: Zap,
-    screen: "quiz",
-    group: ["quiz", "processing"],
-  },
-  {
     label: "Results",
     icon: BarChart3,
     screen: "results",

@@ -5,7 +5,7 @@ import { AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
 import {
   LayoutDashboard, BarChart3, GitBranch, Zap, BookOpen,
   Bell, User, Menu, X, TrendingUp, AlertTriangle, CheckCircle2,
-  Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info
+  Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info, Terminal
 } from "lucide-react";
 
 /* ─── Types ─── */
@@ -15,6 +15,7 @@ interface Props {
   analysis: AnalysisResult;
   onRestart: () => void;
   onSimulate: () => void;
+  onPractice: () => void; // 🔥 Added
 }
 
 type Tab = "dashboard" | "analytics" | "conceptmap";
@@ -123,9 +124,9 @@ function Sidebar({ tab, setTab, domain, onRestart, sidebarOpen, close }: {
 }
 
 /* ─── DASHBOARD TAB ─── */
-function DashboardTab({ domain, scores, analysis, onSimulate }: {
+function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
   domain: string; scores: Record<string, TopicScore>;
-  analysis: AnalysisResult; onSimulate: () => void;
+  analysis: AnalysisResult; onSimulate: () => void; onPractice: () => void;
 }) {
   const entries = Object.entries(scores);
   const overallScore = Math.round(entries.reduce((s, [, t]) => s + t.score, 0) / Math.max(entries.length, 1));
@@ -147,11 +148,18 @@ function DashboardTab({ domain, scores, analysis, onSimulate }: {
           <p style={{ color: "rgba(255,255,255,0.65)", fontWeight: 700, fontSize: "0.9rem", marginBottom: 20 }}>
             {weak.length} weak topics found. Root cause: <strong style={{ color: "#FF3B3B" }}>{analysis.rootCause}</strong>
           </p>
-          <button onClick={onSimulate}
-            style={{ background: "#FFD60A", border: "3px solid #FFD60A", padding: "12px 28px", fontWeight: 900, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "5px 5px 0 #fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
-          >
-            <Zap size={16} /> Simulate Improvement →
-          </button>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            <button onClick={onSimulate}
+              style={{ background: "#FFD60A", color: "#0D0D0D", border: "3px solid #FFD60A", padding: "12px 28px", fontWeight: 900, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "5px 5px 0 #fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <Zap size={16} /> Simulate Improvement →
+            </button>
+            <button onClick={onPractice}
+              style={{ background: "#1DB954", color: "#fff", border: "3px solid #1DB954", padding: "12px 28px", fontWeight: 900, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "5px 5px 0 #0D0D0D", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
+            >
+              <Terminal size={16} fill="currentColor" /> Practice IDE
+            </button>
+          </div>
         </div>
       </div>
 
@@ -560,7 +568,7 @@ function ConceptMapTab({ domain, scores, analysis }: {
 }
 
 /* ─── MAIN EXPORT ─── */
-export default function MainDashboard({ domain, scores, analysis, onRestart, onSimulate }: Props) {
+export default function MainDashboard({ domain, scores, analysis, onRestart, onSimulate, onPractice }: Props) {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -597,7 +605,7 @@ export default function MainDashboard({ domain, scores, analysis, onRestart, onS
 
         {/* Page content */}
         <main style={{ flex: 1, overflowY: "auto" }}>
-          {tab === "dashboard"  && <DashboardTab  domain={domain} scores={scores} analysis={analysis} onSimulate={onSimulate} />}
+          {tab === "dashboard"  && <DashboardTab  domain={domain} scores={scores} analysis={analysis} onSimulate={onSimulate} onPractice={onPractice} />}
           {tab === "analytics"  && <AnalyticsTab  scores={scores} analysis={analysis} />}
           {tab === "conceptmap" && <ConceptMapTab domain={domain} scores={scores} analysis={analysis} />}
         </main>

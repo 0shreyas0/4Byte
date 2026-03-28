@@ -156,6 +156,7 @@ export default function Home() {
             scores={scores}
             analysis={analysis}
             onSimulate={() => setScreen("simulation")}
+            onPractice={() => setScreen("sandbox")} // 🔥 Added
             onRestart={handleRestart}
           />
         )}
