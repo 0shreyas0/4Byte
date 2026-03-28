@@ -1,43 +1,80 @@
 # Documentation Workflow
 
-This project is a component template library. Any new component or major update MUST be immediately reflected in the documentation.
+This repository is being re-oriented toward a smart EdTech product. Any new feature, page, or major component update MUST be reflected in the documentation metadata and preview system.
 
-## Mandatory Steps for New Components
+## Mandatory Steps for New EdTech Features
 
-Whenever you create a new component (or rename an existing one), you MUST p erform these steps:
+Whenever you create a new feature or rename an existing one, perform these steps:
 
-### 1. Register in COMPONENT_REGISTRY (`lib/registry.ts`)
-Add a metadata entry:
-- **id**: A unique kebab-case slug (e.g., `search-bar`)
-- **name**: Human-readable name (e.g., `SearchBar`)
-- **description**: A concise, premium-sounding one-liner
-- **category**: Must be one of: `Base UI` | `Layout` | `Auth` | `AI & Tools` | `Search & Data` | `Payment`
+### 1. Register in the COMPONENT REGISTRY (`lib/registry.ts`)
+Add or update a metadata entry:
+- **id**: unique kebab-case slug (e.g., `course-card`)
+- **name**: human-readable component name (e.g., `CourseCard`)
+- **description**: concise learner-facing one-liner
+- **category**: must be one of the new EdTech categories below
 - **difficulty**: `Simple` | `Modular` | `Advanced`
-- **modularStructure**: List the key files and directories
+- **modularStructure**: list the key files and folders for the feature
 
-### 2. Add to ComponentPreview (`app/docs/ComponentPreview.tsx`)
-- Add a `dynamic()` import for the component (always `{ ssr: false }`)
-- Add a `case` in the `switch (id)` block with a working, realistic demo
-- Wrap the component in a sensible container with `max-w-*` and `mx-auto`
+### 2. Add a Preview in `app/docs/ComponentPreview.tsx`
+- Add a dynamic import for the new feature with `{ ssr: false }`
+- Add a new `case` branch in `switch (id)` with a realistic interactive preview
+- Wrap the preview in a responsive container with `max-w-*`, `mx-auto`, and safe spacing
+- Show the feature in context, not just as a bare component
 
-### 3. Update Sidebar if adding a NEW category (`app/docs/Sidebar.tsx`)
-- The `CATEGORIES` array in `Sidebar.tsx` controls what appears in the sidebar nav
-- Add the new category name to the array in a logical position
+### 3. Update Sidebar Categories if Needed (`app/docs/Sidebar.tsx`)
+- `CATEGORIES` defines documentation sections and navigation order
+- If you add a new category, insert it logically for the learner experience
+- Keep categories focused on product flows, not internal implementation details
 
-### 4. Verify export from index (`packages/ui/src/index.ts`)
-Ensure the component is re-exported from the root barrel file.
+### 4. Export from the UI Barrel (`packages/ui/src/index.ts`)
+- Ensure the feature is exported from the root UI entrypoint
+- Use explicit exports instead of `export *` where possible for clarity
 
-## Current Component Catalog (20 components)
+### 5. Register New Feature Assets
+If the feature includes hooks or library helpers, keep those under `hooks/edtech` and `lib/edtech` and document the modular structure in the registry entry.
 
-| Category | Components |
-|---|---|
-| Base UI | Button, Card, Input, CodeSnippet, ThemeToggler, UserProfile, PageTransition |
-| Layout | Navbar, Footer |
-| Auth | LogIn |
-| AI & Tools | AIChat, AIDemo, AgentVoiceControl, PDFProcessor, TeamChat, VoiceComms, ThemeCustomizer |
-| Search & Data | SearchBar |
-| Payment | RazorpayButton |
+## EdTech Documentation Categories
+Replace legacy categories with platform-first categories:
+- `Learning Experience`
+- `Assessment`
+- `Classroom`
+- `Collaboration`
+- `Analytics`
+- `Admin`
+
+## Recommended EdTech Feature Names
+Use domain-specific names instead of generic `Agent*` terms:
+- `CourseCard`, `LessonPlayer`, `PracticeSession`, `QuizBuilder`, `ProgressDashboard`
+- `ClassroomRoster`, `InstructorPanel`, `PeerReview`, `AchievementBadge`
+- `AdaptiveTutor`, `StudyPlan`, `FeedbackPanel`, `AssessmentSummary`
+
+## Example Registry Entry
+```ts
+{
+  id: 'progress-dashboard',
+  name: 'ProgressDashboard',
+  description: 'Shows a student’s learning progress, mastery levels, and next recommended lessons.',
+  category: 'Analytics',
+  difficulty: 'Modular',
+  modularStructure: [
+    'components/edtech/ProgressDashboard/ProgressDashboard.tsx',
+    'hooks/edtech/useProgressDashboard.ts',
+    'lib/edtech/progress.ts'
+  ]
+}
+```
 
 ## Why This Matters
-The `app/docs` route dynamically generates pages for components based on the registry. If you don't update the registry, the component essentially doesn't exist for the end-user browsing the library.
+The docs route is the product catalog for the platform. If the registry is out of sync, the feature may not be searchable or discoverable by product teams.
+
+## Legacy Cleanup Guidance
+- Do not add new features under the old `hackkit` namespace.
+- Keep legacy HackKit code in `legacy/hackkit/` if needed for reference.
+- New features should use `components/edtech`, `lib/edtech`, and `hooks/edtech` where appropriate.
+
+## Documentation Best Practices
+- Keep demos interactive and relevant to the learner flow
+- Use real-looking data in previews (courses, students, grades, assignments)
+- Keep copy user-focused: student/teacher, lesson, assessment, feedback
+- Register every feature change immediately; do not rely on auto-discovery
 
