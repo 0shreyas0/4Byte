@@ -52,14 +52,6 @@ class UserStatsResponse(BaseModel):
     user_id: str
     total_errors_recorded: int
     weak_topics: list[str]
-
-
-class UserStatsResponse(BaseModel):
-    """Per-user learning / error profile for GET /user/{user_id}/stats."""
-
-    user_id: str
-    total_errors_recorded: int
-    weak_topics: list[str]
     common_errors: list[str]
     topic_counts: dict[str, int]
     error_type_counts: dict[str, int]
@@ -118,3 +110,72 @@ class AnalysisResponse(BaseModel):
     summary: str
     reasoning_chain: list[str]
     detailed_report: list[QuestionAnalysis] = Field(default_factory=list)
+
+
+# ── ANTIGRAVITY Chat / Memory / Firestore models ──────────────────────────────
+
+class ChatRequest(BaseModel):
+    """Request body for POST /chat."""
+    user_id: str = Field(..., min_length=1)
+    query: str = Field(..., min_length=1)
+    domain: str | None = Field(default=None, description="Filter memories by domain (e.g. Python, DSA)")
+    topic: str | None = Field(default=None, description="Filter memories by topic (e.g. loops, recursion)")
+
+
+class MemoryItem(BaseModel):
+    """Single user memory entry."""
+    memory_id: str
+    type: str
+    domain: str
+    topic: str
+    content: str
+    distance: float | None = None
+
+
+class ChatAPIResponse(BaseModel):
+    """Response from POST /chat."""
+    answer: str
+    user_context_used: str
+    new_memories: list[MemoryItem] = Field(default_factory=list)
+    domain: str | None = None
+    topic: str | None = None
+
+
+class MemoryStoreRequest(BaseModel):
+    """Manually store a memory via POST /memory."""
+    user_id: str = Field(..., min_length=1)
+    domain: str = Field(..., min_length=1)
+    topic: str = Field(..., min_length=1)
+    type: str = Field(..., pattern="^(weakness|strength|preference)$")
+    content: str = Field(..., min_length=5)
+
+
+class MemoryListResponse(BaseModel):
+    """Response from GET /memory/{user_id}."""
+    user_id: str
+    memories: list[MemoryItem]
+    total: int
+
+
+class FirestoreProfileRequest(BaseModel):
+    """Upsert user profile in Firestore."""
+    user_id: str = Field(..., min_length=1)
+    name: str | None = None
+    email: str | None = None
+
+
+class DomainScoreRequest(BaseModel):
+    """Record a quiz/coding score for a domain."""
+    user_id: str = Field(..., min_length=1)
+    domain: str = Field(..., min_length=1)
+    score: float = Field(..., ge=0, le=100)
+    total_questions: int = Field(..., ge=1)
+    correct: int = Field(..., ge=0)
+
+
+class TopicCompleteRequest(BaseModel):
+    """Mark a topic as completed and award XP."""
+    user_id: str = Field(..., min_length=1)
+    domain: str = Field(..., min_length=1)
+    topic: str = Field(..., min_length=1)
+    xp_earned: int = Field(default=10, ge=0)

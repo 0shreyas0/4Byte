@@ -26,7 +26,14 @@ from app import seed_knowledge
 from app.compiler import check_source
 from app.db import init_db, record_error
 from app.explainer import build_personalized_explanation
-from app.models import CompileRequest, CompileResponse, UserStatsResponse, AnalysisRequest, AnalysisResponse
+from app.models import (
+    CompileRequest, CompileResponse,
+    UserStatsResponse,
+    AnalysisRequest, AnalysisResponse,
+    ChatRequest, ChatAPIResponse,
+    MemoryStoreRequest, MemoryListResponse, MemoryItem,
+    FirestoreProfileRequest, DomainScoreRequest, TopicCompleteRequest,
+)
 from app.rag import retrieve_for_error
 from app.user_profile import (
     compute_common_errors,
@@ -37,6 +44,21 @@ from app.user_profile import (
     total_errors,
 )
 from app.db import get_session_factory
+from app.chat_pipeline import run_chat
+from app.memory_store import (
+    store_memory,
+    get_all_memories,
+    retrieve_memories,
+)
+from app.firestore_db import (
+    upsert_user_profile,
+    get_user_profile,
+    update_domain_score,
+    get_domain_scores,
+    mark_topic_complete,
+    get_progress,
+    update_streak,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -91,7 +113,10 @@ def root():
         "mvp_language": "python",
         "endpoints": {
             "compile": "POST /compile",
+            "chat": "POST /chat",
+            "memory": "GET /memory/{user_id}",
             "user_stats": "GET /user/{user_id}/stats",
+            "user_profile": "GET /user/{user_id}/profile",
             "analyze": "POST /analyze/performance",
         },
     }
@@ -267,3 +292,164 @@ async def global_handler(request, exc):
         status_code=500,
         content={"detail": "Internal server error. Please try again later."},
     )
+
+
+# ───────────────────────────────────────────────────────────────────────────────
+#  ANTIGRAVITY — Chat, Memory, Firestore
+# ───────────────────────────────────────────────────────────────────────────────
+
+
+@app.post("/chat", response_model=ChatAPIResponse)
+async def chat_endpoint(req: ChatRequest) -> ChatAPIResponse:
+    """
+    Full ANTIGRAVITY conversational pipeline.
+
+    1. Retrieves typed user memories from ChromaDB (filtered by domain/topic)
+    2. Local LLM compresses memories → User Context
+    3. Main LLM generates adaptive, personalised answer
+    4. Extracts MEMORY_UPDATE blocks (inline + LLM-assisted)
+    5. Stores new memories back into ChromaDB
+    """
+    result = run_chat(
+        user_id=req.user_id,
+        query=req.query,
+        domain=req.domain,
+        topic=req.topic,
+    )
+
+    # Also update Firestore last_seen
+    upsert_user_profile(req.user_id)
+    update_streak(req.user_id)
+
+    new_mem_items = [
+        MemoryItem(**m) for m in result.new_memories
+    ]
+
+    return ChatAPIResponse(
+        answer=result.answer,
+        user_context_used=result.user_context_used,
+        new_memories=new_mem_items,
+        domain=result.domain,
+        topic=result.topic,
+    )
+
+
+# ── Memory CRUD ──────────────────────────────────────────────────────────────
+
+@app.post("/memory", status_code=201)
+def store_memory_endpoint(req: MemoryStoreRequest):
+    """
+    Manually insert a typed memory for a user.
+    Useful for seeding initial profiles or admin corrections.
+    """
+    inserted, mem_id = store_memory(
+        user_id=req.user_id,
+        domain=req.domain,
+        topic=req.topic,
+        mem_type=req.type,      # type: ignore[arg-type]
+        content=req.content,
+    )
+    return {"inserted": inserted, "memory_id": mem_id}
+
+
+@app.get("/memory/{user_id}", response_model=MemoryListResponse)
+def list_memories(
+    user_id: str,
+    domain: str | None = None,
+    topic: str | None = None,
+    mem_type: str | None = None,
+    query: str = "general learning profile",
+) -> MemoryListResponse:
+    """
+    Retrieve user memories.
+    
+    Use query + domain/topic/mem_type to filter semantically or by metadata.
+    """
+    if domain or topic or mem_type:
+        raw = retrieve_memories(
+            user_id=user_id,
+            query=query,
+            domain=domain,
+            topic=topic,
+            mem_type=mem_type,      # type: ignore[arg-type]
+            k=20,
+        )
+    else:
+        raw = get_all_memories(user_id)
+
+    items = [
+        MemoryItem(
+            memory_id=m.memory_id,
+            type=m.type,
+            domain=m.domain,
+            topic=m.topic,
+            content=m.content,
+            distance=m.distance,
+        )
+        for m in raw
+    ]
+    return MemoryListResponse(user_id=user_id, memories=items, total=len(items))
+
+
+# ── Firestore User Profile ──────────────────────────────────────────────────
+
+@app.post("/user/profile")
+def create_or_update_profile(req: FirestoreProfileRequest):
+    """Create or update a user's Firestore profile (name, email, last_seen)."""
+    ok = upsert_user_profile(
+        user_id=req.user_id,
+        name=req.name,
+        email=req.email,
+    )
+    if not ok:
+        raise HTTPException(
+            status_code=503,
+            detail="Firestore unavailable. Set FIREBASE_CREDENTIALS env var.",
+        )
+    streak = update_streak(req.user_id)
+    return {"status": "ok", "streak": streak}
+
+
+@app.get("/user/{user_id}/profile")
+def get_profile(user_id: str):
+    """Fetch a user's Firestore profile, scores, and progress summary."""
+    profile = get_user_profile(user_id)
+    scores = get_domain_scores(user_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail="User profile not found in Firestore.")
+    return {"profile": profile, "domain_scores": scores}
+
+
+@app.post("/user/score")
+def record_score(req: DomainScoreRequest):
+    """Save a quiz or coding score for a domain."""
+    ok = update_domain_score(
+        user_id=req.user_id,
+        domain=req.domain,
+        score=req.score,
+        total_questions=req.total_questions,
+        correct=req.correct,
+    )
+    if not ok:
+        raise HTTPException(status_code=503, detail="Firestore unavailable.")
+    return {"status": "ok", "domain": req.domain, "score": req.score}
+
+
+@app.post("/user/topic-complete")
+def complete_topic(req: TopicCompleteRequest):
+    """Mark a learning topic as completed and award XP."""
+    ok = mark_topic_complete(
+        user_id=req.user_id,
+        domain=req.domain,
+        topic=req.topic,
+        xp_earned=req.xp_earned,
+    )
+    if not ok:
+        raise HTTPException(status_code=503, detail="Firestore unavailable.")
+    completed = get_progress(req.user_id, req.domain)
+    return {
+        "status": "ok",
+        "topic": req.topic,
+        "xp_earned": req.xp_earned,
+        "total_completed_in_domain": len(completed),
+    }

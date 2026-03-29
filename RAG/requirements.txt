@@ -12,3 +12,9 @@ sentence-transformers>=2.3.0
 
 # Local LM
 ollama>=0.1.7
+
+# Groq (Extreme speed primary intelligence)
+groq>=0.4.2
+
+# Firebase / Firestore (structured user data)
+firebase-admin>=6.2.0
