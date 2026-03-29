@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import {
   Trophy,
   AlertCircle,
@@ -108,12 +109,75 @@ function getTopicColor(topic: string): string {
   return colors[topic] || "#F5F0E8";
 }
 
+function getKidOptionStyle(
+  idx: number,
+  isSelected: boolean,
+  submitted: boolean,
+  selectedOption: number | null,
+  correctIndex: number
+): React.CSSProperties {
+  if (!submitted) {
+    return {
+      background: isSelected ? "#DCFCE7" : "#FFFFFF",
+      border: `3px solid ${isSelected ? "#22C55E" : "#0D0D0D"}`,
+      color: "#0D0D0D",
+      boxShadow: isSelected ? "4px 4px 0 #22C55E" : "4px 4px 0 #0D0D0D",
+      cursor: "pointer",
+      transform: isSelected ? "translate(2px, 2px)" : "none",
+    };
+  }
+
+  if (idx === correctIndex) {
+    return {
+      background: "#DCFCE7",
+      border: "3px solid #16A34A",
+      color: "#0D0D0D",
+      boxShadow: "4px 4px 0 #16A34A",
+      cursor: "default",
+    };
+  }
+
+  if (idx === selectedOption && selectedOption !== correctIndex) {
+    return {
+      background: "#FEE2E2",
+      border: "3px solid #EF4444",
+      color: "#0D0D0D",
+      boxShadow: "4px 4px 0 #EF4444",
+      cursor: "default",
+    };
+  }
+
+  return {
+    background: "#FFFFFF",
+    border: "3px solid #D4D4D4",
+    color: "#777",
+    boxShadow: "none",
+    cursor: "default",
+  };
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenProps) {
-  const questions = QUIZ_DATA[domain] || QUIZ_DATA["DSA"];
+  // Enhanced fallback logic: Try exact match, then subject-only match, then default to DSA
+  const getQuestions = () => {
+    if (QUIZ_DATA[domain]) return QUIZ_DATA[domain];
+    
+    // Extract base subject (e.g. "Physics" from "Physics (11th Grade)")
+    const baseSubject = domain.split(" (")[0];
+    if (QUIZ_DATA[baseSubject]) return QUIZ_DATA[baseSubject];
+
+    // Check for nested keys (e.g. "Mathematics" matches "Mathematics (11th Grade)")
+    const fuzzyKey = Object.keys(QUIZ_DATA).find(k => k.startsWith(baseSubject));
+    if (fuzzyKey) return QUIZ_DATA[fuzzyKey];
+
+    return QUIZ_DATA["DSA"];
+  };
+
+  const questions = getQuestions();
   const totalQuestions = questions.length;
   const isVisualKidQuiz = questions.some((question) => question.cardStyle === "visual");
+  const showExamChrome = !isVisualKidQuiz;
 
   // Exam state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -557,7 +621,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
         style={{
           background: "#0D0D0D",
           borderBottom: "3px solid #FFD60A",
-          padding: "10px 20px",
+          padding: isVisualKidQuiz ? "12px 18px" : "10px 20px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -605,18 +669,38 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               letterSpacing: "0.02em",
             }}
           >
-            MCQ Exam &mdash; {totalQuestions} Questions
+            {isVisualKidQuiz ? `Question ${currentIndex + 1} of ${totalQuestions}` : `MCQ Exam — ${totalQuestions} Questions`}
           </span>
         </div>
 
-        {/* Center: progress counts */}
-        <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
-          <StatPill label="Answered" value={attemptedCount} color="#1DB954" />
-          <StatPill label="Marked" value={markedCount} color="#8B5CF6" />
-          <StatPill label="Not Visited" value={unattemptedCount} color="#888" />
-        </div>
+        {showExamChrome ? (
+          <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+            <StatPill label="Answered" value={attemptedCount} color="#1DB954" />
+            <StatPill label="Marked" value={markedCount} color="#8B5CF6" />
+            <StatPill label="Not Visited" value={unattemptedCount} color="#888" />
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {questions.map((q, i) => (
+              <div
+                key={q.id}
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 999,
+                  border: "2px solid #FFD60A",
+                  background:
+                    i < currentIndex
+                      ? "#34C759"
+                      : i === currentIndex
+                      ? "#FFD60A"
+                      : "transparent",
+                }}
+              />
+            ))}
+          </div>
+        )}
 
-        {/* Right: hints counter + timer */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {hintsEnabled && (
             <div
@@ -642,21 +726,23 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               </span>
             </div>
           )}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              color: "#FFD60A",
-              fontWeight: 800,
-              fontSize: "1.1rem",
-              fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: "0.04em",
-            }}
-          >
-            <Clock size={18} />
-            {formatTime(elapsed)}
-          </div>
+          {showExamChrome && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: "#FFD60A",
+                fontWeight: 800,
+                fontSize: "1.1rem",
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: "0.04em",
+              }}
+            >
+              <Clock size={18} />
+              {formatTime(elapsed)}
+            </div>
+          )}
         </div>
       </header>
 
@@ -676,10 +762,12 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
             padding: "24px 28px",
             display: "flex",
             flexDirection: "column",
-            gap: 20,
-            borderRight: "3px solid #0D0D0D",
-          }}
-        >
+          gap: 20,
+          borderRight: showExamChrome ? "3px solid #0D0D0D" : "none",
+          maxWidth: isVisualKidQuiz ? 980 : undefined,
+          margin: isVisualKidQuiz ? "0 auto" : undefined,
+        }}
+      >
           {/* Question number strip */}
           <div
             style={{
@@ -701,25 +789,26 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               >
                 Question {currentIndex + 1} / {totalQuestions}
               </span>
-              <span
-                style={{
-                  background: getTopicColor(current.topic),
-                  border: "2px solid #0D0D0D",
-                  fontSize: "0.68rem",
-                  fontWeight: 800,
-                  padding: "2px 8px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                {current.topic}
-              </span>
+              {showExamChrome && (
+                <span
+                  style={{
+                    background: getTopicColor(current.topic),
+                    border: "2px solid #0D0D0D",
+                    fontSize: "0.68rem",
+                    fontWeight: 800,
+                    padding: "2px 8px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                  }}
+                >
+                  {current.topic}
+                </span>
+              )}
             </div>
 
-            {/* Right-side action buttons: hint + mark for review */}
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {/* Hint button */}
-              {hintsEnabled && (
+              {showExamChrome && hintsEnabled && (
                 <button
                   onClick={handleUseHint}
                   disabled={submitted || hintsUsed >= MAX_HINTS || hintShown[currentIndex]}
@@ -771,6 +860,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               )}
 
               {/* Mark for review toggle */}
+              {showExamChrome && (
               <button
                 onClick={handleMarkForReview}
                 style={{
@@ -802,6 +892,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                   ? "Marked"
                   : "Mark for Review"}
               </button>
+              )}
             </div>
           </div>
 
@@ -830,18 +921,20 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               />
             )}
             <div style={{ position: "relative", zIndex: 1 }}>
-              <div
-                style={{
-                  fontSize: "0.65rem",
-                  fontWeight: 800,
-                  color: "#999",
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  marginBottom: 12,
-                }}
-              >
-                Q{currentIndex + 1}.
-              </div>
+              {!isVisualKidQuiz && (
+                <div
+                  style={{
+                    fontSize: "0.65rem",
+                    fontWeight: 800,
+                    color: "#999",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    marginBottom: 12,
+                  }}
+                >
+                  Q{currentIndex + 1}.
+                </div>
+              )}
               {isVisualKidQuiz && current.promptVisual && (
                 <div
                   style={{
@@ -853,13 +946,42 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                     border: "3px solid #0D0D0D",
                     background: "#FFFFFF",
                     boxShadow: "5px 5px 0 rgba(13,13,13,0.12)",
-                    fontSize: "clamp(2.4rem, 7vw, 4rem)",
+                    fontSize: "clamp(2.6rem, 8vw, 4.4rem)",
                     lineHeight: 1.1,
                     textAlign: "center",
                     padding: "14px 18px",
+                    borderRadius: 28,
                   }}
                 >
                   {current.promptVisual}
+                </div>
+              )}
+              {isVisualKidQuiz && current.promptImageSrc && (
+                <div
+                  style={{
+                    minHeight: 140,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 18,
+                    border: "3px solid #0D0D0D",
+                    background: "#FFFFFF",
+                    boxShadow: "5px 5px 0 rgba(13,13,13,0.12)",
+                    padding: "10px 14px",
+                    borderRadius: 28,
+                  }}
+                >
+                  <Image
+                    src={current.promptImageSrc}
+                    alt={current.promptImageAlt ?? current.question}
+                    width={360}
+                    height={180}
+                    style={{
+                      width: "min(100%, 360px)",
+                      height: "auto",
+                      display: "block",
+                    }}
+                  />
                 </div>
               )}
               <p
@@ -931,22 +1053,30 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
             {current.options.map((opt, idx) => {
               const isSelected = currentAttempt.selectedOption === idx;
               const optionAccent = visualPalette[idx % visualPalette.length];
-              const pendingStyle: React.CSSProperties = isSelected
-                ? {
-                    background: isVisualKidQuiz ? optionAccent : "#0D0D0D",
-                    border: `3px solid ${isVisualKidQuiz ? "#0D0D0D" : "#FFD60A"}`,
-                    color: isVisualKidQuiz ? "#0D0D0D" : "#FFD60A",
-                    boxShadow: `4px 4px 0 ${isVisualKidQuiz ? "#0D0D0D" : "#FFD60A"}`,
-                    cursor: "pointer",
-                    transform: "translate(2px, 2px)",
-                  }
-                : {
-                    background: isVisualKidQuiz ? "#FFFFFF" : "#FFFFFF",
-                    border: "3px solid #0D0D0D",
-                    color: "#0D0D0D",
-                    boxShadow: "4px 4px 0 #0D0D0D",
-                    cursor: "pointer",
-                  };
+              const pendingStyle: React.CSSProperties = isVisualKidQuiz
+                ? getKidOptionStyle(
+                    idx,
+                    isSelected,
+                    submitted,
+                    currentAttempt.selectedOption,
+                    current.correctIndex
+                  )
+                : isSelected
+                  ? {
+                      background: "#0D0D0D",
+                      border: "3px solid #FFD60A",
+                      color: "#FFD60A",
+                      boxShadow: "4px 4px 0 #FFD60A",
+                      cursor: "pointer",
+                      transform: "translate(2px, 2px)",
+                    }
+                  : {
+                      background: "#FFFFFF",
+                      border: "3px solid #0D0D0D",
+                      color: "#0D0D0D",
+                      boxShadow: "4px 4px 0 #0D0D0D",
+                      cursor: "pointer",
+                    };
 
               return (
                 <button
@@ -974,44 +1104,40 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                 >
                   {isVisualKidQuiz ? (
                     <>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                        <div
-                          style={{
-                            flexShrink: 0,
-                            width: 36,
-                            height: 36,
-                            border: "2px solid #0D0D0D",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "0.82rem",
-                            fontWeight: 900,
-                            background: isSelected ? "#0D0D0D" : optionAccent,
-                            color: isSelected ? "#FFFFFF" : "#0D0D0D",
-                          }}
-                        >
-                          {String.fromCharCode(65 + idx)}
-                        </div>
-                        <div style={{ fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555" }}>
-                          Tap Me
-                        </div>
-                      </div>
                       <div
                         style={{
-                          minHeight: 72,
+                          minHeight: 88,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          fontSize: "3rem",
+                          fontSize: typeof current.optionVisuals?.[idx] === "string" && current.optionVisuals[idx].length <= 2 ? "4rem" : "3rem",
                           lineHeight: 1,
                           width: "100%",
+                          border: "3px solid #0D0D0D",
+                          background: submitted
+                            ? idx === current.correctIndex
+                              ? "#BBF7D0"
+                              : idx === currentAttempt.selectedOption
+                              ? "#FECACA"
+                              : "#F8F8F8"
+                            : isSelected
+                            ? "#DCFCE7"
+                            : optionAccent,
+                          borderRadius: 24,
+                          color: "#0D0D0D",
+                          fontWeight: 900,
                         }}
                       >
                         {current.optionVisuals?.[idx] ?? "✨"}
                       </div>
-                      <span style={{ flex: 1, width: "100%", textAlign: "center", fontSize: "0.98rem", fontWeight: 800 }}>
-                        {opt}
-                      </span>
+                      {!(
+                        typeof current.optionVisuals?.[idx] === "string" &&
+                        current.optionVisuals[idx] === opt
+                      ) && (
+                        <span style={{ flex: 1, width: "100%", textAlign: "center", fontSize: "0.98rem", fontWeight: 800 }}>
+                          {opt}
+                        </span>
+                      )}
                     </>
                   ) : (
                     <>
@@ -1050,26 +1176,30 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               gap: 12,
             }}
           >
-            <button
-              onClick={handleClear}
-              disabled={submitted || currentAttempt.selectedOption === null}
-              style={{
-                background: "transparent",
-                border: "2px solid #FF3B3B",
-                color: "#FF3B3B",
-                padding: "7px 16px",
-                fontWeight: 700,
-                fontSize: "0.8rem",
-                cursor:
-                  submitted || currentAttempt.selectedOption === null
-                    ? "not-allowed"
-                    : "pointer",
-                opacity: currentAttempt.selectedOption === null ? 0.4 : 1,
-                letterSpacing: "0.04em",
-              }}
-            >
-              Clear Response
-            </button>
+            {showExamChrome ? (
+              <button
+                onClick={handleClear}
+                disabled={submitted || currentAttempt.selectedOption === null}
+                style={{
+                  background: "transparent",
+                  border: "2px solid #FF3B3B",
+                  color: "#FF3B3B",
+                  padding: "7px 16px",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  cursor:
+                    submitted || currentAttempt.selectedOption === null
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: currentAttempt.selectedOption === null ? 0.4 : 1,
+                  letterSpacing: "0.04em",
+                }}
+              >
+                Clear Response
+              </button>
+            ) : (
+              <div />
+            )}
 
             <div style={{ display: "flex", gap: 10 }}>
               <NavBtn
@@ -1079,17 +1209,58 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                 onClick={() => goToQuestion(currentIndex - 1)}
               />
               <NavBtn
-                label="Next →"
+                label={isVisualKidQuiz && currentIndex === totalQuestions - 1 ? "Finish Quiz" : "Next →"}
                 icon={<ChevronRight size={16} />}
                 iconRight
-                disabled={currentIndex === totalQuestions - 1}
-                onClick={() => goToQuestion(currentIndex + 1)}
+                disabled={!isVisualKidQuiz && currentIndex === totalQuestions - 1}
+                onClick={() => {
+                  if (isVisualKidQuiz && currentIndex === totalQuestions - 1) {
+                    setShowConfirm(true);
+                    return;
+                  }
+                  if (currentIndex < totalQuestions - 1) {
+                    goToQuestion(currentIndex + 1);
+                  }
+                }}
               />
             </div>
           </div>
+
+          {!showExamChrome && (
+            <div
+              style={{
+                marginTop: 8,
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                onClick={() => setShowConfirm(true)}
+                style={{
+                  background: "#0D0D0D",
+                  color: "#FFD60A",
+                  border: "3px solid #0D0D0D",
+                  boxShadow: "4px 4px 0 #FFD60A",
+                  padding: "14px 22px",
+                  fontWeight: 800,
+                  fontSize: "0.92rem",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Send size={16} />
+                Finish Quiz
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── RIGHT: Question navigator + submit ──────────────────────────── */}
+        {showExamChrome && (
         <div
           style={{
             width: 280,
@@ -1129,7 +1300,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               flexShrink: 0,
             }}
           >
-            <LegendItem color="#FFD60A" borderColor="#FFD60A" label="Current" textColor="#0D0D0D" bg="#0D0D0D" />
+            <LegendItem color="#FFD60A" borderColor="#FFD60A" label="Current" bg="#0D0D0D" />
             <LegendItem color="#1DB954" label="Answered" />
             <LegendItem color="#8B5CF6" label="Marked for Review" />
             <LegendItem color="#FFFFFF" label="Not Answered" />
@@ -1231,6 +1402,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* ── Confirm submit modal ─────────────────────────────────────────────── */}

@@ -181,9 +181,6 @@ export default function LandingScreen({ onStart }: LandingScreenProps) {
                   }}
                 />
               </button>
-              <span style={{ fontWeight: 600, color: "#666", fontSize: "0.9rem" }}>
-                Free • No signup needed
-              </span>
             </div>
 
             {/* Stats */}

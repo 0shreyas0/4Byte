@@ -1019,11 +1019,11 @@ function HistoryTab({ sessionHistory, onSelect }: {
 
 /* ─── MAIN EXPORT ─── */
 export default function MainDashboard({ uid, domain, scores, analysis, onRestart, onSimulate, onPractice, sessionHistory }: Props) {
-  const [tab, setTab] = useState<Tab>("dashboard");
-
-  if (!analysis) {
-    return <div style={{ padding: 40 }}>Missing Analysis</div>;
-  }
+  const [tab, setTab] = useState<Tab>(analysis ? "dashboard" : "history");
+  
+  const [activeAnalysis, setActiveAnalysis] = useState<AnalysisResult | null>(analysis || null);
+  const [activeScores, setActiveScores] = useState<Record<string, TopicScore>>(scores || {});
+  const [activeTabDomain, setActiveTabDomain] = useState<string>(domain || "");
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "dashboard",  label: "Behavioral Insight", icon: LayoutDashboard },
@@ -1032,10 +1032,6 @@ export default function MainDashboard({ uid, domain, scores, analysis, onRestart
     { id: "deepdive",   label: "Neural Mentor",         icon: Sparkles },
     { id: "history",    label: "All Tests",         icon: History },
   ];
-
-  const [activeAnalysis, setActiveAnalysis] = useState<AnalysisResult>(analysis);
-  const [activeScores, setActiveScores] = useState<Record<string, TopicScore>>(scores);
-  const [activeTabDomain, setActiveTabDomain] = useState<string>(domain);
 
   // Sync state if props change (e.g. after a new quiz)
   useEffect(() => {
@@ -1088,23 +1084,62 @@ export default function MainDashboard({ uid, domain, scores, analysis, onRestart
         </button>
       </div>
 
-      <main style={{ flex: 1 }}>
-        {tab === "dashboard"  && <DashboardTab  domain={activeTabDomain} scores={activeScores} analysis={activeAnalysis} onSimulate={onSimulate} onPractice={onPractice} />}
-        {tab === "analytics"  && <AnalyticsTab  scores={activeScores} analysis={activeAnalysis} />}
-        {tab === "conceptmap" && <ConceptMapTab domain={activeTabDomain} scores={activeScores} analysis={activeAnalysis} />}
-        {tab === "deepdive"   && <DeepDiveTab   analysis={activeAnalysis} />}
-        {tab === "history"    && (
-          <HistoryTab 
-            sessionHistory={sessionHistory}
-            onSelect={(hist) => {
-              setActiveAnalysis(hist.analysis);
-              setActiveScores(hist.scores);
-              setActiveTabDomain(hist.domain);
-              setTab("dashboard"); // Go to dashboard after selecting
-            }} 
-          />
+      <main style={{ flex: 1, paddingBottom: 60 }}>
+        {!activeAnalysis && tab !== "history" ? (
+          <AuditEmptyState onStart={onRestart} />
+        ) : (
+          <>
+            {tab === "dashboard"  && activeAnalysis && <DashboardTab  domain={activeTabDomain} scores={activeScores} analysis={activeAnalysis} onSimulate={onSimulate} onPractice={onPractice} />}
+            {tab === "analytics"  && activeAnalysis && <AnalyticsTab  scores={activeScores} analysis={activeAnalysis} />}
+            {tab === "conceptmap" && activeAnalysis && <ConceptMapTab domain={activeTabDomain} scores={activeScores} analysis={activeAnalysis} />}
+            {tab === "deepdive"   && activeAnalysis && <DeepDiveTab   analysis={activeAnalysis} />}
+            {tab === "history"    && (
+              <HistoryTab 
+                sessionHistory={sessionHistory}
+                onSelect={(hist) => {
+                  setActiveAnalysis(hist.analysis);
+                  setActiveScores(hist.scores);
+                  setActiveTabDomain(hist.domain);
+                  setTab("dashboard");
+                }} 
+              />
+            )}
+          </>
         )}
       </main>
+    </div>
+  );
+}
+
+function AuditEmptyState({ onStart }: { onStart: () => void }) {
+  return (
+    <div style={{ 
+      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", 
+      padding: "80px 20px", textAlign: "center", gap: 24 
+    }}>
+      <div style={{ 
+        width: 100, height: 100, background: "#FFD60A", border: "4px solid #0D0D0D",
+        display: "flex", alignItems: "center", justifyContent: "center", 
+        boxShadow: "10px 10px 0 #0D0D0D", fontSize: "3rem"
+      }}>
+        ✨
+      </div>
+      <div>
+        <h1 style={{ fontWeight: 900, fontSize: "2rem", textTransform: "uppercase", margin: 0 }}>No active session found</h1>
+        <p style={{ fontWeight: 700, color: "#666", maxWidth: 450, margin: "12px auto 0" }}>
+          You haven't completed a skill audit recently. Run your first Neural Mentor analysis to see your behavioral insights.
+        </p>
+      </div>
+      <button 
+        onClick={onStart}
+        style={{
+          background: "#0D0D0D", color: "#FFD60A", border: "none",
+          padding: "16px 32px", fontWeight: 900, fontSize: "1rem", 
+          textTransform: "uppercase", cursor: "pointer", boxShadow: "8px 8px 0 #AF52DE"
+        }}
+      >
+        Start First Audit →
+      </button>
     </div>
   );
 }

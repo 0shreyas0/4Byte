@@ -1,0 +1,10 @@
+<svg width="360" height="180" viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="360" height="180" rx="28" fill="#FFE8E8"/>
+  <rect x="16" y="16" width="328" height="148" rx="24" fill="#FFFFFF" stroke="#111111" stroke-width="4"/>
+  <path d="M183 44C187 31 201 24 214 28" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="221" cy="36" rx="20" ry="10" transform="rotate(20 221 36)" fill="#34C759" stroke="#111111" stroke-width="4"/>
+  <path d="M181 65C202 49 231 61 239 86C248 114 230 143 198 143C162 143 144 114 153 86C159 66 175 62 181 65Z" fill="#FF4D4D" stroke="#111111" stroke-width="5"/>
+  <path d="M180 69C171 56 150 56 140 69C132 79 132 95 140 105C148 115 164 120 176 114" fill="#FF6B6B" stroke="#111111" stroke-width="5"/>
+  <text x="76" y="62" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#111111">A</text>
+  <text x="76" y="94" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#666666">Apple</text>
+</svg>

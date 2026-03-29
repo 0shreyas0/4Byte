@@ -106,6 +106,47 @@ const TIMELINE_DATA: Record<string, TimelineNode[]> = {
     { id: "decorators", label: "Decorators & Generators", status: "locked", why: "Advanced Python patterns land after strong function thinking.", connects: [] },
     { id: "testing", label: "Testing & Debugging", status: "locked", why: "Reliable Python work depends on good debugging discipline.", connects: [] },
   ],
+  Alphabets: [
+    { id: "letter-shapes", label: "Letter Shapes", status: "completed", why: "Children first need to notice how each letter looks before they can name it confidently.", connects: ["Letter Names", "Capital Letters"] },
+    { id: "letter-names", label: "Letter Names", status: "completed", why: "Naming letters turns visual spotting into actual recognition.", connects: ["Letter Sounds"] },
+    { id: "capital-letters", label: "Capital Letters", status: "active", why: "Big letters are easier to identify and help build early alphabet confidence.", connects: ["Small Letters"] },
+    { id: "letter-sounds", label: "Letter Sounds", status: "active", why: "Phonics starts when letters connect to the sounds they make.", connects: ["Picture Matching"] },
+    { id: "small-letters", label: "Small Letters", status: "locked", why: "Lowercase letters make more sense once uppercase shapes feel familiar.", connects: ["Picture Matching"] },
+    { id: "picture-matching", label: "Picture Matching", status: "locked", why: "Matching A to apple or B to ball makes letters meaningful in the real world.", connects: ["Simple Words"] },
+    { id: "simple-words", label: "Simple Words", status: "locked", why: "Short words are the first bridge from letters to reading.", connects: [] },
+  ],
+  Numbers: [
+    { id: "counting-objects", label: "Counting Objects", status: "completed", why: "Young learners understand numbers best when they count real things they can see.", connects: ["Number Names", "More or Less"] },
+    { id: "number-names", label: "Number Names", status: "completed", why: "Seeing and saying number names helps children connect symbols with quantity.", connects: ["Number Order"] },
+    { id: "more-or-less", label: "More or Less", status: "active", why: "Comparing groups builds early number sense before formal arithmetic.", connects: ["Number Order"] },
+    { id: "number-order", label: "Number Order", status: "active", why: "Recognizing what comes next creates confidence with sequences and patterns.", connects: ["Simple Addition"] },
+    { id: "simple-addition", label: "Simple Addition", status: "locked", why: "Adding becomes easier once counting and order feel natural.", connects: ["Simple Subtraction"] },
+    { id: "simple-subtraction", label: "Simple Subtraction", status: "locked", why: "Taking away builds on the same number sense as addition.", connects: [] },
+  ],
+  "Colors & Shapes": [
+    { id: "basic-colors", label: "Basic Colors", status: "completed", why: "Bright familiar colors are the easiest visual category for early learners to spot.", connects: ["Object Colors", "Color Sorting"] },
+    { id: "basic-shapes", label: "Basic Shapes", status: "completed", why: "Circles, squares, and triangles form the foundation for visual recognition.", connects: ["Shape Matching"] },
+    { id: "object-colors", label: "Object Colors", status: "active", why: "Linking colors to things like the sun, leaves, and apples makes learning stick.", connects: ["Color Sorting"] },
+    { id: "shape-matching", label: "Shape Matching", status: "active", why: "Matching shapes strengthens observation and pattern recognition.", connects: ["Shape Hunt"] },
+    { id: "color-sorting", label: "Color Sorting", status: "locked", why: "Sorting groups by color turns recognition into a thinking skill.", connects: [] },
+    { id: "shape-hunt", label: "Shape Hunt", status: "locked", why: "Finding shapes in the world helps children notice geometry in everyday life.", connects: [] },
+  ],
+  "Rhymes & Stories": [
+    { id: "listening-fun", label: "Listening Fun", status: "completed", why: "Before children retell stories, they need to enjoy listening and noticing sounds.", connects: ["Animal Sounds", "Rhyme Pairs"] },
+    { id: "animal-sounds", label: "Animal Sounds", status: "completed", why: "Recognizing familiar sounds builds audio memory and playful engagement.", connects: ["Story Moments"] },
+    { id: "rhyme-pairs", label: "Rhyme Pairs", status: "active", why: "Rhyming trains the ear to hear similar ending sounds in words.", connects: ["Simple Story Words"] },
+    { id: "story-moments", label: "Story Moments", status: "active", why: "Remembering what happens first or next builds comprehension gently.", connects: ["Feelings in Stories"] },
+    { id: "simple-story-words", label: "Simple Story Words", status: "locked", why: "New vocabulary lands better once children enjoy the story flow.", connects: [] },
+    { id: "feelings-in-stories", label: "Feelings in Stories", status: "locked", why: "Characters' feelings help children connect emotionally with stories.", connects: [] },
+  ],
+  "Nature & EVS": [
+    { id: "plants-and-animals", label: "Plants and Animals", status: "completed", why: "Kids begin EVS by noticing the living things around them.", connects: ["Homes of Animals", "My Body"] },
+    { id: "weather-around-us", label: "Weather Around Us", status: "completed", why: "Sunny, rainy, and windy days are easy everyday science observations.", connects: ["Seasons"] },
+    { id: "homes-of-animals", label: "Homes of Animals", status: "active", why: "Linking animals to where they live builds real-world understanding.", connects: ["Healthy Habits"] },
+    { id: "my-body", label: "My Body", status: "active", why: "Knowing body parts helps children connect learning to themselves.", connects: ["Healthy Habits"] },
+    { id: "seasons", label: "Seasons", status: "locked", why: "Seasonal change makes more sense after weather patterns feel familiar.", connects: [] },
+    { id: "healthy-habits", label: "Healthy Habits", status: "locked", why: "Handwashing, food, and rest turn EVS into useful everyday action.", connects: [] },
+  ],
 };
 
 export default function LearningTimeline({ domain, onStart, onBack }: TimelineProps) {

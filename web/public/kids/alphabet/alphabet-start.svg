@@ -1,0 +1,10 @@
+<svg width="360" height="180" viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="360" height="180" rx="28" fill="#FFF9DB"/>
+  <rect x="16" y="16" width="328" height="148" rx="24" fill="#FFFFFF" stroke="#111111" stroke-width="4"/>
+  <path d="M62 118C89 91 106 83 132 83C155 83 170 92 186 109C201 126 215 135 237 135C261 135 281 120 298 94" stroke="#FFD43B" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="62" cy="118" r="18" fill="#34C759" stroke="#111111" stroke-width="4"/>
+  <text x="62" y="125" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111111">A</text>
+  <circle cx="298" cy="94" r="16" fill="#5AC8FA" stroke="#111111" stroke-width="4"/>
+  <path d="M298 70L303 83H317L306 91L310 104L298 96L286 104L290 91L279 83H293L298 70Z" fill="#FF8A65" stroke="#111111" stroke-width="3"/>
+  <text x="180" y="54" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#111111">Find the first letter</text>
+</svg>

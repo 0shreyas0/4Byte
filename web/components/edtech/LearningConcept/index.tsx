@@ -9,7 +9,15 @@ interface LearningConceptProps {
   onBack: () => void;
 }
 
-const CONCEPT_DATA: Record<string, any[]> = {
+interface ConceptCard {
+  title: string;
+  concept: string;
+  content: string;
+  visual: string;
+  example: string;
+}
+
+const CONCEPT_DATA: Record<string, ConceptCard[]> = {
   DSA: [
     {
       title: "Variables & Memory",
@@ -158,6 +166,121 @@ const CONCEPT_DATA: Record<string, any[]> = {
       visual: "🔒 Tuple: (1, 2) | 🔓 List: [1, 2]",
       example: "my_list = [1,2]\nmy_tuple = (1,2)"
     }
+  ],
+  Alphabets: [
+    {
+      title: "Meet the Letters",
+      concept: "Letter Recognition",
+      content: "Letters are special shapes we use to read and write. The first step is learning to spot each one quickly, like noticing a friendly face in a crowd.",
+      visual: "🔠 A B C",
+      example: "A is for Apple. B is for Ball."
+    },
+    {
+      title: "Letters Make Sounds",
+      concept: "Phonics",
+      content: "Every letter has a sound. When children connect the shape of a letter to its sound, reading starts to feel like a fun puzzle instead of a memory game.",
+      visual: "🅰️ -> /a/   🅱️ -> /b/",
+      example: "A says 'a' in apple."
+    },
+    {
+      title: "Match Letters with Pictures",
+      concept: "Word Beginnings",
+      content: "Pictures help letters feel real. Matching A with apple or C with cat makes the alphabet useful and memorable.",
+      visual: "🍎 Apple -> A",
+      example: "C is for Cat."
+    }
+  ],
+  Numbers: [
+    {
+      title: "Counting What We See",
+      concept: "Counting",
+      content: "Young learners understand numbers best by counting real objects like stars, apples, and blocks. Seeing quantity comes before memorizing symbols.",
+      visual: "⭐ ⭐ ⭐ = 3",
+      example: "Count 1, 2, 3 apples."
+    },
+    {
+      title: "Number Symbols",
+      concept: "Recognition",
+      content: "Once children can count, they begin matching groups to symbols like 1, 2, and 3. This is the bridge from objects to written math.",
+      visual: "3 -> 🍎🍎🍎",
+      example: "The number 5 means five things."
+    },
+    {
+      title: "Tiny Math Ideas",
+      concept: "Add and Take Away",
+      content: "Simple addition and subtraction start as stories: two birds on a tree and one more joins, or three candies and one is eaten.",
+      visual: "2 + 1 = 3",
+      example: "⭐ ⭐ + ⭐ = ⭐ ⭐ ⭐"
+    }
+  ],
+  "Colors & Shapes": [
+    {
+      title: "Color Spotting",
+      concept: "Color Recognition",
+      content: "Colors are often a child’s first sorting skill. Recognizing yellow, blue, green, and red helps children organize the world visually.",
+      visual: "🔴 🔵 🟡 🟢",
+      example: "The sun is yellow. The leaf is green."
+    },
+    {
+      title: "Shape Friends",
+      concept: "Shape Recognition",
+      content: "Shapes are all around us. Circles, squares, and triangles help children understand how objects look and fit together.",
+      visual: "⚪ 🟦 🔺",
+      example: "A clock is a circle. A tile can be a square."
+    },
+    {
+      title: "Sort and Match",
+      concept: "Visual Patterns",
+      content: "When children sort by color or match the same shapes, they build observation skills that later support math and problem-solving.",
+      visual: "🟡🟡 | 🔺🔺",
+      example: "Put all the red blocks together."
+    }
+  ],
+  "Rhymes & Stories": [
+    {
+      title: "Listening for Fun",
+      concept: "Attention and Sound",
+      content: "Rhymes and stories grow listening skills. Children learn to notice repeated sounds, familiar words, and what happens next.",
+      visual: "🎵 clap, tap, nap",
+      example: "Cat and hat sound alike."
+    },
+    {
+      title: "Rhyming Words",
+      concept: "Sound Patterns",
+      content: "Rhymes help children hear patterns in language. That makes it easier to remember words and later connect sounds to reading.",
+      visual: "🐱 cat -> 🎩 hat",
+      example: "Sun does not rhyme with cat, but hat does."
+    },
+    {
+      title: "Story Understanding",
+      concept: "Comprehension",
+      content: "Simple stories teach order, feelings, and memory. Kids start to understand who did what, what happened first, and how characters feel.",
+      visual: "📖 Beginning -> Middle -> End",
+      example: "First the bunny wakes up, then it eats, then it sleeps."
+    }
+  ],
+  "Nature & EVS": [
+    {
+      title: "Our World Around Us",
+      concept: "Observation",
+      content: "EVS begins with noticing everyday life: plants, animals, rain, sunshine, and the people around us. Curiosity is the starting point.",
+      visual: "🌳 🐦 ☀️ 🌧️",
+      example: "Birds live in nests. Fish live in water."
+    },
+    {
+      title: "My Body and My Health",
+      concept: "Body Awareness",
+      content: "Young children learn EVS by understanding themselves too. Eyes help us see, hands help us hold, and clean habits keep us healthy.",
+      visual: "👀 ✋ 👂",
+      example: "Wash hands before eating."
+    },
+    {
+      title: "Weather and Seasons",
+      concept: "Nature Patterns",
+      content: "Sunny days, rain, wind, and winter all help children notice that nature changes in patterns. This becomes their first science thinking.",
+      visual: "☀️ -> 🌧️ -> 🍂",
+      example: "We use an umbrella when it rains."
+    }
   ]
 };
 
@@ -250,8 +373,12 @@ export default function LearningConcept({ domain, onComplete, onBack }: Learning
       {/* Action Button */}
       <button
         onClick={handleNext}
-        className="w-full flex items-center justify-center gap-3 py-5 brutal-btn bg-black text-white text-lg font-black uppercase tracking-wider"
-        style={{ boxShadow: "8px 8px 0 #8B5CF6" }}
+        className="w-full flex items-center justify-center gap-3 py-5 brutal-btn text-lg font-black uppercase tracking-wider"
+        style={{ 
+          background: "#0D0D0D", 
+          color: "#FFFFFF",
+          boxShadow: "8px 8px 0 #8B5CF6" 
+        }}
       >
         {step < data.length - 1 ? (
           <>Next Concept <ArrowRight size={22} /></>
@@ -260,9 +387,6 @@ export default function LearningConcept({ domain, onComplete, onBack }: Learning
         )}
       </button>
 
-      <div className="mt-6 text-center text-xs font-black uppercase opacity-30 italic">
-        Beginner Mode enabled • Dynamic Concept Generation active
-      </div>
     </div>
   );
 }

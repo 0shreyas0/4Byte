@@ -137,6 +137,56 @@ export const DOMAIN_DATA: Record<string, { topics: string[]; graph: Record<strin
       "OOP Basics": ["Functions"],
       "Modules": ["Functions"]
     }
+  },
+  Alphabets: {
+    topics: ["Letter Shapes", "Letter Names", "Capital Letters", "Letter Sounds", "Picture Matching"],
+    graph: {
+      "Letter Shapes": [],
+      "Letter Names": ["Letter Shapes"],
+      "Capital Letters": ["Letter Shapes"],
+      "Letter Sounds": ["Letter Names"],
+      "Picture Matching": ["Letter Sounds", "Capital Letters"]
+    }
+  },
+  Numbers: {
+    topics: ["Counting Objects", "Number Names", "More or Less", "Number Order", "Simple Addition"],
+    graph: {
+      "Counting Objects": [],
+      "Number Names": ["Counting Objects"],
+      "More or Less": ["Counting Objects"],
+      "Number Order": ["Number Names", "More or Less"],
+      "Simple Addition": ["Number Order"]
+    }
+  },
+  "Colors & Shapes": {
+    topics: ["Basic Colors", "Basic Shapes", "Object Colors", "Shape Matching", "Color Sorting"],
+    graph: {
+      "Basic Colors": [],
+      "Basic Shapes": [],
+      "Object Colors": ["Basic Colors"],
+      "Shape Matching": ["Basic Shapes"],
+      "Color Sorting": ["Basic Colors", "Object Colors"]
+    }
+  },
+  "Rhymes & Stories": {
+    topics: ["Listening Fun", "Animal Sounds", "Rhyme Pairs", "Story Moments", "Feelings in Stories"],
+    graph: {
+      "Listening Fun": [],
+      "Animal Sounds": ["Listening Fun"],
+      "Rhyme Pairs": ["Listening Fun"],
+      "Story Moments": ["Animal Sounds"],
+      "Feelings in Stories": ["Story Moments"]
+    }
+  },
+  "Nature & EVS": {
+    topics: ["Plants and Animals", "Weather Around Us", "Homes of Animals", "My Body", "Healthy Habits"],
+    graph: {
+      "Plants and Animals": [],
+      "Weather Around Us": [],
+      "Homes of Animals": ["Plants and Animals"],
+      "My Body": ["Plants and Animals"],
+      "Healthy Habits": ["My Body", "Weather Around Us"]
+    }
   }
 };
 
@@ -204,7 +254,7 @@ export function analyzePerformance(
   while (current && !visited.has(current)) {
     visited.add(current);
     chain.push(current);
-    const dependents = Object.entries(graph).filter(([t, deps]) => deps.includes(current));
+    const dependents = Object.entries(graph).filter(([, deps]) => deps.includes(current));
     const nextWeak = dependents.find(([t]) => weakTopics.includes(t) || mediumTopics.includes(t));
     if (nextWeak) {
       current = nextWeak[0];
@@ -312,7 +362,7 @@ export function simulateImprovement(
   while (queue.length > 0) {
     const current = queue.shift()!;
     visited.add(current);
-    const dependents = Object.entries(graph).filter(([t, deps]) => deps.includes(current));
+    const dependents = Object.entries(graph).filter(([, deps]) => deps.includes(current));
     for (const [depName] of dependents) {
       if (!visited.has(depName)) {
         const currentScore = result[depName] || 0;

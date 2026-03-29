@@ -1,0 +1,10 @@
+<svg width="360" height="180" viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="360" height="180" rx="28" fill="#E8FFF1"/>
+  <rect x="16" y="16" width="328" height="148" rx="24" fill="#FFFFFF" stroke="#111111" stroke-width="4"/>
+  <circle cx="198" cy="94" r="48" fill="#FFD43B" stroke="#111111" stroke-width="5"/>
+  <path d="M155 72C170 84 188 90 211 93C224 95 237 98 243 111" stroke="#FF6B6B" stroke-width="5" stroke-linecap="round"/>
+  <path d="M175 48C185 61 190 76 190 94C190 116 180 133 164 144" stroke="#4D96FF" stroke-width="5" stroke-linecap="round"/>
+  <path d="M209 50C222 66 229 81 229 100C229 116 223 130 211 142" stroke="#34C759" stroke-width="5" stroke-linecap="round"/>
+  <text x="74" y="62" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#111111">B</text>
+  <text x="74" y="94" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#666666">Ball</text>
+</svg>
