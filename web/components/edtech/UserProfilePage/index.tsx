@@ -103,6 +103,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
   const [savingName, setSavingName] = useState(false);
 
   const [editingPrefs, setEditingPrefs] = useState(false);
+  const [editRole, setEditRole] = useState(profile?.role ?? "student");
   const [editEducationLevel, setEditEducationLevel] = useState(profile?.educationLevel ?? "");
   const [editDomains, setEditDomains] = useState<string[]>(profile?.preferredDomains ?? []);
   const [editExp, setEditExp] = useState(profile?.experienceLevel ?? "");
@@ -144,6 +145,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
     setSavingPrefs(true);
     try {
       await saveProfile({
+        role: editRole as any,
         educationLevel: editEducationLevel,
         preferredDomains: editDomains.filter((domain) =>
           availableDomainChips.some((chip) => chip.id === domain)
@@ -163,6 +165,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
 
   const startEditingPrefs = () => {
     const nextEducationLevel = profile?.educationLevel ?? "";
+    setEditRole(profile?.role ?? "other");
     setEditEducationLevel(nextEducationLevel);
     setEditDomains(profile?.preferredDomains ?? []);
     setEditExp(profile?.experienceLevel ?? "");
@@ -247,12 +250,22 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                 )}
                 <div style={{ color: "#888", fontSize: "0.82rem", fontWeight: 500, marginTop: 4 }}>{user?.email}</div>
 
-                {/* Role badge */}
+                {/* Role badge (clickable) */}
                 {roleInfo && (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, background: roleInfo.color, border: "2px solid #0D0D0D", padding: "4px 12px" }}>
+                  <button 
+                    onClick={startEditingPrefs}
+                    style={{ 
+                      display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, 
+                      background: roleInfo.color, border: "2px solid #0D0D0D", padding: "4px 12px",
+                      cursor: "pointer", transition: "transform 0.1s ease"
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
+                  >
                     <roleInfo.icon size={13} color={roleInfo.textColor} strokeWidth={2.5} />
                     <span style={{ fontWeight: 800, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", color: roleInfo.textColor }}>{roleInfo.label}</span>
-                  </div>
+                    <Edit3 size={10} color={roleInfo.textColor} style={{ marginLeft: 4, opacity: 0.6 }} />
+                  </button>
                 )}
               </div>
             </div>
@@ -311,16 +324,17 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
             <Section title="Learning Profile" accent="#FFD60A">
               {!editingPrefs ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {/* Exp */}
+                  {/* Ed Level (clickable) */}
                   {educationInfo && (
-                    <div>
+                    <div onClick={startEditingPrefs} style={{ cursor: "pointer" }}>
                       <Label text="Education Level" />
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: educationInfo.color, border: "2px solid #0D0D0D" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: educationInfo.color, border: "2px solid #0D0D0D", position: "relative" }}>
                         <educationInfo.icon size={18} color={educationInfo.textColor} strokeWidth={2.5} />
                         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                           <span style={{ fontWeight: 800, fontSize: "0.9rem", color: educationInfo.textColor }}>{educationInfo.label}</span>
                           <span style={{ fontSize: "0.68rem", fontWeight: 700, color: educationInfo.textColor, opacity: 0.75 }}>{educationInfo.sub}</span>
                         </div>
+                        <Edit3 size={14} color={educationInfo.textColor} style={{ marginLeft: "auto", opacity: 0.5 }} />
                       </div>
                     </div>
                   )}
@@ -360,9 +374,48 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {/* Edit Role */}
+                  <div>
+                    <Label text="Your Role" />
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+                      {Object.entries(ROLE_META).map(([key, meta]) => {
+                        const Icon = meta.icon;
+                        const sel = editRole === key;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => setEditRole(key as any)}
+                            style={{ 
+                              display: "flex", alignItems: "center", gap: 8, padding: "10px", 
+                              border: "2px solid #0D0D0D", background: sel ? meta.color : "#F5F0E8", 
+                              cursor: "pointer", textAlign: "left", transition: "all 0.1s ease",
+                              color: sel ? meta.textColor : "#0D0D0D",
+                              boxShadow: sel ? "2px 2px 0 #0D0D0D" : "4px 4px 0 #0D0D0D",
+                              transform: sel ? "translate(2px, 2px)" : "none"
+                            }}
+                          >
+                            <Icon size={14} color={sel ? meta.textColor : "#888"} />
+                            <span style={{ fontWeight: 800, fontSize: "0.7rem", textTransform: "uppercase" }}>{meta.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {/* Edit Ed Level */}
                   <div>
                     <Label text="Education Level" />
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <div style={{ 
+                      display: "grid", 
+                      gridTemplateColumns: "repeat(1, 1fr)", 
+                      gap: 8, 
+                      maxHeight: "360px", 
+                      overflowY: "auto",
+                      paddingRight: "8px",
+                      border: "3px solid #0D0D0D",
+                      padding: "12px",
+                      background: "#FFFFFF",
+                      boxShadow: "inset 4px 4px 0 rgba(0,0,0,0.05)"
+                    }}>
                       {EDUCATION_LEVELS.map((level) => {
                         const Icon = level.icon;
                         const sel = editEducationLevel === level.id;
@@ -370,7 +423,19 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                           <button
                             key={level.id}
                             onClick={() => handleEducationLevelChange(level.id)}
-                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "2px solid #0D0D0D", background: sel ? level.color : "#F5F0E8", cursor: "pointer", textAlign: "left", boxShadow: sel ? "2px 2px 0 #0D0D0D" : "3px 3px 0 #0D0D0D", transform: sel ? "translate(1px, 1px)" : "none" }}
+                            style={{ 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: 10, 
+                              padding: "10px 12px", 
+                              border: "2px solid #0D0D0D", 
+                              background: sel ? level.color : "#F5F0E8", 
+                              cursor: "pointer", 
+                              textAlign: "left", 
+                              boxShadow: sel ? "2px 2px 0 #0D0D0D" : "3px 3px 0 #0D0D0D", 
+                              transform: sel ? "translate(1px, 1px)" : "none",
+                              flexShrink: 0
+                            }}
                           >
                             <Icon size={16} color={sel ? level.textColor : "#0D0D0D"} strokeWidth={2.5} />
                             <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>

@@ -757,7 +757,7 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
 
         <div style={{ border: "2px dashed #0D0D0D", padding: "14px 16px", background: "#fff" }}>
           <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#555" }}>
-            Deep dive appears only when backend returns question-level mentor output (`detailed_report`).
+            The full deep dive is only available when this attempt includes question-by-question mentor feedback.
           </p>
         </div>
       </div>
