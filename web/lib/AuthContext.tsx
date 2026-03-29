@@ -24,9 +24,9 @@ export interface UserProfile {
   activityLog?: Record<string, number>;      // { "YYYY-MM-DD": sessionCount }
   topicMastery?: Record<string, Record<string, number>>; // { domain: { topic: score_0_100 } }
   domainStageProgress?: Record<string, { completedStages: number }>;
-  latestAnalysis?: any; // AnalysisResult
-  latestScores?: Record<string, any>; // Record<string, TopicScore>
-  sessionHistory?: any[];             // last 15 attempts
+  latestAnalysis?: unknown; // AnalysisResult
+  latestScores?: Record<string, unknown>; // Record<string, TopicScore>
+  sessionHistory?: unknown[];             // last 15 attempts
   createdAt?: unknown;
   lastActive?: unknown;
 }

@@ -1,12 +1,12 @@
-"use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   Play, ExternalLink, Search, Filter, BookOpen, Layers, 
   Code2, Globe, Brain, Smartphone, BarChart3, Shield, Cpu, Database,
-  CheckCircle2, Star, Sparkles, Clock, ArrowRight, Zap
+  CheckCircle2, Star, Sparkles, Clock, ArrowRight, Zap, Loader2
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { fetchYouTubeVideos, YouTubeVideo } from "@/lib/edtech/youtube";
+import { generateOptimizedQuery } from "@/lib/edtech/ai";
 
 /* ─── Domain Icons/Colors ─── */
 const DOMAIN_META: Record<string, { icon: any; color: string; bg: string }> = {
@@ -20,40 +20,49 @@ const DOMAIN_META: Record<string, { icon: any; color: string; bg: string }> = {
   "Python":        { icon: Database,  color: "#FFD60A", bg: "#0D0D0D" },
 };
 
-/* ─── Mock Video Data ─── */
-const MOCK_RESOURCES = [
-  // DSA
-  { id: 1, domain: "DSA", topic: "Arrays", title: "Mastering Array Manipulations", url: "https://www.youtube.com/watch?v=09_LlHjoEiY", duration: "12:45", level: "Beginner" },
-  { id: 2, domain: "DSA", topic: "Sorting", title: "Quick Sort vs Merge Sort Explained", url: "https://www.youtube.com/watch?v=Ho9pZ_3T_m8", duration: "15:20", level: "Intermediate" },
-  { id: 3, domain: "DSA", topic: "Recursion", title: "Deep Dive into Recursion Tree", url: "https://www.youtube.com/watch?v=ngCos392W4w", duration: "18:10", level: "Advanced" },
-  
-  // Web Dev
-  { id: 4, domain: "Web Dev", topic: "React Basics", title: "React Component Lifecycle", url: "https://www.youtube.com/watch?v=O6P86uwfdO0", duration: "22:00", level: "Intermediate" },
-  { id: 5, domain: "Web Dev", topic: "CSS Basics", title: "Modern CSS Flexbox & Grid", url: "https://www.youtube.com/watch?v=jzZ_pA6A_W0", duration: "14:30", level: "Beginner" },
-  { id: 6, domain: "Web Dev", topic: "JS Basics", title: "Asynchronous JavaScript (Promises/Async)", url: "https://www.youtube.com/watch?v=V_Kr9OSfDeU", duration: "19:45", level: "Advanced" },
-  
-  // Aptitude
-  { id: 7, domain: "Aptitude", topic: "Arithmetic", title: "Mental Math: Speed Addition & Subtraction", url: "https://www.youtube.com/watch?v=L2zR9O2f4M8", duration: "10:30", level: "Beginner" },
-  { id: 8, domain: "Aptitude", topic: "Percentages", title: "Smart Percentage Calculations", url: "https://www.youtube.com/watch?v=y38uXv_Nl_Y", duration: "11:15", level: "Intermediate" },
-];
-
 export default function ResourceLibrary({ currentDomain }: { currentDomain: string }) {
   const { profile } = useAuth();
   const [selectedDomain, setSelectedDomain] = useState<string>(currentDomain || "DSA");
   const [search, setSearch] = useState("");
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const domains = Object.keys(DOMAIN_META);
   
-  // Filter resources
-  const filtered = MOCK_RESOURCES.filter(r => 
-    r.domain === selectedDomain && 
-    (r.title.toLowerCase().includes(search.toLowerCase()) || r.topic.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  // Recommendation logic: find topics with scores < 50
+  // Recommendation logic: find topics with scores < 60
   const weakTopicsInDomain = Object.entries(profile?.topicMastery?.[selectedDomain] || {})
     .filter(([, score]) => score < 60)
     .map(([topic]) => topic);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchResources = async () => {
+      setLoading(true);
+      try {
+        // Build a query based on search or weak topics
+        let query = "";
+        if (search) {
+          query = `${selectedDomain} ${search}`;
+        } else if (weakTopicsInDomain.length > 0) {
+          query = `${selectedDomain} ${weakTopicsInDomain[0]} tutorial`;
+        } else {
+          query = `${selectedDomain} beginner tutorial`;
+        }
+
+        const res = await fetchYouTubeVideos(query);
+        if (isMounted) {
+          setVideos(res);
+        }
+      } catch (err) {
+        console.error("Failed to fetch library resources:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchResources();
+    return () => { isMounted = false; };
+  }, [selectedDomain, search, weakTopicsInDomain.length > 0]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8", display: "flex" }}>
@@ -125,13 +134,13 @@ export default function ResourceLibrary({ currentDomain }: { currentDomain: stri
               display: "flex", alignItems: "center", gap: 8 
             }}>
               <Zap size={16} color="#FFD60A" fill="#FFD60A" />
-              <span style={{ fontWeight: 800, fontSize: "0.85rem", textTransform: "uppercase" }}>{filtered.length} Resources</span>
+              <span style={{ fontWeight: 800, fontSize: "0.85rem", textTransform: "uppercase" }}>{videos.length} Results</span>
             </div>
           </div>
         </div>
 
         {/* Recommendations alert if any */}
-        {weakTopicsInDomain.length > 0 && (
+        {!search && weakTopicsInDomain.length > 0 && (
           <div style={{ 
             background: "#FF3B3B", border: "4px solid #0D0D0D", color: "#FFFFFF", 
             padding: "20px", marginBottom: 32, boxShadow: "8px 8px 0 #0D0D0D",
@@ -139,96 +148,107 @@ export default function ResourceLibrary({ currentDomain }: { currentDomain: stri
           }}>
             <Sparkles size={32} />
             <div>
-              <div style={{ fontWeight: 900, fontSize: "1.1rem", textTransform: "uppercase" }}>Focus Needed!</div>
+              <div style={{ fontWeight: 900, fontSize: "1.1rem", textTransform: "uppercase" }}>Personalized Support!</div>
               <div style={{ fontWeight: 700, fontSize: "0.9rem", opacity: 0.9 }}>
-                You're scoring below 60% in <span style={{ fontWeight: 900, textDecoration: "underline" }}>{weakTopicsInDomain.join(", ")}</span>. 
-                We've pinned relevant study material below.
+                Based on your test results, you should focus on <span style={{ fontWeight: 900, textDecoration: "underline" }}>{weakTopicsInDomain.join(", ")}</span>. 
+                We've fetched live tutorials for you.
               </div>
             </div>
           </div>
         )}
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 size={48} className="animate-spin mb-4" />
+            <p className="font-black uppercase tracking-widest text-[#0D0D0D]">Syncing with YouTube...</p>
+          </div>
+        )}
+
         {/* Resource Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {filtered.map(res => {
-            const isWeak = weakTopicsInDomain.includes(res.topic);
-            const mastery = profile?.topicMastery?.[selectedDomain]?.[res.topic] || 0;
-            const isMastered = mastery >= 85;
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {videos.map((res, idx) => {
+              const mastery = profile?.topicMastery?.[selectedDomain]?.[selectedDomain] || 0; // fallback
+              const isMastered = mastery >= 85;
 
-            return (
-              <div 
-                key={res.id}
-                style={{ 
-                  background: "#FFFFFF", border: "4px solid #0D0D0D", 
-                  boxShadow: "6px 6px 0 #0D0D0D", display: "flex", flexDirection: "column",
-                  position: "relative"
-                }}
-              >
-                {/* Labels */}
-                <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10, display: "flex", gap: 6 }}>
-                  <div style={{ background: "#0D0D0D", color: "#FFFFFF", padding: "4px 8px", fontSize: "0.65rem", fontWeight: 900, textTransform: "uppercase", border: "1px solid #0D0D0D" }}>
-                    {res.topic}
-                  </div>
-                  {isWeak && (
-                    <div style={{ background: "#FFD60A", color: "#0D0D0D", padding: "4px 8px", fontSize: "0.65rem", fontWeight: 900, textTransform: "uppercase", border: "1px solid #0D0D0D" }}>
-                      Recommended
+              return (
+                <div 
+                  key={res.videoId + idx}
+                  style={{ 
+                    background: "#FFFFFF", border: "4px solid #0D0D0D", 
+                    boxShadow: "6px 6px 0 #0D0D0D", display: "flex", flexDirection: "column",
+                    position: "relative"
+                  }}
+                >
+                  {/* Labels */}
+                  <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10, display: "flex", gap: 6 }}>
+                    <div style={{ background: "#0D0D0D", color: "#FFFFFF", padding: "4px 8px", fontSize: "0.65rem", fontWeight: 900, textTransform: "uppercase", border: "1px solid #0D0D0D" }}>
+                      {selectedDomain}
                     </div>
-                  )}
-                  {isMastered && (
-                    <div style={{ background: "#34C759", color: "#FFFFFF", padding: "4px 8px", fontSize: "0.65rem", fontWeight: 900, textTransform: "uppercase", border: "1px solid #0D0D0D" }}>
-                      Mastered
-                    </div>
-                  )}
-                </div>
-
-                {/* Thumb Placeholder */}
-                <div className="aspect-video bg-gray-100 flex items-center justify-center relative overflow-hidden group">
-                   <div style={{ 
-                     position: "absolute", inset: 0, 
-                     background: isWeak ? "rgba(255, 214, 10, 0.05)" : "transparent"
-                   }} />
-                   <Play size={40} color="#0D0D0D" opacity={0.2} />
-                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300" />
-                </div>
-
-                {/* Details */}
-                <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                    <div style={{ fontSize: "0.7rem", fontWeight: 900, textTransform: "uppercase", color: "#888" }}>{res.level}</div>
-                    <div style={{ width: 4, height: 4, background: "#888", borderRadius: "50%" }} />
-                    <div style={{ fontSize: "0.7rem", fontWeight: 900, textTransform: "uppercase", color: "#888" }}>{res.duration}</div>
-                  </div>
-                  
-                  <h3 style={{ fontWeight: 900, fontSize: "1.1rem", lineHeight: 1.2, marginBottom: 16 }}>{res.title}</h3>
-                  
-                  <div className="mt-auto flex items-center justify-between">
-                    {isMastered ? (
-                      <div className="flex items-center gap-2 text-[#34C759] font-black text-xs uppercase">
-                        <CheckCircle2 size={16} /> Concepts Clear
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-gray-400 font-bold text-xs uppercase">
-                        <Clock size={16} /> Unwatched
+                    {idx < 2 && !search && weakTopicsInDomain.length > 0 && (
+                      <div style={{ background: "#FFD60A", color: "#0D0D0D", padding: "4px 8px", fontSize: "0.65rem", fontWeight: 900, textTransform: "uppercase", border: "1px solid #0D0D0D" }}>
+                        Recommended
                       </div>
                     )}
+                  </div>
+
+                  {/* Thumb Placeholder */}
+                  <div className="aspect-video bg-black flex items-center justify-center relative overflow-hidden group">
+                     <img 
+                       src={`https://img.youtube.com/vi/${res.videoId}/maxresdefault.jpg`} 
+                       alt={res.title}
+                       className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-all duration-300"
+                       onError={(e) => {
+                         (e.target as any).src = `https://img.youtube.com/vi/${res.videoId}/0.jpg`;
+                       }}
+                     />
+                     <div className="absolute inset-0 flex items-center justify-center">
+                        <Play size={48} color="#FFD60A" fill="#FFD60A" className="drop-shadow-lg" />
+                     </div>
+                  </div>
+
+                  {/* Details */}
+                  <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <div style={{ fontSize: "0.7rem", fontWeight: 900, textTransform: "uppercase", color: "#888" }}>{res.channel}</div>
+                      {res.duration && (
+                        <>
+                          <div style={{ width: 4, height: 4, background: "#888", borderRadius: "50%" }} />
+                          <div style={{ fontSize: "0.7rem", fontWeight: 900, textTransform: "uppercase", color: "#888" }}>{res.duration}</div>
+                        </>
+                      )}
+                    </div>
                     
-                    <a 
-                      href={res.url} 
-                      target="_blank" 
-                      className="brutal-btn p-3 bg-white hover:bg-[#F5F0E8] transition-all"
-                      style={{ border: "2px solid #0D0D0D", boxShadow: "3px 3px 0 #0D0D0D" }}
-                    >
-                      <ExternalLink size={16} color="#0D0D0D" />
-                    </a>
+                    <h3 
+                      style={{ fontWeight: 900, fontSize: "1.1rem", lineHeight: 1.2, marginBottom: 16 }}
+                      dangerouslySetInnerHTML={{ __html: res.title }}
+                    />
+                    
+                    <div className="mt-auto flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-gray-400 font-bold text-[10px] uppercase">
+                        <Clock size={14} /> Video Tutorial
+                      </div>
+                      
+                      <a 
+                        href={res.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="brutal-btn p-3 bg-white hover:bg-[#FFD60A] transition-all"
+                        style={{ border: "2px solid #0D0D0D", boxShadow: "3px 3px 0 #0D0D0D" }}
+                      >
+                        <ExternalLink size={16} color="#0D0D0D" />
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Empty State */}
-        {filtered.length === 0 && (
+        {!loading && videos.length === 0 && (
           <div style={{ 
             padding: "80px 40px", textAlign: "center", border: "4px dashed rgba(0,0,0,0.1)", marginTop: 20
           }}>

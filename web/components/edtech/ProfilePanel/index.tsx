@@ -326,8 +326,8 @@ export default function ProfilePanel({ open, onClose, onNavigate }: ProfilePanel
             </Section>
           )}
 
-          {/* No profile yet notice */}
-          {!profile?.onboardingComplete && (
+          {/* No profile yet notice - only show if actually missing key fields */}
+          {(!profile?.onboardingComplete && (!profile?.role || !profile?.preferredDomains?.length)) && (
             <div
               style={{
                 background: "#FFD60A",

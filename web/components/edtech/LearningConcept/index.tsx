@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BookOpen, ArrowRight, Lightbulb, Code, CheckCircle2 } from "lucide-react";
 
 interface LearningConceptProps {
@@ -306,10 +306,6 @@ export default function LearningConcept({ domain, stage = 1, onComplete, onBack 
   const [step, setStep] = useState(0);
   const data = selectedConcepts;
   const current = data[step];
-
-  useEffect(() => {
-    setStep(0);
-  }, [domain, stage]);
 
   const handleNext = () => {
     if (step < data.length - 1) {

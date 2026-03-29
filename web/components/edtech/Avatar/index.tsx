@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { X, MessageSquare } from "lucide-react";
+import { X, MessageSquare, Play, ExternalLink, Sparkles } from "lucide-react";
+import { fetchYouTubeVideos } from "@/lib/edtech/youtube";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -78,6 +79,8 @@ export default function Avatar() {
     }
   }, [chatMessages, isChatOpen]);
 
+  const [currentVideo, setCurrentVideo] = useState<any>(null);
+
   const sendChatMessage = useCallback(async () => {
     const userText = chatInput.trim();
     if (!userText || isChatLoading) return;
@@ -86,13 +89,26 @@ export default function Avatar() {
     setChatMessages(nextMessages);
     setChatInput("");
     setIsChatLoading(true);
+    setCurrentVideo(null); // reset
 
     try {
-      const response = await fetch("/api/chat", {
+      // Parallel fetch chat and potential video
+      const chatPromise = fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: nextMessages })
       });
+
+      const videoSearchPromise = (async () => {
+         // simplistic heuristic: check if message has > 10 chars and contains topic-like word
+         if (userText.length > 5) {
+             const res = await fetchYouTubeVideos(userText + " tutorial");
+             return res[0] || null;
+         }
+         return null;
+      })();
+
+      const [response, recVideo] = await Promise.all([chatPromise, videoSearchPromise]);
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
@@ -103,6 +119,9 @@ export default function Avatar() {
       const reply = typeof data.reply === "string" ? data.reply : "I could not generate a response right now.";
       const cleanReply = normalizeTutorText(reply);
       setChatMessages((prev) => [...prev, { role: "assistant", content: cleanReply }]);
+      if (recVideo) {
+         setCurrentVideo(recVideo);
+      }
     } catch (error: any) {
       const fallback = `Chat error: ${error?.message || "Unknown failure"}`;
       setChatMessages((prev) => [...prev, { role: "assistant", content: fallback }]);
@@ -194,6 +213,25 @@ export default function Avatar() {
                   <span className="w-1.5 h-1.5 bg-black rounded-full animate-bounce" />
                   <span className="w-1.5 h-1.5 bg-black rounded-full animate-bounce [animation-delay:120ms]" />
                   <span className="w-1.5 h-1.5 bg-black rounded-full animate-bounce [animation-delay:240ms]" />
+                </div>
+              )}
+
+              {currentVideo && (
+                <div className="mr-auto w-[90%] bg-[#FFD60A] border-4 border-black p-2 shadow-[4px_4px_0px_#000] animate-in slide-in-from-left-2">
+                  <div className="flex items-center gap-2 mb-2">
+                     <Sparkles size={12} />
+                     <span className="text-[8px] font-black uppercase tracking-tighter">Recommended Resource</span>
+                  </div>
+                  <div className="text-[10px] font-bold line-clamp-1 mb-2 border-b border-black/20 pb-1">{currentVideo.title}</div>
+                  <a 
+                    href={currentVideo.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between bg-black text-white px-2 py-1.5 text-[9px] font-black uppercase hover:bg-gray-800 transition-colors"
+                  >
+                    <span>Watch Lesson</span>
+                    <Play size={10} fill="white" />
+                  </a>
                 </div>
               )}
             </div>

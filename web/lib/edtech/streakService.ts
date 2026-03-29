@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { TopicScore } from "./conceptGraph";
 
@@ -15,7 +15,7 @@ export async function recordSession(
   uid: string, 
   domain?: string, 
   newScores?: Record<string, TopicScore>,
-  analysis?: any,
+  analysis?: unknown,
   stage?: number
 ): Promise<void> {
   const ref = doc(db, "users", uid);

@@ -320,7 +320,7 @@ export async function analyzePerformanceAsync(
   const result = analyzePerformance(scores, domain, rawResults);
   
   const enhancedPath = await Promise.all(result.learningPath.map(async (step, i) => {
-    if (i > 2) return step; 
+    if (i > 4) return step; 
     const focalPoint = step.concept || step.topic;
     const query = await generateOptimizedQuery(focalPoint, step.fixes, "beginner", domain);
     const rawVideos = await fetchYouTubeVideos(query);

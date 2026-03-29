@@ -134,7 +134,10 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
   const handleSaveName = async () => {
     setSavingName(true);
     try {
-      await saveProfile({ displayName: editName });
+      await saveProfile({ 
+        displayName: editName,
+        onboardingComplete: true
+      });
       setEditingName(false);
     } finally {
       setSavingName(false);
@@ -152,6 +155,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
         ),
         experienceLevel: editExp as "beginner" | "intermediate" | "advanced",
         learningGoal: editGoal as "placement" | "upskilling" | "academic" | "freelancing" | "curiosity",
+        onboardingComplete: true,
       });
       setEditingPrefs(false);
     } finally {

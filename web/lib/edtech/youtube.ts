@@ -5,63 +5,47 @@ export interface YouTubeVideo {
   videoId: string;
   url: string;
   channel: string;
+  duration?: string;
 }
 
-const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-
 export async function fetchYouTubeVideos(query: string): Promise<YouTubeVideo[]> {
-  if (!YOUTUBE_API_KEY || YOUTUBE_API_KEY === "YOUR_API_KEY_HERE") {
-    console.warn("YouTube API Key missing. Returning mock data.");
-    return [
-      {
-        title: "Mock: Understanding Nested Loops in JavaScript",
-        videoId: "mock1",
-        url: "https://www.youtube.com/watch?v=mock1",
-        channel: "Mock School",
-      },
-      {
-        title: "Mock: Array Traversal and Logic",
-        videoId: "mock2",
-        url: "https://www.youtube.com/watch?v=mock2",
-        channel: "Code Mock",
-      },
-    ];
+  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  
+  if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+    console.warn("YouTube API Key missing. Returning fallback search links.");
+    return getFallbackVideos(query);
   }
 
-  const url = "https://www.googleapis.com/youtube/v3/search";
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&key=${apiKey}&maxResults=8&type=video`;
 
   try {
-    console.log(`YouTube Search Query: "${query}"`);
-    const res = await axios.get(url, {
-      params: {
-        part: "snippet",
-        q: query,
-        key: YOUTUBE_API_KEY,
-        maxResults: 10,
-        type: "video",
-      },
-    });
-
-    const items = res.data.items;
-    console.log(`YouTube Fetched: ${items?.length || 0} videos`);
+    const res = await fetch(url);
+    if (!res.ok) {
+       const errBody = await res.json().catch(() => ({}));
+       throw new Error(errBody.error?.message || `YouTube API responded with ${res.status}`);
+    }
+    
+    const data = await res.json();
+    const items = data.items;
+    
     if (!items || items.length === 0) return [];
 
     // Optional: Get more details (duration)
     const videoIds = items.map((i: any) => i.id.videoId).join(",");
-    const detailsUrl = "https://www.googleapis.com/youtube/v3/videos";
+    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds}&key=${apiKey}`;
     
-    const detailsRes = await axios.get(detailsUrl, {
-      params: {
-        part: "contentDetails",
-        id: videoIds,
-        key: YOUTUBE_API_KEY,
-      },
-    });
-
-    const durations: Record<string, string> = {};
-    detailsRes.data.items.forEach((item: any) => {
-      durations[item.id] = item.contentDetails.duration;
-    });
+    let durations: Record<string, string> = {};
+    try {
+      const detailsRes = await fetch(detailsUrl);
+      if (detailsRes.ok) {
+        const detailsData = await detailsRes.json();
+        detailsData.items.forEach((item: any) => {
+          durations[item.id] = item.contentDetails.duration;
+        });
+      }
+    } catch (e) {
+      console.warn("Could not fetch video durations:", e);
+    }
 
     return items.map((item: any) => ({
       title: item.snippet.title,
@@ -71,25 +55,25 @@ export async function fetchYouTubeVideos(query: string): Promise<YouTubeVideo[]>
       duration: durations[item.id.videoId],
     }));
   } catch (error: any) {
-    // 403 = API key restricted / quota exhausted — degrade gracefully
-    if (error?.response?.status === 403) {
-      console.warn("YouTube API: 403 Forbidden (key restricted or quota hit). Using mock data.");
-    } else {
-      console.warn("YouTube fetch failed, using mock data:", error?.message || error);
-    }
-    return [
-      {
-        title: "Understanding the concept — Recommended Study",
-        videoId: "mock1",
-        url: "https://www.youtube.com/results?search_query=learn+programming",
-        channel: "Study Resources",
-      },
-      {
-        title: "Practice Problems and Exercises",
-        videoId: "mock2",
-        url: "https://www.youtube.com/results?search_query=programming+exercises",
-        channel: "Code Practice",
-      },
-    ];
+    console.error("YouTube API Failure:", error.message || error);
+    return getFallbackVideos(query);
   }
+}
+
+function getFallbackVideos(query: string): YouTubeVideo[] {
+  const searchQuery = encodeURIComponent(query);
+  return [
+    {
+      title: `Watch tutorials on ${query}`,
+      videoId: "mock1",
+      url: `https://www.youtube.com/results?search_query=${searchQuery}`,
+      channel: "YouTube Search",
+    },
+    {
+      title: `Master ${query} concepts`,
+      videoId: "mock2",
+      url: `https://www.youtube.com/results?search_query=${searchQuery}+advanced`,
+      channel: "YouTube Search",
+    },
+  ];
 }

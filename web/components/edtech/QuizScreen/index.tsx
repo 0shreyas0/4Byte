@@ -13,11 +13,12 @@ import {
   Lightbulb,
   Lock,
 } from "lucide-react";
-import { QUIZ_DATA } from "@/lib/edtech/quizData";
+import { QUIZ_DATA, getQuizQuestions } from "@/lib/edtech/quizData";
 import { TopicScore } from "@/lib/edtech/conceptGraph";
 
 interface QuizScreenProps {
   domain: string;
+  stage?: number;
   onComplete: (scores: Record<string, TopicScore>, results: QuestionResult[]) => void;
   onBack: () => void;
 }
@@ -158,23 +159,16 @@ function getKidOptionStyle(
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenProps) {
-  // Enhanced fallback logic: Try exact match, then subject-only match, then default to DSA
-  const getQuestions = () => {
-    if (QUIZ_DATA[domain]) return QUIZ_DATA[domain];
-    
-    // Extract base subject (e.g. "Physics" from "Physics (11th Grade)")
+export default function QuizScreen({ domain, stage = 1, onComplete, onBack }: QuizScreenProps) {
+  const resolveDomainKey = () => {
+    if (QUIZ_DATA[domain]) return domain;
     const baseSubject = domain.split(" (")[0];
-    if (QUIZ_DATA[baseSubject]) return QUIZ_DATA[baseSubject];
-
-    // Check for nested keys (e.g. "Mathematics" matches "Mathematics (11th Grade)")
-    const fuzzyKey = Object.keys(QUIZ_DATA).find(k => k.startsWith(baseSubject));
-    if (fuzzyKey) return QUIZ_DATA[fuzzyKey];
-
-    return QUIZ_DATA["DSA"];
+    if (QUIZ_DATA[baseSubject]) return baseSubject;
+    const fuzzyKey = Object.keys(QUIZ_DATA).find((key) => key.startsWith(baseSubject));
+    return fuzzyKey || "DSA";
   };
 
-  const questions = getQuestions();
+  const questions = getQuizQuestions(resolveDomainKey(), stage);
   const totalQuestions = questions.length;
   const isVisualKidQuiz = questions.some((question) => question.cardStyle === "visual");
   const showExamChrome = !isVisualKidQuiz;

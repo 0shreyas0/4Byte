@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Navbar, { Screen } from "@/components/edtech/Navbar";
 import LandingScreen from "@/components/edtech/LandingScreen";
 import DomainSelection from "@/components/edtech/DomainSelection";
@@ -23,6 +23,7 @@ import Avatar from "@/components/edtech/Avatar";
 import TextSelector from "@/components/edtech/TextSelector";
 import { useAuth } from "@/lib/AuthContext";
 import { analyzePerformanceAsync, AnalysisResult, TopicScore, QuestionResult, LearningPersona } from "@/lib/edtech/conceptGraph";
+import { getAvailableQuizStages } from "@/lib/edtech/domainStages";
 import { recordSession } from "@/lib/edtech/streakService";
 
 export default function Home() {
@@ -37,9 +38,15 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Whether we're waiting for the profile to load after a login event
-  const [awaitingPostLogin, setAwaitingPostLogin] = useState(false);
+  const awaitingPostLoginRef = useRef(false);
 
   const { user, profile, profileLoading, refreshProfile } = useAuth();
+
+  const getNextQuizStage = useCallback((selectedDomain: string) => {
+    const completedStages = profile?.domainStageProgress?.[selectedDomain]?.completedStages ?? 0;
+    const availableStages = getAvailableQuizStages(selectedDomain);
+    return Math.min(completedStages + 1, availableStages);
+  }, [profile]);
 
   // Linear Step-by-Step Navigation
   const navigate = useCallback((next: Screen) => {
@@ -62,19 +69,18 @@ export default function Home() {
 
   // After login: once profile finishes loading, route to onboarding or domain-select
   useEffect(() => {
-    if (awaitingPostLogin && !profileLoading) {
-      setAwaitingPostLogin(false);
-      if (!profile?.onboardingComplete) {
-        navigate("onboarding");
-      } else {
-        navigate("domain-select");
-      }
+    if (awaitingPostLoginRef.current && !profileLoading) {
+      awaitingPostLoginRef.current = false;
+      const target = !profile?.onboardingComplete ? "onboarding" : "domain-select";
+      setTimeout(() => navigate(target), 0);
     }
-  }, [awaitingPostLogin, profileLoading, profile, navigate]);
+  }, [profileLoading, profile, navigate]);
+
+  const quizStage = getNextQuizStage(domain);
 
   // Called by LoginScreen after successful auth
   const handlePostLogin = useCallback(() => {
-    setAwaitingPostLogin(true);
+    awaitingPostLoginRef.current = true;
   }, []);
 
   // Handlers for Linear Flow
@@ -140,14 +146,14 @@ export default function Home() {
     // Record the completed session → updates streak, totalSessions, activityLog, topicMastery & latestAnalysis
     if (user) {
       try {
-        await recordSession(user.uid, domain, scores, result);
+        await recordSession(user.uid, domain, scores, result, quizStage);
         await refreshProfile?.(); // pull fresh data so everything is in sync
       } catch (e) {
         console.error("Failed to record session:", e);
       }
     }
     navigate("results");
-  }, [scores, domain, results, aiPersona, navigate, user, refreshProfile]);
+  }, [scores, domain, results, aiPersona, navigate, user, refreshProfile, quizStage]);
 
   const handleRestart = useCallback(() => {
     setScores({});
@@ -245,13 +251,15 @@ export default function Home() {
           <LearningTimeline
             domain={domain}
             onStart={handleTimelineStart}
-            onBack={() => navigate("mode-select")}
+            onBack={() => navigate(quizMode === "coding" ? "mode-select" : "domain-select")}
           />
         )}
 
         {screen === "learning-concept" && (
           <LearningConcept
+            key={`${domain}-${quizStage}`}
             domain={domain}
+            stage={quizStage}
             onComplete={handleConceptComplete}
             onBack={() => navigate("timeline")}
           />
@@ -260,6 +268,7 @@ export default function Home() {
         {screen === "quiz" && (
           <QuizScreen
             domain={domain}
+            stage={quizStage}
             onComplete={handleQuizComplete}
             onBack={() => navigate("learning-concept")}
           />
