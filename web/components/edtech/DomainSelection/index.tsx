@@ -31,6 +31,37 @@ import {
   Layers,
 } from "lucide-react";
 
+const DIRECT_SUBJECTS_BY_EDUCATION_LEVEL: Record<string, string[]> = {
+  early_childhood: ["Alphabets", "Numbers", "Colors & Shapes", "Rhymes & Stories", "Nature & EVS"],
+  primary: ["Maths", "English", "EVS", "Hindi", "GK"],
+  middle: ["Mathematics", "Science", "Social Studies", "English", "Computers"],
+  secondary: ["Mathematics", "Physics", "Chemistry", "Biology", "History", "Computer Science"],
+  hs_science_pcm: ["Physics", "Chemistry", "Mathematics", "Computer Science", "English"],
+  hs_science_pcb: ["Physics", "Chemistry", "Biology", "Zoology"],
+  hs_commerce: ["Accountancy", "Economics", "Business Studies", "Applied Mathematics"],
+  hs_arts: ["History", "Political Science", "Geography", "Psychology", "Sociology"],
+};
+
+const PROFESSIONAL_LEVELS = new Set([
+  "engineering",
+  "medical",
+  "law",
+  "mba",
+  "competitive",
+  "professional",
+]);
+
+const DIRECT_SUBJECT_LABELS: Record<string, string> = {
+  early_childhood: "Pre-School / Kindergarten",
+  primary: "Class 1 - 5",
+  middle: "Class 6 - 8",
+  secondary: "Class 9 - 10",
+  hs_science_pcm: "11 - 12 Science (PCM)",
+  hs_science_pcb: "11 - 12 Science (PCB)",
+  hs_commerce: "11 - 12 Commerce",
+  hs_arts: "11 - 12 Arts / Humanities",
+};
+
 function PythonLogoMark({
   size = 26,
   color = "currentColor",
@@ -284,12 +315,17 @@ import { useAuth } from "@/lib/AuthContext";
 
 export default function DomainSelection({ onSelect, onBack }: DomainSelectionProps) {
   const { profile } = useAuth();
+  const savedEducationLevel = profile?.educationLevel ?? null;
+  const opensDirectSubjects = savedEducationLevel ? !PROFESSIONAL_LEVELS.has(savedEducationLevel) : false;
+  const opensDirectDomains = savedEducationLevel ? PROFESSIONAL_LEVELS.has(savedEducationLevel) : false;
 
   const [step, setStep] = useState<"level" | "grade" | "stream" | "subject" | "professional">(
-    profile?.academicGrade ? "subject" : "level"
+    opensDirectSubjects ? "subject" : opensDirectDomains ? "professional" : profile?.academicGrade ? "subject" : "level"
   );
   const [selectedLevel, setSelectedLevel] = useState<string | null>(profile?.academicLevel ?? null);
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(profile?.academicGrade ?? null);
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(
+    opensDirectSubjects ? DIRECT_SUBJECT_LABELS[savedEducationLevel ?? ""] ?? null : profile?.academicGrade ?? null
+  );
   const [selectedStream, setSelectedStream] = useState<string | null>(profile?.academicStream ?? null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   
@@ -323,8 +359,8 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
   };
 
   const handleFinalConfirm = () => {
-    const finalSelection = step === "professional" 
-      ? selectedSubject || "" 
+    const finalSelection = step === "professional" || opensDirectSubjects
+      ? selectedSubject || ""
       : `${selectedSubject} (${selectedGrade}${selectedStream ? ` - ${selectedStream}` : ""})`;
       
     setConfirming(true);
@@ -335,8 +371,13 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
     if (step === "level") onBack();
     else if (step === "grade") setStep("level");
     else if (step === "stream") setStep("grade");
-    else if (step === "subject") setStep(selectedLevel === "senior" || selectedLevel === "higher" ? "stream" : "grade");
-    else if (step === "professional") setStep("level");
+    else if (step === "subject") {
+      if (opensDirectSubjects) onBack();
+      else setStep(selectedLevel === "senior" || selectedLevel === "higher" ? "stream" : "grade");
+    } else if (step === "professional") {
+      if (opensDirectDomains) onBack();
+      else setStep("level");
+    }
   };
 
   // ── Render Helpers ────────────────────────────────────────────────────────────
@@ -420,7 +461,11 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
   };
 
   const renderSubjects = () => {
-    const subjects = selectedGrade ? (SUBJECTS_BY_GRADE[selectedGrade] || ["Math", "Science", "English", "History"]) : [];
+    const subjects = opensDirectSubjects
+      ? DIRECT_SUBJECTS_BY_EDUCATION_LEVEL[savedEducationLevel ?? ""] || []
+      : selectedGrade
+        ? (SUBJECTS_BY_GRADE[selectedGrade] || ["Math", "Science", "English", "History"])
+        : [];
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {subjects.map((sub) => {
@@ -512,7 +557,7 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
             {step === "level" && "Level Selection"}
             {step === "grade" && `${selectedLevel} / Grade Selection`}
             {step === "stream" && `${selectedGrade} / Stream Selection`}
-            {step === "subject" && `${selectedGrade} / Subject Selection`}
+            {step === "subject" && `${selectedGrade ?? "Subjects"} / Subject Selection`}
             {step === "professional" && "Professional Tracks"}
           </div>
           <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#FFFFFF", marginBottom: 12 }}>
@@ -537,7 +582,7 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
             ← BACK
           </button>
 
-          {step === "subject" && profile?.academicGrade && (
+          {step === "subject" && profile?.academicGrade && !opensDirectSubjects && (
             <button onClick={() => setStep("level")} className="text-xs font-black uppercase underline p-2">
               Change My Level / Grade
             </button>
