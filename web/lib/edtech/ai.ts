@@ -14,7 +14,11 @@ export const DOMAIN_CONTEXT: Record<string, string> = {
   Cybersecurity: "network security ethical hacking penetration testing cyber security",
   IoT: "embedded systems arduino sensors hardware internet of things",
   "App Dev": "react native mobile app development android ios flutter",
-  Python: "python programming basics oop scripting python tutorial"
+  Python: "python programming basics oop scripting python tutorial",
+  "Product Design": "ui ux design figma user experience interface research prototyping",
+  Marketing: "digital marketing seo sem social media content strategy analytics",
+  Business: "finance accounting entrepreneurship business strategy startup management",
+  "Content Creation": "video editing storytelling youtube growth podcasting creative writing"
 };
 
 // 🔥 DOMAIN KEYWORDS FOR FILTERING
@@ -26,7 +30,11 @@ export const DOMAIN_KEYWORDS: Record<string, string[]> = {
   Cybersecurity: ["security", "hacking", "network", "cyber", "penetration", "threat"],
   IoT: ["arduino", "iot", "sensor", "embedded", "hardware", "raspberry"],
   "App Dev": ["mobile", "react", "native", "flutter", "android", "ios", "app"],
-  Python: ["python", "programming", "scripting", "basics", "oop"]
+  Python: ["python", "programming", "scripting", "basics", "oop"],
+  "Product Design": ["design", "ui", "ux", "figma", "experience", "interface", "prototype"],
+  Marketing: ["marketing", "seo", "content", "social", "media", "brand", "analytics"],
+  Business: ["finance", "business", "startup", "strategy", "management", "accounting"],
+  "Content Creation": ["video", "editing", "storytelling", "creative", "podcast", "content"]
 };
 
 /**

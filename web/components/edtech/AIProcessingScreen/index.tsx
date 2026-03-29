@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { analyzePerformanceAI, AnalysisResponse } from "@/lib/rag";
 import { TopicScore, QuestionResult } from "@/lib/edtech/conceptGraph";
 
@@ -36,6 +36,16 @@ export default function AIProcessingScreen({ onComplete, scores, results, domain
   const [stepsDone, setStepsDone] = useState(0);
   const [dots, setDots] = useState("");
   const aiResultRef = useRef<AnalysisResponse | null>(null);
+  const animationsDoneRef = useRef(false);
+  const aiDoneRef = useRef(false);
+  const completedRef = useRef(false);
+
+  const tryComplete = useCallback(() => {
+    if (aiDoneRef.current && !completedRef.current) {
+      completedRef.current = true;
+      onComplete(aiResultRef.current);
+    }
+  }, [onComplete]);
 
   useEffect(() => {
     // 1. Start AI Analysis in background
@@ -59,6 +69,9 @@ export default function AIProcessingScreen({ onComplete, scores, results, domain
         aiResultRef.current = res;
       } catch (err) {
         console.error("AI Analysis failed:", err);
+      } finally {
+        aiDoneRef.current = true;
+        tryComplete();
       }
     };
 
@@ -66,11 +79,15 @@ export default function AIProcessingScreen({ onComplete, scores, results, domain
 
     const msgInterval = setInterval(() => {
       setMessageIndex((i) => {
-        if (i >= MESSAGES.length - 1) {
-          clearInterval(msgInterval);
-          return i;
+        const next = i >= MESSAGES.length - 1 ? i : i + 1;
+        if (next >= MESSAGES.length - 1) {
+          // Mark animations as done and try to complete
+          setTimeout(() => {
+            animationsDoneRef.current = true;
+            tryComplete();
+          }, 500);
         }
-        return i + 1;
+        return next;
       });
     }, 700);
 
@@ -88,17 +105,22 @@ export default function AIProcessingScreen({ onComplete, scores, results, domain
       setDots((d) => (d.length >= 3 ? "" : d + "."));
     }, 400);
 
-    const done = setTimeout(() => {
-      onComplete(aiResultRef.current);
-    }, 5500);
+    // Safety net: 60 seconds max
+    const safetyTimeout = setTimeout(() => {
+      if (!completedRef.current) {
+        console.warn("AI Analysis safety timeout (60s). Proceeding with available data.");
+        completedRef.current = true;
+        onComplete(aiResultRef.current);
+      }
+    }, 60000);
 
     return () => {
       clearInterval(msgInterval);
       clearInterval(stepInterval);
       clearInterval(dotInterval);
-      clearTimeout(done);
+      clearTimeout(safetyTimeout);
     };
-  }, [onComplete, scores, results, domain]);
+  }, [onComplete, scores, results, domain, tryComplete]);
 
   const progress = ((messageIndex + 1) / MESSAGES.length) * 100;
 

@@ -584,7 +584,6 @@ export default function LoginScreen({ onLogin, onGetStarted }: LoginScreenProps)
               gap: 8,
             }}
           >
-            Get Started — No Signup Needed
             <ArrowRight
               size={17}
               style={{
@@ -603,7 +602,6 @@ export default function LoginScreen({ onLogin, onGetStarted }: LoginScreenProps)
               marginTop: 14,
             }}
           >
-            Free forever · No credit card required
           </p>
         </div>
 

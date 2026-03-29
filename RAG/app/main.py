@@ -17,6 +17,7 @@ print("🚀🚀🚀 NEURALPATH RAG SERVER V2.0: AI MENTOR ONLINE 🚀🚀🚀")
 print("🚀"*40 + "\n", flush=True)
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from ai.seed_knowledge import seed_database
@@ -67,6 +68,14 @@ app = FastAPI(
     description="Python MVP with RAG + per-user weak-topic profiles.",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Importing this module (e.g. `TestClient` without lifespan context) still needs tables.

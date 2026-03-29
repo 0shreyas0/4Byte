@@ -14,6 +14,9 @@ export interface UserProfile {
   learningGoal: "placement" | "upskilling" | "academic" | "freelancing" | "curiosity";
   preferredDomains: string[];
   onboardingComplete: boolean;
+  academicLevel?: string;   // e.g., "high"
+  academicGrade?: string;   // e.g., "10th Grade" 
+  academicStream?: string;  // e.g., "Science"
   streak: number;
   totalSessions: number;
   lastActiveDate?: string;                   // "YYYY-MM-DD" of last session

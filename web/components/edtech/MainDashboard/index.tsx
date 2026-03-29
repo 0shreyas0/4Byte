@@ -700,6 +700,28 @@ function ConceptMapTab({ domain, scores, analysis }: {
 
 /* ─── DEEP DIVE TAB ─── */
 function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [globalExpanded, setGlobalExpanded] = useState(false);
+
+  const toggleCard = (id: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (globalExpanded) {
+      setExpandedCards(new Set());
+      setGlobalExpanded(false);
+    } else {
+      setExpandedCards(new Set(analysis.detailedAiReport?.map(q => q.question_id) || []));
+      setGlobalExpanded(true);
+    }
+  };
+
   if (!analysis.detailedAiReport || analysis.detailedAiReport.length === 0) {
     return (
       <div style={{ padding: "40px", textAlign: "center" }}>
@@ -711,68 +733,151 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
   }
 
   return (
-    <div style={{ padding: "24px", maxWidth: 1000, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
-       <div style={{ background: "#0D0D0D", border: "4px solid #0D0D0D", padding: "32px", boxShadow: "8px 8px 0 #FFD60A" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-            <div style={{ width: 56, height: 56, background: "#FFD60A", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #fff" }}>
-              <Sparkles size={28} color="#0D0D0D" />
-            </div>
-            <div>
-              <h1 style={{ color: "#fff", fontWeight: 900, fontSize: "1.8rem", textTransform: "uppercase", letterSpacing: "-0.02em" }}>Mentor Deep-Dive Analysis</h1>
-              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", fontWeight: 700 }}>A psychological breakdown of your learning patterns and conceptual gaps.</p>
-            </div>
-          </div>
+    <div style={{ padding: "24px", maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-            {analysis.detailedAiReport.map((q, i) => (
-              <div key={q.question_id} style={{ background: "#1A1A1A", border: "3px solid #333", padding: "28px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 20, borderBottom: "1px solid #333", paddingBottom: 16 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 32, height: 32, background: "#333", border: "2px solid #555", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: "0.8rem" }}>{i+1}</div>
-                    <span style={{ color: "#fff", fontWeight: 900, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>{q.concept}</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 10 }}>
-                     <span style={{ background: q.is_correct ? "#1DB954" : "#FF3B3B", color: q.is_correct ? "#0D0D0D" : "#fff", padding: "4px 12px", fontWeight: 900, fontSize: "0.7rem", textTransform: "uppercase", border: "2px solid #000" }}>
-                        {q.is_correct ? "MASTERED ✅" : "MISSED ⚠️"}
-                     </span>
-                     <span style={{ border: "2px solid #555", color: "#888", padding: "4px 12px", fontWeight: 900, fontSize: "0.7rem", textTransform: "uppercase" }}>ID: {q.question_id}</span>
-                  </div>
+      {/* Header + Global Toggle */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 style={{ fontWeight: 900, fontSize: "1.4rem", textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+            🧠 AI Mentor Review
+          </h1>
+          <p style={{ color: "#666", fontSize: "0.85rem", fontWeight: 600, marginTop: 4 }}>
+            {analysis.detailedAiReport.length} questions reviewed · Tap a card for full analysis
+          </p>
+        </div>
+        <button
+          onClick={toggleAll}
+          style={{
+            background: "#0D0D0D", color: "#FFD60A", border: "3px solid #0D0D0D",
+            padding: "10px 20px", fontWeight: 900, fontSize: "0.78rem",
+            textTransform: "uppercase", cursor: "pointer", letterSpacing: "0.05em",
+            display: "flex", alignItems: "center", gap: 8,
+          }}
+        >
+          {globalExpanded ? "⬆ Collapse All" : "⬇ Expand All"}
+        </button>
+      </div>
+
+      {/* AI Summary Card */}
+      {analysis.explanation && analysis.explanation[0] && (
+        <div style={{ background: "#0D0D0D", border: "3px solid #FFD60A", padding: "20px 24px", boxShadow: "6px 6px 0 #FFD60A" }}>
+          <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.72rem", textTransform: "uppercase", marginBottom: 10, letterSpacing: "0.1em" }}>
+            💬 Mentor's Take
+          </div>
+          <p style={{ color: "#fff", fontSize: "0.95rem", lineHeight: 1.7, fontWeight: 600 }}>
+            {analysis.explanation[0]}
+          </p>
+        </div>
+      )}
+
+      {/* Per-Question Cards */}
+      {analysis.detailedAiReport.map((q, i) => {
+        const isExpanded = expandedCards.has(q.question_id);
+        return (
+          <div
+            key={q.question_id}
+            style={{
+              background: "#fff", border: "3px solid #0D0D0D",
+              boxShadow: isExpanded ? "5px 5px 0 #FFD60A" : "4px 4px 0 #0D0D0D",
+              transition: "box-shadow 0.15s ease",
+              overflow: "hidden",
+            }}
+          >
+            {/* ── QUICK VIEW (always visible) ── */}
+            <div
+              style={{
+                padding: "18px 22px", display: "flex",
+                justifyContent: "space-between", alignItems: "center",
+                gap: 12, flexWrap: "wrap", cursor: "pointer",
+              }}
+              onClick={() => toggleCard(q.question_id)}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
+                {/* Number badge */}
+                <div style={{
+                  width: 34, height: 34, flexShrink: 0,
+                  background: q.is_correct ? "#1DB954" : "#FF3B3B",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#fff", fontWeight: 900, fontSize: "0.85rem",
+                  border: "2.5px solid #0D0D0D",
+                }}>
+                  {q.is_correct ? "✓" : i + 1}
                 </div>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 32 }} className="md:grid-cols-2 grid-cols-1">
+                <div style={{ minWidth: 0 }}>
+                  {/* Takeaway — the TL;DR */}
+                  <p style={{
+                    fontWeight: 800, fontSize: "0.92rem", color: "#0D0D0D",
+                    margin: 0, lineHeight: 1.4,
+                  }}>
+                    {q.key_takeaway || q.concept}
+                  </p>
+                  <p style={{ fontSize: "0.75rem", color: "#888", fontWeight: 700, marginTop: 3 }}>
+                    {q.topic} · {q.concept}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <span style={{
+                  background: q.is_correct ? "#1DB954" : "#FF3B3B",
+                  color: "#fff", padding: "4px 10px",
+                  fontWeight: 900, fontSize: "0.68rem", textTransform: "uppercase",
+                  border: "2px solid #0D0D0D",
+                }}>
+                  {q.is_correct ? "✅ Correct" : "⚠️ Missed"}
+                </span>
+                <span style={{
+                  background: isExpanded ? "#FFD60A" : "#0D0D0D",
+                  color: isExpanded ? "#0D0D0D" : "#FFD60A",
+                  padding: "4px 12px", fontWeight: 900, fontSize: "0.68rem",
+                  textTransform: "uppercase", border: "2px solid #0D0D0D",
+                  transition: "all 0.1s",
+                }}>
+                  {isExpanded ? "▲ Less" : "▼ Full Analysis"}
+                </span>
+              </div>
+            </div>
+
+            {/* ── FULL ANALYSIS (expandable) ── */}
+            {isExpanded && (
+              <div style={{
+                borderTop: "3px solid #0D0D0D",
+                background: "#0D0D0D",
+                padding: "28px 24px",
+                display: "flex", flexDirection: "column", gap: 24,
+              }}>
+                {/* Grid: Thought Process + Right Column */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 28 }}>
+                  {/* Left: Full Thought Process */}
                   <div>
                     <div style={{ color: "#FF3B3B", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                      <Zap size={16} /> Mentor's Mental Mapping:
+                      <Zap size={16} /> Mentor's Mental Mapping
                     </div>
-                    <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.95rem", lineHeight: 1.7, fontWeight: 700 }}>
+                    <p style={{ color: "rgba(255,255,255,0.9)", fontSize: "0.95rem", lineHeight: 1.75, fontWeight: 600 }}>
                       {q.mentor_thought_process}
                     </p>
                   </div>
+
+                  {/* Right: Insight + Drill */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div style={{ background: "rgba(29, 185, 84, 0.05)", borderLeft: "4px solid #1DB954", padding: "20px" }}>
+                    <div style={{ background: "rgba(29, 185, 84, 0.07)", borderLeft: "4px solid #1DB954", padding: "20px" }}>
                       <div style={{ color: "#1DB954", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 8 }}>💡 Professional Insight</div>
-                      <p style={{ color: "#fff", fontSize: "0.95rem", fontWeight: 800, fontStyle: "italic" }}>
+                      <p style={{ color: "#fff", fontSize: "0.93rem", fontWeight: 800, fontStyle: "italic" }}>
                         "{q.key_takeaway}"
                       </p>
                     </div>
-                    <div style={{ background: "rgba(255, 214, 10, 0.05)", borderLeft: "4px solid #FFD60A", padding: "20px" }}>
+                    <div style={{ background: "rgba(255,214,10,0.07)", borderLeft: "4px solid #FFD60A", padding: "20px" }}>
                       <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 8 }}>🛠 Recommended Drill</div>
                       <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", fontWeight: 700 }}>
-                        Practice {q.topic} labs with a focus on {q.concept} edge cases.
+                        Practice {q.topic} labs with a focus on {q.concept} edge cases. Try solving variations without looking at notes first.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+            )}
           </div>
-
-          <div style={{ marginTop: 40, borderTop: "2px solid #333", paddingTop: 20, textAlign: "center" }}>
-            <p style={{ color: "#666", fontSize: "0.8rem", fontWeight: 700 }}>
-              This Deep-Dive was synthetically reconstructed using your session time vectors and conceptual entropy.
-            </p>
-          </div>
-       </div>
+        );
+      })}
     </div>
   );
 }

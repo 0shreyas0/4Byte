@@ -12,6 +12,23 @@ import {
   Database,
   ChevronRight,
   Zap,
+  Palette,
+  Megaphone,
+  TrendingUp,
+  Video,
+  GraduationCap,
+  Calculator,
+  FlaskConical,
+  Beaker,
+  Dna,
+  Atom,
+  Terminal,
+  Type,
+  History as HistoryIcon,
+  Search,
+  School,
+  Briefcase,
+  Layers,
 } from "lucide-react";
 
 function PythonLogoMark({
@@ -171,19 +188,312 @@ const DOMAINS = [
     level: "Beginner → Advanced",
     questions: 8,
   },
+  {
+    id: "Product Design",
+    name: "Design",
+    fullName: "UI / UX Design",
+    icon: Palette,
+    color: "#FF2D55",
+    textColor: "#FFFFFF",
+    shadow: "#cc2444",
+    description: "UI/UX principles, Figma proficiency, user research, wireframing, and building design systems.",
+    topics: ["Figma", "UI", "UX", "Wireframing", "Design System"],
+    tag: "CREATIVE",
+    difficulty: "Medium",
+    level: "Beginner → Expert",
+    questions: 8,
+  },
+  {
+    id: "Marketing",
+    name: "Marketing",
+    fullName: "Digital Growth",
+    icon: Megaphone,
+    color: "#5856D6",
+    textColor: "#FFFFFF",
+    shadow: "#4644ab",
+    description: "SEO, SEM, social media strategy, content marketing, and performance analytics.",
+    topics: ["SEO", "SEM", "Content", "Social Media", "Analytics"],
+    tag: "GROWTH",
+    difficulty: "Easy",
+    level: "Beginner → Intermediate",
+    questions: 8,
+  },
+  {
+    id: "Business",
+    name: "Business",
+    fullName: "Strategy & Finance",
+    icon: TrendingUp,
+    color: "#171717",
+    textColor: "#FFFFFF",
+    shadow: "#000000",
+    description: "Entrepreneurship, startup business models, finance fundamentals, and growth strategy.",
+    topics: ["Startup", "Finance", "Strategy", "Management", "Growth"],
+    tag: "BUSINESS",
+    difficulty: "Hard",
+    level: "Intermediate → Advanced",
+    questions: 8,
+  },
+  {
+    id: "Content Creation",
+    name: "Creator",
+    fullName: "Content & Storytelling",
+    icon: Video,
+    color: "#FF3B30",
+    textColor: "#FFFFFF",
+    shadow: "#cc2e25",
+    description: "Video editing, youtube growth, brand storytelling, audience psychology, and creative scripting.",
+    topics: ["Video", "Storytelling", "YouTube", "Branding", "Creative"],
+    tag: "CREATOR",
+    difficulty: "Medium",
+    level: "Basics → Influencer",
+    questions: 8,
+  },
 ];
 
+// 🔥 NEW HIERARCHICAL DATA
+const GRADE_LEVELS = [
+  { id: "primary", name: "Primary", range: "K - 5th", icon: School, color: "#FFD60A" },
+  { id: "middle", name: "Middle School", range: "6th - 8th", icon: GraduationCap, color: "#0A84FF" },
+  { id: "high", name: "Secondary", range: "9th - 10th", icon: GraduationCap, color: "#34C759" },
+  { id: "senior", name: "Senior Secondary", range: "11th - 12th", icon: GraduationCap, color: "#FF3B30" },
+  { id: "higher", name: "Higher Ed", range: "UG / PG", icon: GraduationCap, color: "#AF52DE" },
+  { id: "professional", name: "Skills", range: "Jobs & Tech", icon: Briefcase, color: "#FF9F0A" },
+];
+
+const GRADES_BY_LEVEL: Record<string, string[]> = {
+  primary: ["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"],
+  middle: ["6th Grade", "7th Grade", "8th Grade"],
+  high: ["9th Grade", "10th Grade"],
+  senior: ["11th Grade", "12th Grade"],
+  higher: ["Undergraduate", "Post-Graduate"],
+};
+
+const STREAMS = ["Science", "Commerce", "Arts"];
+
+const SUBJECTS_BY_GRADE: Record<string, string[]> = {
+  Kindergarten: ["Basic Counting", "Alphabets", "Colors & Shapes"],
+  "1st Grade": ["Arithmetic", "English Reading", "Environment"],
+  "9th Grade": ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Social Studies"],
+  "10th Grade": ["Physics", "Chemistry", "Biology", "Mathematics", "English", "Social Studies"],
+  "11th Grade": ["Physics", "Chemistry", "Biology", "Mathematics", "Accountancy", "Economics", "History", "Computer Science"],
+  "12th Grade": ["Physics", "Chemistry", "Biology", "Mathematics", "Accountancy", "Economics", "History", "Computer Science"],
+  Undergraduate: ["Data Structures", "Operating Systems", "Microeconomics", "Psychology", "Law"],
+};
+
+import { useAuth } from "@/lib/AuthContext";
+
 export default function DomainSelection({ onSelect, onBack }: DomainSelectionProps) {
-  const [selected, setSelected] = useState<string | null>(null);
+  const { profile } = useAuth();
+
+  const [step, setStep] = useState<"level" | "grade" | "stream" | "subject" | "professional">(
+    profile?.academicGrade ? "subject" : "level"
+  );
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(profile?.academicLevel ?? null);
+  const [selectedGrade, setSelectedGrade] = useState<string | null>(profile?.academicGrade ?? null);
+  const [selectedStream, setSelectedStream] = useState<string | null>(profile?.academicStream ?? null);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  
   const [confirming, setConfirming] = useState(false);
 
-  const handleConfirm = () => {
-    if (!selected) return;
-    setConfirming(true);
-    setTimeout(() => onSelect(selected), 400);
+  const handleLevelSelect = (levelId: string) => {
+    setSelectedLevel(levelId);
+    if (levelId === "professional") {
+      setStep("professional");
+    } else {
+      setStep("grade");
+    }
   };
 
-  const selectedDomain = DOMAINS.find((d) => d.id === selected);
+  const handleGradeSelect = (grade: string) => {
+    setSelectedGrade(grade);
+    if (grade === "11th Grade" || grade === "12th Grade" || grade === "Undergraduate") {
+      setStep("stream");
+    } else {
+      setStep("subject");
+    }
+  };
+
+  const handleStreamSelect = (stream: string) => {
+    setSelectedStream(stream);
+    setStep("subject");
+  };
+
+  const handleSubjectSelect = (subject: string) => {
+    setSelectedSubject(subject);
+  };
+
+  const handleFinalConfirm = () => {
+    const finalSelection = step === "professional" 
+      ? selectedSubject || "" 
+      : `${selectedSubject} (${selectedGrade}${selectedStream ? ` - ${selectedStream}` : ""})`;
+      
+    setConfirming(true);
+    setTimeout(() => onSelect(finalSelection), 400);
+  };
+
+  const handleStepBack = () => {
+    if (step === "level") onBack();
+    else if (step === "grade") setStep("level");
+    else if (step === "stream") setStep("grade");
+    else if (step === "subject") setStep(selectedLevel === "senior" || selectedLevel === "higher" ? "stream" : "grade");
+    else if (step === "professional") setStep("level");
+  };
+
+  // ── Render Helpers ────────────────────────────────────────────────────────────
+
+  const renderLevels = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {GRADE_LEVELS.map((lvl) => {
+        const Icon = lvl.icon;
+        return (
+          <button
+            key={lvl.id}
+            onClick={() => handleLevelSelect(lvl.id)}
+            className="text-left p-6 group transition-all"
+            style={{
+              border: "4px solid #0D0D0D",
+              background: "#FFFFFF",
+              boxShadow: "6px 6px 0 #0D0D0D",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translate(-2px, -2px)";
+              e.currentTarget.style.boxShadow = "8px 8px 0 #0D0D0D";
+              e.currentTarget.style.background = lvl.color;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "6px 6px 0 #0D0D0D";
+              e.currentTarget.style.background = "#FFFFFF";
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+               <div className="p-3 border-2 border-black bg-white">
+                 <Icon size={28} />
+               </div>
+               <span className="text-xs font-black uppercase tracking-widest bg-black text-white px-2 py-1">
+                 {lvl.range}
+               </span>
+            </div>
+            <h3 className="text-2xl font-black mb-2 tracking-tight">{lvl.name}</h3>
+            <p className="text-sm font-bold opacity-70">Trace gaps in {lvl.name} fundamentals.</p>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderGrades = () => {
+    const grades = selectedLevel ? GRADES_BY_LEVEL[selectedLevel] : [];
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {grades.map((grade) => (
+          <button
+            key={grade}
+            onClick={() => handleGradeSelect(grade)}
+            className="p-5 text-center font-black text-lg border-4 border-black bg-white hover:bg-[#FFD60A] shadow-[4px_4px_0_#0D0D0D] hover:shadow-[2px_2px_0_#0D0D0D] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
+          >
+            {grade}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderStreams = () => {
+    const streamOptions = selectedLevel === "higher" 
+      ? ["Engineering", "Medical", "Commerce", "Humanities", "Law"]
+      : STREAMS;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {streamOptions.map((stream) => (
+          <button
+            key={stream}
+            onClick={() => handleStreamSelect(stream)}
+            className="p-8 text-left border-4 border-black bg-white hover:bg-black hover:text-white shadow-[6px_6px_0_#0D0D0D] transition-all"
+          >
+            <div className="text-xs font-bold uppercase opacity-60 mb-1">Select Stream</div>
+            <div className="text-2xl font-black">{stream}</div>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  const renderSubjects = () => {
+    const subjects = selectedGrade ? (SUBJECTS_BY_GRADE[selectedGrade] || ["Math", "Science", "English", "History"]) : [];
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {subjects.map((sub) => {
+          const isSelected = selectedSubject === sub;
+          return (
+            <button
+              key={sub}
+              onClick={() => handleSubjectSelect(sub)}
+              className="p-4 flex items-center gap-4 border-4 border-black transition-all"
+              style={{
+                background: isSelected ? "#0D0D0D" : "#FFFFFF",
+                color: isSelected ? "#FFD60A" : "#0D0D0D",
+                boxShadow: isSelected ? "2px 2px 0 #FFD60A" : "4px 4px 0 #000",
+                transform: isSelected ? "translate(2px, 2px)" : "none",
+              }}
+            >
+              <div className={`p-2 border-2 ${isSelected ? 'border-[#FFD60A]' : 'border-black'}`}>
+                <Layers size={20} />
+              </div>
+              <span className="font-black text-lg">{sub}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderProfessional = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+      {DOMAINS.map((domain) => {
+        const Icon = domain.icon;
+        const isSelected = selectedSubject === domain.id;
+        const usePythonMark = domain.id === "Python";
+        return (
+          <button
+            key={domain.id}
+            onClick={() => handleSubjectSelect(domain.id)}
+            className="text-left flex flex-col gap-3 p-5"
+            style={{
+              border: "4px solid #0D0D0D",
+              background: isSelected ? domain.color : "#FFFFFF",
+              boxShadow: isSelected
+                ? `3px 3px 0px ${domain.shadow}`
+                : `6px 6px 0px ${domain.shadow}`,
+              transform: isSelected ? "translate(3px, 3px)" : "translate(0,0)",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease",
+              cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
+              minHeight: 280,
+            }}
+          >
+            {/* Same internal logic as before */}
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "0.62rem", fontWeight: 800, padding: "2px 8px", border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`, color: isSelected ? domain.textColor : "#0D0D0D" }}>
+                {domain.tag}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div style={{ width: 52, height: 52, display: "flex", alignItems: "center", justifyContent: "center", border: `3px solid ${isSelected ? domain.textColor : "#0D0D0D"}`, background: isSelected ? "rgba(255,255,255,0.12)" : "#F5F0E8", color: isSelected ? domain.textColor : "#0D0D0D" }}>
+                {usePythonMark ? <PythonLogoMark size={28} color={isSelected ? domain.textColor : "#0D0D0D"} /> : <Icon size={26} strokeWidth={2.25} />}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 800, color: isSelected ? domain.textColor : "#0D0D0D" }}>{domain.name}</div>
+              <div style={{ fontSize: "0.78rem", fontWeight: 600, opacity: 0.7, color: isSelected ? domain.textColor : "#444" }}>{domain.fullName}</div>
+            </div>
+            <p style={{ fontSize: "0.85rem", fontWeight: 500, color: isSelected ? domain.textColor : "#555" }}>{domain.description}</p>
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8" }}>
@@ -196,289 +506,63 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
           overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            fontSize: "140px",
-            fontWeight: 900,
-            opacity: 0.04,
-            lineHeight: 1,
-            color: "#fff",
-            userSelect: "none",
-            pointerEvents: "none",
-          }}
-        >
-          ∞
-        </div>
-
         <div style={{ position: "relative", zIndex: 10 }}>
-          <div
-            style={{
-              fontSize: "0.7rem",
-              fontWeight: 800,
-              color: "#FFD60A",
-              letterSpacing: "0.15em",
-              textTransform: "uppercase",
-              marginBottom: 10,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <ChevronRight size={14} /> Choose Your Domain
+          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#FFD60A", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+            <ChevronRight size={14} /> 
+            {step === "level" && "Level Selection"}
+            {step === "grade" && `${selectedLevel} / Grade Selection`}
+            {step === "stream" && `${selectedGrade} / Stream Selection`}
+            {step === "subject" && `${selectedGrade} / Subject Selection`}
+            {step === "professional" && "Professional Tracks"}
           </div>
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3.5rem)",
-              fontWeight: 800,
-              letterSpacing: "-0.04em",
-              lineHeight: 1.05,
-              color: "#FFFFFF",
-              marginBottom: 12,
-            }}
-          >
-            What do you want
-            <br />
-            <span style={{ color: "#FFD60A" }}>to master?</span>
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#FFFFFF", marginBottom: 12 }}>
+            {step === "level" && <>What is your <span style={{ color: "#FFD60A" }}>Current Scale?</span></>}
+            {step === "grade" && <>Which <span style={{ color: "#FFD60A" }}>Grade?</span></>}
+            {step === "stream" && <>Choose <span style={{ color: "#FFD60A" }}>Specialization</span></>}
+            {step === "subject" && <>Select <span style={{ color: "#FFD60A" }}>Subject</span></>}
+            {step === "professional" && <>Select <span style={{ color: "#FFD60A" }}>Domain</span></>}
           </h1>
-          <p
-            style={{
-              fontSize: "0.95rem",
-              color: "rgba(255,255,255,0.65)",
-              fontWeight: 600,
-              maxWidth: 560,
-              lineHeight: 1.6,
-            }}
-          >
-            Pick a domain and we&apos;ll trace weak spots, map concept dependencies,
-            and generate a personalized recovery path.
-          </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-          {DOMAINS.map((domain) => {
-            const Icon = domain.icon;
-            const isSelected = selected === domain.id;
-            const usePythonMark = domain.id === "Python";
-            return (
-              <button
-                key={domain.id}
-                onClick={() => setSelected(domain.id)}
-                className="text-left flex flex-col gap-3 p-5"
-                style={{
-                  border: "4px solid #0D0D0D",
-                  background: isSelected ? domain.color : "#FFFFFF",
-                  boxShadow: isSelected
-                    ? `3px 3px 0px ${domain.shadow}`
-                    : `6px 6px 0px ${domain.shadow}`,
-                  transform: isSelected ? "translate(3px, 3px)" : "translate(0,0)",
-                  transition: "transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease",
-                  cursor: "pointer",
-                  position: "relative",
-                  overflow: "hidden",
-                  minHeight: 280,
-                }}
-                onMouseEnter={(e) => {
-                  if (isSelected) return;
-                  e.currentTarget.style.boxShadow = `3px 3px 0px ${domain.shadow}`;
-                  e.currentTarget.style.transform = "translate(3px, 3px)";
-                }}
-                onMouseLeave={(e) => {
-                  if (isSelected) return;
-                  e.currentTarget.style.boxShadow = `6px 6px 0px ${domain.shadow}`;
-                  e.currentTarget.style.transform = "translate(0, 0)";
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <span
-                    style={{
-                      fontSize: "0.62rem",
-                      fontWeight: 800,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      padding: "2px 8px",
-                      border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
-                      color: isSelected ? domain.textColor : "#0D0D0D",
-                    }}
-                  >
-                    {domain.tag}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "0.62rem",
-                      fontWeight: 700,
-                      padding: "2px 8px",
-                      border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
-                      color: isSelected ? domain.textColor : "#0D0D0D",
-                      background: "rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    {domain.difficulty}
-                  </span>
-                </div>
+        {step === "level" && renderLevels()}
+        {step === "grade" && renderGrades()}
+        {step === "stream" && renderStreams()}
+        {step === "subject" && renderSubjects()}
+        {step === "professional" && renderProfessional()}
 
-                <div className="flex items-center justify-between">
-                  <div
-                    style={{
-                      width: 52,
-                      height: 52,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: `3px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
-                      background: isSelected ? "rgba(255,255,255,0.12)" : "#F5F0E8",
-                      color: isSelected ? domain.textColor : "#0D0D0D",
-                      boxShadow: isSelected ? "none" : "2px 2px 0 rgba(0,0,0,0.12)",
-                    }}
-                  >
-                    {usePythonMark ? (
-                      <PythonLogoMark size={28} color={isSelected ? domain.textColor : "#0D0D0D"} />
-                    ) : (
-                      <Icon size={26} strokeWidth={2.25} />
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: `3px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
-                      color: isSelected ? domain.textColor : "#0D0D0D",
-                    }}
-                  >
-                    {usePythonMark ? (
-                      <PythonLogoMark size={18} color={isSelected ? domain.textColor : "#0D0D0D"} />
-                    ) : (
-                      <Icon size={18} />
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      fontSize: "1.4rem",
-                      fontWeight: 800,
-                      letterSpacing: "-0.03em",
-                      lineHeight: 1.1,
-                      color: isSelected ? domain.textColor : "#0D0D0D",
-                    }}
-                  >
-                    {domain.name}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "0.78rem",
-                      fontWeight: 600,
-                      opacity: 0.7,
-                      marginTop: 2,
-                      color: isSelected ? domain.textColor : "#444",
-                    }}
-                  >
-                    {domain.fullName}
-                  </div>
-                </div>
-
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    lineHeight: 1.55,
-                    fontWeight: 500,
-                    color: isSelected ? domain.textColor : "#555",
-                  }}
-                >
-                  {domain.description}
-                </p>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {domain.topics.map((topic) => (
-                    <span
-                      key={topic}
-                      style={{
-                        fontSize: "0.68rem",
-                        fontWeight: 700,
-                        padding: "2px 7px",
-                        border: `2px solid ${isSelected ? domain.textColor : "#0D0D0D"}`,
-                        background: isSelected ? "rgba(255,255,255,0.15)" : "#F5F0E8",
-                        color: isSelected ? domain.textColor : "#0D0D0D",
-                      }}
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between mt-auto">
-                  <span
-                    style={{
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                      color: isSelected ? domain.textColor : "#888",
-                    }}
-                  >
-                    {domain.questions} questions · {domain.level}
-                  </span>
-                  {isSelected && (
-                    <div
-                      style={{
-                        background: domain.textColor === "#FFFFFF" ? "#FFFFFF" : "#0D0D0D",
-                        color: isSelected ? domain.color : "#FFFFFF",
-                        border: "2px solid currentColor",
-                        width: 28,
-                        height: 28,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 800,
-                        fontSize: "1rem",
-                      }}
-                    >
-                      ✓
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <button
-            onClick={onBack}
-            className="brutal-btn px-5 py-3 text-sm"
-            style={{ background: "#FFFFFF" }}
-          >
-            ← Back
+        <div className="flex items-center justify-between gap-4 mt-12 border-t-4 border-black pt-8">
+          <button onClick={handleStepBack} className="brutal-btn px-8 py-4 text-sm font-black bg-white border-4 border-black shadow-[4px_4px_0_#000]">
+            ← BACK
           </button>
 
-          <button
-            onClick={handleConfirm}
-            disabled={!selected || confirming}
-            className="brutal-btn flex items-center gap-3 px-8 py-4"
-            style={{
-              background: selected ? "#FFD60A" : "#E5E5E5",
-              color: selected ? "#0D0D0D" : "#999",
-              cursor: selected ? "pointer" : "not-allowed",
-              opacity: confirming ? 0.7 : 1,
-              fontSize: "0.95rem",
-              fontWeight: 800,
-              letterSpacing: "0.02em",
-              boxShadow: selected ? `6px 6px 0 ${selectedDomain?.shadow ?? "#0D0D0D"}` : "4px 4px 0 #CCCCCC",
-            }}
-          >
-            <Zap size={18} />
-            {confirming
-              ? "Loading..."
-              : selected
-                ? `Start ${selected} Quiz`
-                : "Choose a Domain"}
-          </button>
+          {step === "subject" && profile?.academicGrade && (
+            <button onClick={() => setStep("level")} className="text-xs font-black uppercase underline p-2">
+              Change My Level / Grade
+            </button>
+          )}
+
+          {(step === "subject" || step === "professional") && (
+            <button
+              onClick={handleFinalConfirm}
+              disabled={!selectedSubject || confirming}
+              className="brutal-btn flex items-center gap-3 px-12 py-4"
+              style={{
+                background: selectedSubject ? "#FFD60A" : "#E5E5E5",
+                color: selectedSubject ? "#0D0D0D" : "#999",
+                cursor: selectedSubject ? "pointer" : "not-allowed",
+                opacity: confirming ? 0.7 : 1,
+                fontSize: "1.1rem",
+                fontWeight: 900,
+                border: "4px solid #0D0D0D",
+                boxShadow: selectedSubject ? "6px 6px 0 #0D0D0D" : "none",
+              }}
+            >
+              <Zap size={22} />
+              {confirming ? "LAUNCHING..." : `START ${selectedSubject?.toUpperCase()} QUIZ`}
+            </button>
+          )}
         </div>
       </div>
     </div>
