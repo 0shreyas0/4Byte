@@ -51,7 +51,7 @@ export interface AnalysisResponse {
   detailed_report?: QuestionAnalysis[];
 }
 
-const RAG_API_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000';
+const RAG_API_URL = process.env.NEXT_PUBLIC_RAG_API_URL || 'http://127.0.0.1:8000';
 
 export async function compileAndExplain(
   userId: string,

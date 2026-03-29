@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import {
   Trophy,
   AlertCircle,
-  CheckCircle2,
   Clock,
   BookmarkPlus,
   ChevronLeft,
   ChevronRight,
   Send,
+  Lightbulb,
+  Lock,
 } from "lucide-react";
 import { QUIZ_DATA } from "@/lib/edtech/quizData";
 import { TopicScore } from "@/lib/edtech/conceptGraph";
@@ -107,53 +108,12 @@ function getTopicColor(topic: string): string {
   return colors[topic] || "#F5F0E8";
 }
 
-// ─── Submitted review helpers ──────────────────────────────────────────────────
-
-function getResultOptionStyle(
-  idx: number,
-  selectedOption: number | null,
-  correctIndex: number
-): React.CSSProperties {
-  if (idx === correctIndex) {
-    return {
-      background: "linear-gradient(135deg,#1DB954 0%,#17a348 100%)",
-      border: "3px solid #0D0D0D",
-      color: "#000",
-      boxShadow: "4px 4px 0 rgba(29,185,84,0.25)",
-    };
-  }
-  if (idx === selectedOption && selectedOption !== correctIndex) {
-    return {
-      background: "linear-gradient(135deg,#FF3B3B 0%,#e63232 100%)",
-      border: "3px solid #0D0D0D",
-      color: "#fff",
-      boxShadow: "4px 4px 0 rgba(255,59,59,0.25)",
-    };
-  }
-  return {
-    background: "#F0EEEA",
-    border: "3px solid #CCCCCC",
-    color: "rgba(13,13,13,0.35)",
-    boxShadow: "none",
-  };
-}
-
-function getResultLabelStyle(
-  idx: number,
-  selectedOption: number | null,
-  correctIndex: number
-): React.CSSProperties {
-  if (idx === correctIndex) return { background: "#0D0D0D", color: "#1DB954" };
-  if (idx === selectedOption && selectedOption !== correctIndex)
-    return { background: "#0D0D0D", color: "#FF3B3B" };
-  return { background: "#CCCCCC", color: "rgba(13,13,13,0.35)" };
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenProps) {
   const questions = QUIZ_DATA[domain] || QUIZ_DATA["DSA"];
   const totalQuestions = questions.length;
+  const isVisualKidQuiz = questions.some((question) => question.cardStyle === "visual");
 
   // Exam state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -163,14 +123,24 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
   const [submitted, setSubmitted] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Hints state
+  const MAX_HINTS = 3;
+  const [setupDone, setSetupDone] = useState(false);
+  const [hintsEnabled, setHintsEnabled] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [hintShown, setHintShown] = useState<Record<number, boolean>>({});
+
   // Timer (per-question accumulator using a ref for the interval)
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const questionStartRef = useRef(Date.now());
+  const questionStartRef = useRef(0);
 
   // Total elapsed time display
   const [elapsed, setElapsed] = useState(0);
   const elapsedRef = useRef(0);
   const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    questionStartRef.current = Date.now();
+  }, []);
 
   useEffect(() => {
     elapsedTimerRef.current = setInterval(() => {
@@ -285,6 +255,13 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
     onComplete(scores, results);
   };
 
+  // ── Use hint ──────────────────────────────────────────────────
+  const handleUseHint = () => {
+    if (!hintsEnabled || hintsUsed >= MAX_HINTS || hintShown[currentIndex]) return;
+    setHintShown((prev) => ({ ...prev, [currentIndex]: true }));
+    setHintsUsed((prev) => prev + 1);
+  };
+
   // ── Derived counts ─────────────────────────────────────────────────────────────
   const attemptedCount = attempts.filter(
     (a) => a.status === "attempted" || a.status === "attempted-marked"
@@ -296,22 +273,280 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
 
   const current = questions[currentIndex];
   const currentAttempt = attempts[currentIndex];
+  const visualPalette = ["#FFD60A", "#5AC8FA", "#FF8A65", "#7EE787"];
+  const optionLayoutStyle: React.CSSProperties = isVisualKidQuiz
+    ? {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+        gap: 16,
+      }
+    : {
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      };
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60)
       .toString()
-      .padStart(2, "0");
+    .padStart(2, "0");
     const s = (secs % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
-  // ─── RENDER ──────────────────────────────────────────────────────────────────
+  // ─── RENDER ───────────────────  // ─── Pre-quiz Hints Setup Screen ───────────────────────────────────────
+
+  if (!setupDone) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#F5F0E8",
+          backgroundImage: "radial-gradient(circle, #00000012 1.5px, transparent 1.5px)",
+          backgroundSize: "24px 24px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "'Space Grotesk', sans-serif",
+          padding: "20px",
+        }}
+      >
+        <div style={{ maxWidth: 500, width: "100%" }}>
+          {/* Header panel */}
+          <div
+            style={{
+              background: "#0D0D0D",
+              padding: "20px 28px",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                background: "#FFD60A",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Trophy size={24} color="#0D0D0D" />
+            </div>
+            <div>
+              <div
+                style={{
+                  color: "#FFD60A",
+                  fontWeight: 900,
+                  fontSize: "0.68rem",
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  marginBottom: 3,
+                }}
+              >
+                {domain} · {totalQuestions} Questions
+              </div>
+              <div
+                style={{
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: "1.25rem",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Before You Begin
+              </div>
+            </div>
+          </div>
+
+          {/* Body panel */}
+          <div
+            style={{
+              background: "#fff",
+              border: "4px solid #0D0D0D",
+              borderTop: "none",
+              boxShadow: "8px 8px 0 #0D0D0D",
+              padding: "28px",
+            }}
+          >
+            {/* Hint info box */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 14,
+                background: "#FFFBEB",
+                border: "2.5px solid #F59E0B",
+                padding: "16px 18px",
+                marginBottom: 24,
+              }}
+            >
+              <Lightbulb size={20} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: "0.85rem", color: "#0D0D0D", marginBottom: 4 }}>
+                  Hint System Available
+                </div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#666", lineHeight: 1.6 }}>
+                  {isVisualKidQuiz
+                    ? "This round is built for little learners with big picture cards and simple taps. Hints are optional and can gently help if needed."
+                    : <>Use up to <strong>3 hints</strong> during the exam. Each hint reveals a concept nudge for that question. Once used, a hint cannot be undone.</>}
+                </div>
+              </div>
+            </div>
+
+            {/* Mode label */}
+            <p
+              style={{
+                fontWeight: 700,
+                fontSize: "0.72rem",
+                color: "#888",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                marginBottom: 12,
+              }}
+            >
+              Choose your challenge mode:
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {/* Enable hints */}
+              <button
+                onClick={() => { setHintsEnabled(true); setSetupDone(true); }}
+                style={{
+                  width: "100%",
+                  background: "#FFD60A",
+                  border: "3px solid #0D0D0D",
+                  boxShadow: "5px 5px 0 #0D0D0D",
+                  padding: "15px 18px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  textAlign: "left",
+                  transition: "all 0.1s ease",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translate(3px,3px)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "2px 2px 0 #0D0D0D";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "5px 5px 0 #0D0D0D";
+                }}
+              >
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    background: "#0D0D0D",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Lightbulb size={21} color="#FFD60A" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "#0D0D0D", letterSpacing: "-0.01em" }}>
+                    Enable Hints
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: "0.72rem", color: "#555", marginTop: 2 }}>
+                    Up to 3 hints · Adaptive challenge
+                  </div>
+                </div>
+              </button>
+
+              {/* No hints — exam mode */}
+              <button
+                onClick={() => { setHintsEnabled(false); setSetupDone(true); }}
+                style={{
+                  width: "100%",
+                  background: "#0D0D0D",
+                  border: "3px solid #0D0D0D",
+                  boxShadow: "5px 5px 0 #FFD60A",
+                  padding: "15px 18px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  textAlign: "left",
+                  transition: "all 0.1s ease",
+                  color: "#FFD60A",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "translate(3px,3px)";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "2px 2px 0 #FFD60A";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.transform = "";
+                  (e.currentTarget as HTMLButtonElement).style.boxShadow = "5px 5px 0 #FFD60A";
+                }}
+              >
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    background: "#FFD60A",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Lock size={21} color="#0D0D0D" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: "0.95rem", letterSpacing: "-0.01em" }}>
+                    No Hints — Exam Mode 🔒
+                  </div>
+                  <div style={{ fontWeight: 600, fontSize: "0.72rem", color: "#aaa", marginTop: 2 }}>
+                    Pure challenge · No assists
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Stats row */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: 8,
+                marginTop: 22,
+                paddingTop: 18,
+                borderTop: "2px solid #E8E8E0",
+              }}
+            >
+              <div style={{ border: "2px solid #0D0D0D", padding: "10px 6px", textAlign: "center" }}>
+                <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "#0D0D0D" }}>{totalQuestions}</div>
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.06em" }}>Questions</div>
+              </div>
+              <div style={{ border: "2px solid #0D0D0D", padding: "10px 6px", textAlign: "center", background: "#0D0D0D" }}>
+                <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "#FFD60A" }}>3</div>
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.06em" }}>Max Hints</div>
+              </div>
+              <div style={{ border: "2px solid #0D0D0D", padding: "10px 6px", textAlign: "center" }}>
+                <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "#0D0D0D" }}>MCQ</div>
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.06em" }}>Format</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── RENDER ────────────────────────────────────────────
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "#F5F0E8",
+        backgroundColor: "#F5F0E8",
         display: "flex",
         flexDirection: "column",
         fontFamily: "'Space Grotesk', sans-serif",
@@ -381,21 +616,47 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
           <StatPill label="Not Visited" value={unattemptedCount} color="#888" />
         </div>
 
-        {/* Right: timer */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            color: "#FFD60A",
-            fontWeight: 800,
-            fontSize: "1.1rem",
-            fontFamily: "'JetBrains Mono', monospace",
-            letterSpacing: "0.04em",
-          }}
-        >
-          <Clock size={18} />
-          {formatTime(elapsed)}
+        {/* Right: hints counter + timer */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {hintsEnabled && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                background: hintsUsed >= MAX_HINTS ? "rgba(255,59,59,0.15)" : "rgba(255,214,10,0.15)",
+                border: `1.5px solid ${hintsUsed >= MAX_HINTS ? "#FF3B3B" : "#FFD60A"}`,
+                padding: "4px 10px",
+              }}
+            >
+              <Lightbulb size={13} color={hintsUsed >= MAX_HINTS ? "#FF3B3B" : "#FFD60A"} />
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 800,
+                  color: hintsUsed >= MAX_HINTS ? "#FF3B3B" : "#FFD60A",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
+                {MAX_HINTS - hintsUsed} hint{MAX_HINTS - hintsUsed !== 1 ? "s" : ""} left
+              </span>
+            </div>
+          )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: "#FFD60A",
+              fontWeight: 800,
+              fontSize: "1.1rem",
+              fontFamily: "'JetBrains Mono', monospace",
+              letterSpacing: "0.04em",
+            }}
+          >
+            <Clock size={18} />
+            {formatTime(elapsed)}
+          </div>
         </div>
       </header>
 
@@ -455,90 +716,232 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
               </span>
             </div>
 
-            {/* Mark for review toggle */}
-            <button
-              onClick={handleMarkForReview}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                background:
-                  currentAttempt.status === "marked" ||
-                  currentAttempt.status === "attempted-marked"
-                    ? "#8B5CF6"
-                    : "transparent",
-                border: "2px solid #8B5CF6",
-                color:
-                  currentAttempt.status === "marked" ||
-                  currentAttempt.status === "attempted-marked"
-                    ? "#fff"
-                    : "#8B5CF6",
-                padding: "4px 12px",
-                fontWeight: 700,
-                fontSize: "0.75rem",
-                cursor: "pointer",
-                letterSpacing: "0.04em",
-                transition: "all 0.15s ease",
-              }}
-            >
-              <BookmarkPlus size={14} />
-              {currentAttempt.status === "marked" ||
-              currentAttempt.status === "attempted-marked"
-                ? "Marked"
-                : "Mark for Review"}
-            </button>
+            {/* Right-side action buttons: hint + mark for review */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {/* Hint button */}
+              {hintsEnabled && (
+                <button
+                  onClick={handleUseHint}
+                  disabled={submitted || hintsUsed >= MAX_HINTS || hintShown[currentIndex]}
+                  title={
+                    hintShown[currentIndex]
+                      ? "Hint already revealed"
+                      : hintsUsed >= MAX_HINTS
+                      ? "No hints remaining"
+                      : `Use a hint (${MAX_HINTS - hintsUsed} left)`
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    background: hintShown[currentIndex]
+                      ? "rgba(29,185,84,0.12)"
+                      : hintsUsed >= MAX_HINTS
+                      ? "#F5F0E8"
+                      : "#FFFBEB",
+                    border: `2px solid ${
+                      hintShown[currentIndex]
+                        ? "#1DB954"
+                        : hintsUsed >= MAX_HINTS
+                        ? "#CCC"
+                        : "#F59E0B"
+                    }`,
+                    color: hintShown[currentIndex]
+                      ? "#1DB954"
+                      : hintsUsed >= MAX_HINTS
+                      ? "#AAA"
+                      : "#92400E",
+                    padding: "4px 10px",
+                    fontWeight: 700,
+                    fontSize: "0.72rem",
+                    cursor:
+                      submitted || hintsUsed >= MAX_HINTS || hintShown[currentIndex]
+                        ? "not-allowed"
+                        : "pointer",
+                    letterSpacing: "0.04em",
+                    opacity: hintsUsed >= MAX_HINTS && !hintShown[currentIndex] ? 0.5 : 1,
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <Lightbulb size={13} />
+                  {hintShown[currentIndex]
+                    ? "Hint Used ✓"
+                    : `Hint (${MAX_HINTS - hintsUsed} left)`}
+                </button>
+              )}
+
+              {/* Mark for review toggle */}
+              <button
+                onClick={handleMarkForReview}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background:
+                    currentAttempt.status === "marked" ||
+                    currentAttempt.status === "attempted-marked"
+                      ? "#8B5CF6"
+                      : "transparent",
+                  border: "2px solid #8B5CF6",
+                  color:
+                    currentAttempt.status === "marked" ||
+                    currentAttempt.status === "attempted-marked"
+                      ? "#fff"
+                      : "#8B5CF6",
+                  padding: "4px 12px",
+                  fontWeight: 700,
+                  fontSize: "0.75rem",
+                  cursor: "pointer",
+                  letterSpacing: "0.04em",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                <BookmarkPlus size={14} />
+                {currentAttempt.status === "marked" ||
+                currentAttempt.status === "attempted-marked"
+                  ? "Marked"
+                  : "Mark for Review"}
+              </button>
+            </div>
           </div>
 
           {/* Question card */}
           <div
             style={{
               border: "3px solid #0D0D0D",
-              background: "#FFFFFF",
+              background: isVisualKidQuiz
+                ? "linear-gradient(135deg, #FFFDF6 0%, #F7F1FF 48%, #EAF7FF 100%)"
+                : "#FFFFFF",
               boxShadow: "6px 6px 0 #0D0D0D",
-              padding: "24px 28px",
+              padding: isVisualKidQuiz ? "28px" : "24px 28px",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            <div
-              style={{
-                fontSize: "0.65rem",
-                fontWeight: 800,
-                color: "#999",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                marginBottom: 12,
-              }}
-            >
-              Q{currentIndex + 1}.
+            {isVisualKidQuiz && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "radial-gradient(circle at top left, rgba(255,214,10,0.22), transparent 28%), radial-gradient(circle at bottom right, rgba(90,200,250,0.24), transparent 30%)",
+                  pointerEvents: "none",
+                }}
+              />
+            )}
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div
+                style={{
+                  fontSize: "0.65rem",
+                  fontWeight: 800,
+                  color: "#999",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  marginBottom: 12,
+                }}
+              >
+                Q{currentIndex + 1}.
+              </div>
+              {isVisualKidQuiz && current.promptVisual && (
+                <div
+                  style={{
+                    minHeight: 120,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 18,
+                    border: "3px solid #0D0D0D",
+                    background: "#FFFFFF",
+                    boxShadow: "5px 5px 0 rgba(13,13,13,0.12)",
+                    fontSize: "clamp(2.4rem, 7vw, 4rem)",
+                    lineHeight: 1.1,
+                    textAlign: "center",
+                    padding: "14px 18px",
+                  }}
+                >
+                  {current.promptVisual}
+                </div>
+              )}
+              <p
+                style={{
+                  fontSize: isVisualKidQuiz ? "clamp(1.2rem, 3vw, 1.6rem)" : "1.1rem",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                  lineHeight: isVisualKidQuiz ? 1.35 : 1.6,
+                  fontFamily: isVisualKidQuiz ? "'Space Grotesk', sans-serif" : "'JetBrains Mono', monospace",
+                  color: "#0D0D0D",
+                  margin: 0,
+                  textAlign: isVisualKidQuiz ? "center" : "left",
+                }}
+              >
+                {current.question}
+              </p>
             </div>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                fontWeight: 700,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.6,
-                fontFamily: "'JetBrains Mono', monospace",
-                color: "#0D0D0D",
-                margin: 0,
-              }}
-            >
-              {current.question}
-            </p>
           </div>
 
+          {/* Hint reveal panel */}
+          {hintsEnabled && hintShown[currentIndex] && (
+            <div
+              style={{
+                border: "2.5px solid #F59E0B",
+                background: "#FFFBEB",
+                padding: "14px 18px",
+                display: "flex",
+                gap: 12,
+                alignItems: "flex-start",
+                animation: "pop-in 0.2s ease forwards",
+              }}
+            >
+              <div
+                style={{
+                  flexShrink: 0,
+                  width: 30,
+                  height: 30,
+                  background: "#FDE68A",
+                  border: "2px solid #F59E0B",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Lightbulb size={15} color="#D97706" />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "0.62rem",
+                    fontWeight: 800,
+                    color: "#D97706",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    marginBottom: 5,
+                  }}
+                >
+                  Hint — {current.concept}
+                </div>
+                <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "#555", lineHeight: 1.6, margin: 0 }}>
+                  {current.explanation}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Options */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={optionLayoutStyle}>
             {current.options.map((opt, idx) => {
               const isSelected = currentAttempt.selectedOption === idx;
+              const optionAccent = visualPalette[idx % visualPalette.length];
               const pendingStyle: React.CSSProperties = isSelected
                 ? {
-                    background: "#0D0D0D",
-                    border: "3px solid #FFD60A",
-                    color: "#FFD60A",
-                    boxShadow: "4px 4px 0 #FFD60A",
+                    background: isVisualKidQuiz ? optionAccent : "#0D0D0D",
+                    border: `3px solid ${isVisualKidQuiz ? "#0D0D0D" : "#FFD60A"}`,
+                    color: isVisualKidQuiz ? "#0D0D0D" : "#FFD60A",
+                    boxShadow: `4px 4px 0 ${isVisualKidQuiz ? "#0D0D0D" : "#FFD60A"}`,
                     cursor: "pointer",
+                    transform: "translate(2px, 2px)",
                   }
                 : {
-                    background: "#FFFFFF",
+                    background: isVisualKidQuiz ? "#FFFFFF" : "#FFFFFF",
                     border: "3px solid #0D0D0D",
                     color: "#0D0D0D",
                     boxShadow: "4px 4px 0 #0D0D0D",
@@ -554,36 +957,84 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                     ...pendingStyle,
                     width: "100%",
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: isVisualKidQuiz ? "stretch" : "center",
                     gap: 14,
                     textAlign: "left",
-                    padding: "14px 18px",
+                    padding: isVisualKidQuiz ? "18px 16px" : "14px 18px",
                     fontFamily: "'Space Grotesk', sans-serif",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
+                    fontWeight: 700,
+                    fontSize: isVisualKidQuiz ? "1rem" : "0.95rem",
                     lineHeight: 1.4,
                     transition: "all 0.1s ease",
+                    flexDirection: isVisualKidQuiz ? "column" : "row",
+                    minHeight: isVisualKidQuiz ? 170 : undefined,
+                    justifyContent: isVisualKidQuiz ? "space-between" : undefined,
+                    borderRadius: isVisualKidQuiz ? 22 : 0,
                   }}
                 >
-                  {/* Letter badge */}
-                  <div
-                    style={{
-                      flexShrink: 0,
-                      width: 34,
-                      height: 34,
-                      border: "2px solid #0D0D0D",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.8rem",
-                      fontWeight: 800,
-                      background: isSelected ? "#FFD60A" : "#0D0D0D",
-                      color: isSelected ? "#0D0D0D" : "#FFD60A",
-                    }}
-                  >
-                    {String.fromCharCode(65 + idx)}
-                  </div>
-                  <span style={{ flex: 1 }}>{opt}</span>
+                  {isVisualKidQuiz ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                        <div
+                          style={{
+                            flexShrink: 0,
+                            width: 36,
+                            height: 36,
+                            border: "2px solid #0D0D0D",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.82rem",
+                            fontWeight: 900,
+                            background: isSelected ? "#0D0D0D" : optionAccent,
+                            color: isSelected ? "#FFFFFF" : "#0D0D0D",
+                          }}
+                        >
+                          {String.fromCharCode(65 + idx)}
+                        </div>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#555" }}>
+                          Tap Me
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          minHeight: 72,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "3rem",
+                          lineHeight: 1,
+                          width: "100%",
+                        }}
+                      >
+                        {current.optionVisuals?.[idx] ?? "✨"}
+                      </div>
+                      <span style={{ flex: 1, width: "100%", textAlign: "center", fontSize: "0.98rem", fontWeight: 800 }}>
+                        {opt}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        style={{
+                          flexShrink: 0,
+                          width: 34,
+                          height: 34,
+                          border: "2px solid #0D0D0D",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.8rem",
+                          fontWeight: 800,
+                          background: isSelected ? "#FFD60A" : "#0D0D0D",
+                          color: isSelected ? "#0D0D0D" : "#FFD60A",
+                        }}
+                      >
+                        {String.fromCharCode(65 + idx)}
+                      </div>
+                      <span style={{ flex: 1 }}>{opt}</span>
+                    </>
+                  )}
                 </button>
               );
             })}
@@ -852,7 +1303,7 @@ export default function QuizScreen({ domain, onComplete, onBack }: QuizScreenPro
                 onClick={() => setShowConfirm(false)}
                 style={{
                   flex: 1,
-                  background: "#F5F0E8",
+                  backgroundColor: "#F5F0E8",
                   border: "3px solid #0D0D0D",
                   boxShadow: "3px 3px 0 #0D0D0D",
                   padding: "11px",
@@ -928,13 +1379,11 @@ function LegendItem({
   color,
   label,
   borderColor,
-  textColor,
   bg,
 }: {
   color: string;
   label: string;
   borderColor?: string;
-  textColor?: string;
   bg?: string;
 }) {
   return (

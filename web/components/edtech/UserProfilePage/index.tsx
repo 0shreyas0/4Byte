@@ -5,8 +5,6 @@ import {
   Flame,
   BookOpen,
   Layers,
-  Target,
-  Zap,
   TrendingUp,
   Award,
   GraduationCap,
@@ -34,8 +32,10 @@ import {
   Target as TargetIcon,
   BookOpen as BookOpenIcon,
   Clock,
+  Trash2,
 } from "lucide-react";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth, type UserProfile } from "@/lib/AuthContext";
+import { EDUCATION_LEVELS, getDomainChipsForLevel } from "@/lib/edtech/educationLevels";
 
 interface UserProfilePageProps {
   onBack: () => void;
@@ -76,7 +76,6 @@ const DOMAIN_META: Record<string, { icon: React.ElementType; color: string; text
   "Python":        { icon: Database,  color: "#0D0D0D", textColor: "#FFD60A", shadow: "#333333" },
 };
 
-const ALL_DOMAINS = Object.keys(DOMAIN_META);
 const ALL_GOALS = Object.keys(GOAL_META);
 const ALL_EXP = Object.keys(EXP_META);
 
@@ -96,7 +95,7 @@ const ACHIEVEMENTS = [
 
 // ─── Component ────────────────────────────────────────────────────────────
 export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProfilePageProps) {
-  const { user, profile, saveProfile, logout } = useAuth();
+  const { user, profile, saveProfile, logout, resetProfile } = useAuth();
 
   // Edit states
   const [editingName, setEditingName] = useState(false);
@@ -104,6 +103,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
   const [savingName, setSavingName] = useState(false);
 
   const [editingPrefs, setEditingPrefs] = useState(false);
+  const [editEducationLevel, setEditEducationLevel] = useState(profile?.educationLevel ?? "");
   const [editDomains, setEditDomains] = useState<string[]>(profile?.preferredDomains ?? []);
   const [editExp, setEditExp] = useState(profile?.experienceLevel ?? "");
   const [editGoal, setEditGoal] = useState(profile?.learningGoal ?? "");
@@ -112,12 +112,19 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
   const displayName = profile?.displayName || user?.displayName || user?.email?.split("@")[0] || "Learner";
   const initials = displayName.slice(0, 2).toUpperCase();
   const roleInfo = profile?.role ? ROLE_META[profile.role] : null;
+  const educationInfo = profile?.educationLevel
+    ? EDUCATION_LEVELS.find((level) => level.id === profile.educationLevel) ?? null
+    : null;
   const goalInfo = profile?.learningGoal ? GOAL_META[profile.learningGoal] : null;
   const expInfo = profile?.experienceLevel ? EXP_META[profile.experienceLevel] : null;
   const sessions = profile?.totalSessions ?? 0;
   const streak = profile?.streak ?? 0;
   const domainsCount = profile?.preferredDomains?.length ?? 0;
   const questionsAnswered = sessions * 8; // 8 questions per session
+  const availableDomainChips = useMemo(
+    () => (editEducationLevel ? getDomainChipsForLevel(editEducationLevel) : []),
+    [editEducationLevel]
+  );
 
   // Unlock check
   const isUnlocked = (a: typeof ACHIEVEMENTS[0]) =>
@@ -137,7 +144,10 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
     setSavingPrefs(true);
     try {
       await saveProfile({
-        preferredDomains: editDomains,
+        educationLevel: editEducationLevel,
+        preferredDomains: editDomains.filter((domain) =>
+          availableDomainChips.some((chip) => chip.id === domain)
+        ),
         experienceLevel: editExp as "beginner" | "intermediate" | "advanced",
         learningGoal: editGoal as "placement" | "upskilling" | "academic" | "freelancing" | "curiosity",
       });
@@ -149,6 +159,21 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
 
   const toggleEditDomain = (d: string) => {
     setEditDomains((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
+  };
+
+  const startEditingPrefs = () => {
+    const nextEducationLevel = profile?.educationLevel ?? "";
+    setEditEducationLevel(nextEducationLevel);
+    setEditDomains(profile?.preferredDomains ?? []);
+    setEditExp(profile?.experienceLevel ?? "");
+    setEditGoal(profile?.learningGoal ?? "");
+    setEditingPrefs(true);
+  };
+
+  const handleEducationLevelChange = (levelId: string) => {
+    setEditEducationLevel(levelId);
+    const allowedDomains = new Set(getDomainChipsForLevel(levelId).map((chip) => chip.id));
+    setEditDomains((prev) => prev.filter((domain) => allowedDomains.has(domain)));
   };
 
   return (
@@ -287,6 +312,19 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
               {!editingPrefs ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {/* Exp */}
+                  {educationInfo && (
+                    <div>
+                      <Label text="Education Level" />
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", background: educationInfo.color, border: "2px solid #0D0D0D" }}>
+                        <educationInfo.icon size={18} color={educationInfo.textColor} strokeWidth={2.5} />
+                        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                          <span style={{ fontWeight: 800, fontSize: "0.9rem", color: educationInfo.textColor }}>{educationInfo.label}</span>
+                          <span style={{ fontSize: "0.68rem", fontWeight: 700, color: educationInfo.textColor, opacity: 0.75 }}>{educationInfo.sub}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Exp */}
                   {expInfo && (
                     <div>
                       <Label text="Experience Level" />
@@ -312,7 +350,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                     </div>
                   )}
                   <button
-                    onClick={() => { setEditDomains(profile?.preferredDomains ?? []); setEditExp(profile?.experienceLevel ?? ""); setEditGoal(profile?.learningGoal ?? ""); setEditingPrefs(true); }}
+                    onClick={startEditingPrefs}
                     className="brutal-btn"
                     style={{ width: "100%", padding: "10px", background: "#F5F0E8", fontWeight: 800, fontSize: "0.8rem", marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
                   >
@@ -322,6 +360,29 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div>
+                    <Label text="Education Level" />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {EDUCATION_LEVELS.map((level) => {
+                        const Icon = level.icon;
+                        const sel = editEducationLevel === level.id;
+                        return (
+                          <button
+                            key={level.id}
+                            onClick={() => handleEducationLevelChange(level.id)}
+                            style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "2px solid #0D0D0D", background: sel ? level.color : "#F5F0E8", cursor: "pointer", textAlign: "left", boxShadow: sel ? "2px 2px 0 #0D0D0D" : "3px 3px 0 #0D0D0D", transform: sel ? "translate(1px, 1px)" : "none" }}
+                          >
+                            <Icon size={16} color={sel ? level.textColor : "#0D0D0D"} strokeWidth={2.5} />
+                            <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                              <span style={{ fontWeight: 800, fontSize: "0.82rem", color: sel ? level.textColor : "#0D0D0D" }}>{level.label}</span>
+                              <span style={{ fontSize: "0.68rem", fontWeight: 700, color: sel ? level.textColor : "#888", opacity: sel ? 0.75 : 1 }}>{level.sub}</span>
+                            </div>
+                            {sel && <Check size={14} color={level.textColor} style={{ marginLeft: "auto" }} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   {/* Edit Exp */}
                   <div>
                     <Label text="Experience Level" />
@@ -476,7 +537,7 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                     })
                   )}
                   <button
-                    onClick={() => { setEditDomains(profile?.preferredDomains ?? []); setEditExp(profile?.experienceLevel ?? ""); setEditGoal(profile?.learningGoal ?? ""); setEditingPrefs(true); }}
+                    onClick={startEditingPrefs}
                     className="brutal-btn"
                     style={{ width: "100%", padding: "10px", background: "#F5F0E8", fontWeight: 800, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 4 }}
                   >
@@ -486,10 +547,11 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                 </div>
               ) : (
                 <div>
-                  <Label text="Select Your Domains" />
+                  <Label text={editEducationLevel ? "Select Your Domains" : "Pick an Education Level First"} />
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-                    {ALL_DOMAINS.map((d) => {
-                      const meta = DOMAIN_META[d];
+                    {availableDomainChips.map(({ id, label, color }) => {
+                      const meta = DOMAIN_META[id] ?? { color, textColor: "#0D0D0D", icon: Code2, shadow: "#CCC" };
+                      const d = id;
                       const sel = editDomains.includes(d);
                       return (
                         <button
@@ -498,11 +560,16 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
                           style={{ padding: "7px 14px", border: "2px solid #0D0D0D", background: sel ? meta.color : "#FFFFFF", cursor: "pointer", fontWeight: 800, fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 5, color: "#0D0D0D", boxShadow: sel ? "2px 2px 0 #0D0D0D" : "3px 3px 0 #0D0D0D", transform: sel ? "translate(1px, 1px)" : "none" }}
                         >
                           {sel && <Check size={12} strokeWidth={3} />}
-                          {d}
+                          {label}
                         </button>
                       );
                     })}
                   </div>
+                  {editEducationLevel && availableDomainChips.length === 0 && (
+                    <div style={{ padding: "12px", background: "#FFFFFF", border: "2px solid #0D0D0D", fontSize: "0.8rem", fontWeight: 700, color: "#666", marginBottom: 12 }}>
+                      No domain presets found for this education level yet.
+                    </div>
+                  )}
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => setEditingPrefs(false)} className="brutal-btn" style={{ flex: 1, padding: "10px", background: "#FFFFFF", fontWeight: 800, fontSize: "0.8rem" }}>Cancel</button>
                     <button onClick={handleSavePrefs} disabled={savingPrefs} className="brutal-btn" style={{ flex: 2, padding: "10px", background: "#FFD60A", fontWeight: 800, fontSize: "0.8rem" }}>
@@ -543,6 +610,41 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
           </div>
         </div>
 
+        {/* ── DANGER ZONE ── */}
+        <div style={{ marginTop: 20 }}>
+          <Section title="Danger Zone" accent="#FF3B3B" accentText="#FFFFFF">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#0D0D0D" }}>Reset Account Progress</div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#666", marginTop: 4 }}>
+                  This will permanently wipe your streaks, session history, and topic mastery. This cannot be undone.
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  if (confirm("⚠️ ARE YOU ABSOLUTELY SURE? This will wipe ALL your learning progress, history, and streaks permanently.")) {
+                    try {
+                      await resetProfile();
+                      alert("Profile Reset Successfully! Starting from scratch...");
+                      onBack(); // Go back to landing/domains
+                    } catch (err) {
+                      alert("Reset failed. Please try again.");
+                    }
+                  }
+                }}
+                className="brutal-btn"
+                style={{ 
+                  background: "#FF3B3B", color: "#FFFFFF", padding: "12px 24px", 
+                  fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em",
+                  display: "flex", alignItems: "center", gap: 8
+                }}
+              >
+                <Trash2 size={18} />
+                Wipe All Data
+              </button>
+            </div>
+          </Section>
+        </div>
       </div>
     </div>
   );
@@ -777,7 +879,7 @@ function Label({ text }: { text: string }) {
 }
 
 // ─── Smart Recommendations Component ──────────────────────────────────────
-function SmartRecommendations({ profile, onNavigateToDomain }: { profile: any; onNavigateToDomain: (d: string) => void }) {
+function SmartRecommendations({ profile, onNavigateToDomain }: { profile: UserProfile | null; onNavigateToDomain: (d: string) => void }) {
   // Find topics < 60% score in preferred domains
   const recommendations: { domain: string; topic: string; score: number }[] = [];
   

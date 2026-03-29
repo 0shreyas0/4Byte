@@ -13,6 +13,7 @@ Flow:
 All five items from the ANTIGRAVITY system prompt are wired here.
 """
 
+import logging
 import os
 import re
 from dataclasses import dataclass

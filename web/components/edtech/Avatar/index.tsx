@@ -23,7 +23,7 @@ export default function Avatar() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      content: "Namaste! I am your tutor. Ask me any concept and I will explain it step by step."
+      content: "Namaste! I am Neural Mentor. Ask me any concept and I will explain it step by step."
     }
   ]);
 
@@ -118,7 +118,7 @@ export default function Avatar() {
     <div className="fixed bottom-10 left-10 z-100 flex flex-col items-start select-none">
       <div className="w-[320px] bg-white border-4 border-black shadow-[8px_8px_0px_#000]">
         <div className="flex items-center justify-between px-3 py-2 bg-[#FFD60A] border-b-4 border-black">
-          <p className="text-[10px] font-black uppercase tracking-widest">Tutor Chat</p>
+          <p className="text-[10px] font-black uppercase tracking-widest">Neural Mentor Chat</p>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setIsChatOpen((prev) => !prev)}
@@ -172,7 +172,7 @@ export default function Avatar() {
                 <input
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask your tutor..."
+                  placeholder="Ask Neural Mentor..."
                   className="flex-1 border-2 border-black px-2 py-1.5 text-[11px] font-bold focus:outline-none"
                 />
                 <button

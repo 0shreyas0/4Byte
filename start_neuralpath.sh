@@ -11,7 +11,7 @@ osascript -e 'tell application "Terminal" to do script "ollama run llama3"'
 
 # 2. Start FastAPI Backend in a new tab
 echo "🧠 Starting Mentor Backend (uvicorn)..."
-osascript -e 'tell application "Terminal" to do script "cd '"$(pwd)"'/RAG && python3 -m uvicorn app.main:app --reload"'
+osascript -e 'tell application "Terminal" to do script "cd '"$(pwd)"'/RAG && python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"'
 
 # 3. Start Next.js Frontend in a new tab
 echo "🎨 Starting Frontend (next dev)..."

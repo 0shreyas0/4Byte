@@ -212,9 +212,11 @@ export default function Home() {
 
         {screen === "results" && (
           <MainDashboard
+            uid={user?.uid}
             analysis={analysis || profile?.latestAnalysis}
             scores={Object.keys(scores).length > 0 ? scores : (profile?.latestScores || {})}
             domain={domain || (profile?.latestAnalysis?.domain || "DSA")}
+            sessionHistory={profile?.sessionHistory}
             onRestart={handleRestart}
             onSimulate={() => navigate("simulation")}
             onPractice={() => navigate(domain === "Web Dev" ? "web-sandbox" : "sandbox")}
@@ -307,9 +309,9 @@ export default function Home() {
         )}
       </main>
 
-      {/* Persistent AI Tutor Avatar */}
-      <Avatar />
-      <TextSelector persona={aiPersona} />
+      {/* Persistent AI Tutor Avatar — hidden during quiz */}
+      {screen !== "quiz" && <Avatar />}
+      {screen !== "quiz" && <TextSelector persona={aiPersona} />}
     </div>
   );
 }

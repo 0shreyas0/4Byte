@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { TopicScore } from "./conceptGraph";
 
@@ -64,6 +64,29 @@ export async function recordSession(
     latestScores: newScores ?? data.latestScores ?? null,
     lastActive: serverTimestamp(),
   });
+
+  // ── Session History (Internal Array to avoid permission issues) ───────────
+  if (domain && newScores && analysis) {
+    try {
+      const history = data.sessionHistory ?? [];
+      const newSession = {
+        domain,
+        scores: newScores,
+        analysis,
+        date: today,
+        timestamp: new Date().toISOString(), // consistent with the array
+      };
+      
+      // Keep last 15 sessions to stay under document size limits
+      const updatedHistory = [newSession, ...history].slice(0, 15);
+      
+      await updateDoc(ref, {
+        sessionHistory: updatedHistory
+      });
+    } catch (e) {
+      console.error("Failed to store session in history array:", e);
+    }
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

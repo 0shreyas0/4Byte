@@ -25,6 +25,7 @@ export interface UserProfile {
   topicMastery?: Record<string, Record<string, number>>; // { domain: { topic: score_0_100 } }
   latestAnalysis?: any; // AnalysisResult
   latestScores?: Record<string, any>; // Record<string, TopicScore>
+  sessionHistory?: any[];             // last 15 attempts
   createdAt?: unknown;
   lastActive?: unknown;
 }
@@ -37,6 +38,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   saveProfile: (data: Partial<UserProfile>) => Promise<void>;
+  resetProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -47,6 +49,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   refreshProfile: async () => {},
   saveProfile: async () => {},
+  resetProfile: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -102,11 +105,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, { merge: true });
     await fetchProfile(user);
   };
+  
+  const resetProfile = async () => {
+    if (!user) return;
+    const ref = doc(db, "users", user.uid);
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email ?? "",
+      onboardingComplete: false,
+      streak: 0,
+      totalSessions: 0,
+      lastActiveDate: null,
+      activityLog: {},
+      topicMastery: {},
+      latestAnalysis: null,
+      latestScores: {},
+      sessionHistory: [],
+      lastActive: serverTimestamp(),
+    }, { merge: false }); // Overwrite completely
+    await fetchProfile(user);
+  };
 
   const logout = () => signOut(auth);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, profileLoading, logout, refreshProfile, saveProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, profileLoading, logout, refreshProfile, saveProfile, resetProfile }}>
       {children}
     </AuthContext.Provider>
   );
