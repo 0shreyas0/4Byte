@@ -5,6 +5,14 @@ import { X, MessageSquare } from "lucide-react";
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
+  tag?: string | null;
+};
+
+const MESSAGE_TAGS = ["Important", "Insight", "TODO"];
+const TAG_MAP: Record<string, string> = {
+  Important: "#FF3B3B",
+  Insight: "#AF52DE",
+  TODO: "#1DB954",
 };
 
 function normalizeTutorText(text: string): string {
@@ -103,6 +111,14 @@ export default function Avatar() {
     }
   }, [chatInput, isChatLoading, chatMessages]);
 
+  const tagMessage = (index: number, tag: string) => {
+    setChatMessages(prev => prev.map((msg, i) => {
+      if (i !== index) return msg;
+      const nextTag = msg.tag === tag ? null : tag;
+      return { ...msg, tag: nextTag };
+    }));
+  };
+
   if (!isVisible) {
     return (
       <button 
@@ -148,7 +164,28 @@ export default function Avatar() {
                       : "mr-auto bg-white text-black"
                   }`}
                 >
-                  {message.content}
+                  <div className="relative">
+                    {message.content}
+                    {message.role === "assistant" && (
+                      <div className="flex items-center gap-1 mt-2 border-t border-black/10 pt-1">
+                        {MESSAGE_TAGS.map(t => (
+                          <button
+                            key={t}
+                            onClick={() => tagMessage(index, t)}
+                            className={`text-[8px] px-1 border border-black font-black uppercase transition-colors ${message.tag === t ? 'text-white' : 'text-black/40 hover:text-black'}`}
+                            style={{ background: message.tag === t ? TAG_MAP[t] : 'transparent' }}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {message.tag && (
+                      <div className="absolute top-[-10px] right-[-6px] px-1.5 py-0.5 border border-black text-[7px] font-black uppercase text-white shadow-[1px_1px_0px_#000]" style={{ background: TAG_MAP[message.tag] }}>
+                        {message.tag}
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
 

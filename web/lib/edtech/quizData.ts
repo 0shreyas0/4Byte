@@ -13,6 +13,23 @@ export interface QuizQuestion {
   promptImageAlt?: string;
 }
 
+const QUIZ_STAGE_PACKS: Record<string, string[][]> = {
+  DSA: [["dsa-8"], ["dsa-1", "dsa-2"]],
+  "Web Dev": [["web-1"], ["web-2"]],
+  Aptitude: [["apt-1"], ["apt-2"]],
+  "App Dev": [["app-1"], ["app-2"]],
+  "Data Science": [["ds-1", "ds-2"], ["ds-3", "ds-4"]],
+  Cybersecurity: [["cyber-1", "cyber-2"], ["cyber-3", "cyber-4"]],
+  IoT: [["iot-1", "iot-2"], ["iot-3", "iot-4"]],
+  Python: [["py-1", "py-2"], ["py-3", "py-4"]],
+  Alphabets: [["alpha-k-alias-1", "alpha-k-alias-2"], ["alpha-k-alias-3", "alpha-k-alias-4", "alpha-k-alias-5"]],
+  "Alphabets (Kindergarten)": [["alpha-1", "alpha-2"], ["alpha-3", "alpha-4", "alpha-5"]],
+  Numbers: [["num-1", "num-2"], ["num-3", "num-4", "num-5"]],
+  "Colors & Shapes": [["color-1", "color-2"], ["color-3", "color-4", "color-5"]],
+  "Rhymes & Stories": [["rhyme-1", "rhyme-2"], ["rhyme-3", "rhyme-4", "rhyme-5"]],
+  "Nature & EVS": [["nature-1", "nature-2"], ["nature-3", "nature-4", "nature-5"]],
+};
+
 export const QUIZ_DATA: Record<string, QuizQuestion[]> = {
   DSA: [
     {
@@ -1462,3 +1479,20 @@ export const QUIZ_DATA: Record<string, QuizQuestion[]> = {
     },
   ],
 };
+
+export function getQuizQuestions(domain: string, stage = 1): QuizQuestion[] {
+  const questions = QUIZ_DATA[domain] || QUIZ_DATA["DSA"];
+  const packs = QUIZ_STAGE_PACKS[domain];
+  const stageIds = packs?.[stage - 1];
+
+  if (stageIds && stageIds.length > 0) {
+    const stageQuestions = stageIds
+      .map((id) => questions.find((question) => question.id === id))
+      .filter((question): question is QuizQuestion => Boolean(question));
+
+    if (stageQuestions.length > 0) return stageQuestions;
+  }
+
+  const midpoint = Math.max(1, Math.ceil(questions.length / 2));
+  return stage <= 1 ? questions.slice(0, midpoint) : questions.slice(midpoint);
+}

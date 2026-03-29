@@ -15,7 +15,8 @@ export async function recordSession(
   uid: string, 
   domain?: string, 
   newScores?: Record<string, TopicScore>,
-  analysis?: any
+  analysis?: any,
+  stage?: number
 ): Promise<void> {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
@@ -27,6 +28,7 @@ export async function recordSession(
   const currentStreak: number = data.streak ?? 0;
   const activityLog: Record<string, number> = data.activityLog ?? {};
   const topicMastery: Record<string, Record<string, number>> = data.topicMastery ?? {};
+  const domainStageProgress: Record<string, { completedStages: number }> = data.domainStageProgress ?? {};
 
   // ── Streak logic ──────────────────────────────────────────────────────────
   let newStreak: number;
@@ -53,6 +55,13 @@ export async function recordSession(
     });
   }
 
+  if (domain && stage) {
+    const currentProgress = domainStageProgress[domain]?.completedStages ?? 0;
+    domainStageProgress[domain] = {
+      completedStages: Math.max(currentProgress, stage),
+    };
+  }
+
   // ── Write to Firestore ────────────────────────────────────────────────────
   await updateDoc(ref, {
     streak: newStreak,
@@ -60,6 +69,7 @@ export async function recordSession(
     totalSessions: (data.totalSessions ?? 0) + 1,
     activityLog,
     topicMastery,
+    domainStageProgress,
     latestAnalysis: analysis ?? data.latestAnalysis ?? null,
     latestScores: newScores ?? data.latestScores ?? null,
     lastActive: serverTimestamp(),

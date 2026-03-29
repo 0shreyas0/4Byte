@@ -19,6 +19,7 @@ import {
 import { useAuth } from "@/lib/AuthContext";
 import ProfilePanel from "@/components/edtech/ProfilePanel";
 import PixelCat from "@/components/edtech/PixelCat";
+import NotificationCenter from "@/components/edtech/NotificationCenter";
 
 export type Screen =
   | "auth"
@@ -97,6 +98,8 @@ export default function Navbar({
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [searchFocused, setSearchFocused] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const { user, profile } = useAuth();
@@ -271,19 +274,22 @@ export default function Navbar({
               {/* Bell */}
               <button
                 title="Notifications"
+                onClick={() => setNotifOpen(prev => !prev)}
                 className="flex items-center justify-center relative transition-colors duration-100 h-full"
                 style={{
                   width: 56,
                   borderRight: "4px solid #0D0D0D",
-                  background: "transparent",
+                  background: notifOpen ? "#0D0D0D" : "transparent",
                   cursor: "pointer",
                 }}
               >
-                <Bell size={18} color="#0D0D0D" />
-                <span
-                  className="absolute"
-                  style={{ top: 12, right: 14, width: 8, height: 8, background: "#FF3B3B", borderRadius: "50%", border: "2px solid #FFD60A" }}
-                />
+                <Bell size={18} color={notifOpen ? "#FFD60A" : "#0D0D0D"} />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute"
+                    style={{ top: 12, right: 14, width: 8, height: 8, background: "#FF3B3B", borderRadius: "50%", border: "2px solid #FFD60A" }}
+                  />
+                )}
               </button>
 
               {/* Profile button */}
@@ -384,6 +390,11 @@ export default function Navbar({
       )}
 
       <ProfilePanel open={profileOpen} onClose={() => setProfileOpen(false)} onNavigate={onNavigate} />
+      <NotificationCenter 
+        open={notifOpen} 
+        onClose={() => setNotifOpen(false)} 
+        onNewNotificationCount={setUnreadCount}
+      />
     </header>
   );
 }

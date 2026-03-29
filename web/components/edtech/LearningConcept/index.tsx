@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BookOpen, ArrowRight, Lightbulb, Code, CheckCircle2 } from "lucide-react";
 
 interface LearningConceptProps {
   domain: string;
+  stage?: number;
   onComplete: () => void;
   onBack: () => void;
 }
@@ -298,10 +299,17 @@ const getDomainConcepts = (domain: string) => {
   ];
 };
 
-export default function LearningConcept({ domain, onComplete, onBack }: LearningConceptProps) {
+export default function LearningConcept({ domain, stage = 1, onComplete, onBack }: LearningConceptProps) {
+  const allConcepts = getDomainConcepts(domain);
+  const selectedConcepts =
+    allConcepts.length > 1 && stage <= 2 ? [allConcepts[Math.min(stage - 1, allConcepts.length - 1)]] : allConcepts;
   const [step, setStep] = useState(0);
-  const data = getDomainConcepts(domain);
+  const data = selectedConcepts;
   const current = data[step];
+
+  useEffect(() => {
+    setStep(0);
+  }, [domain, stage]);
 
   const handleNext = () => {
     if (step < data.length - 1) {

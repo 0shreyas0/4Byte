@@ -530,7 +530,7 @@ export default function DomainSelection({ searchQuery = "", onSelect, onBack }: 
               }}
             >
               <Zap size={22} />
-              {confirming ? "LAUNCHING..." : `START ${selectedSubject?.toUpperCase()} QUIZ`}
+              {confirming ? "LAUNCHING..." : `START ${selectedSubject ? selectedSubject.toUpperCase() : "QUIZ"}`}
             </button>
           )}
         </div>

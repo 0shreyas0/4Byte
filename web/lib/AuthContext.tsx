@@ -23,6 +23,7 @@ export interface UserProfile {
   lastActiveDate?: string;                   // "YYYY-MM-DD" of last session
   activityLog?: Record<string, number>;      // { "YYYY-MM-DD": sessionCount }
   topicMastery?: Record<string, Record<string, number>>; // { domain: { topic: score_0_100 } }
+  domainStageProgress?: Record<string, { completedStages: number }>;
   latestAnalysis?: any; // AnalysisResult
   latestScores?: Record<string, any>; // Record<string, TopicScore>
   sessionHistory?: any[];             // last 15 attempts
@@ -118,6 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       lastActiveDate: null,
       activityLog: {},
       topicMastery: {},
+      domainStageProgress: {},
       latestAnalysis: null,
       latestScores: {},
       sessionHistory: [],
