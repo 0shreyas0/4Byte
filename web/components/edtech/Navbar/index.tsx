@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   BookOpen,
   Layers,
@@ -14,9 +14,11 @@ import {
   RotateCcw,
   HomeIcon,
   User,
+  Search,
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import ProfilePanel from "@/components/edtech/ProfilePanel";
+import PixelCat from "@/components/edtech/PixelCat";
 
 export type Screen =
   | "auth"
@@ -91,6 +93,9 @@ export default function Navbar({
 }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const { user, profile } = useAuth();
 
   const isActive = (item: (typeof NAV_ITEMS)[0]) =>
@@ -124,7 +129,7 @@ export default function Navbar({
         </button>
 
         {/* ── Desktop nav links ───────────────────────────────────────── */}
-        <nav className="hidden lg:flex flex-1 items-stretch">
+        <nav className="hidden lg:flex items-stretch">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
@@ -151,8 +156,74 @@ export default function Navbar({
           })}
         </nav>
 
+        {/* ── Middle section: search on relevant screens, cat elsewhere ── */}
+        {(["library", "domain-select", "results"] as Screen[]).includes(screen) ? (
+          <div
+            className="hidden lg:flex items-center flex-1 px-4"
+            style={{
+              borderLeft: "4px solid #0D0D0D",
+              borderRight: "4px solid #0D0D0D",
+              background: searchFocused ? "#FFD60A" : "#0D0D0D",
+              transition: "background 0.15s",
+            }}
+          >
+            <Search
+              size={15}
+              color={searchFocused ? "#0D0D0D" : "#FFD60A"}
+              style={{ flexShrink: 0, transition: "color 0.15s" }}
+            />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Search topics, concepts…"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              style={{
+                flex: 1,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                marginLeft: 10,
+                fontWeight: 700,
+                fontSize: "0.78rem",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                color: searchFocused ? "#0D0D0D" : "#FFD60A",
+                caretColor: searchFocused ? "#0D0D0D" : "#FFD60A",
+                transition: "color 0.15s",
+              }}
+            />
+            {searchValue && (
+              <button
+                onClick={() => { setSearchValue(""); searchRef.current?.focus(); }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "2px 4px",
+                  color: searchFocused ? "#0D0D0D" : "#FFD60A",
+                  fontWeight: 900,
+                  fontSize: "0.75rem",
+                  transition: "color 0.15s",
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ) : (
+          <div
+            className="hidden lg:flex flex-1"
+            style={{ borderLeft: "4px solid #0D0D0D", borderRight: "4px solid #0D0D0D", overflow: "hidden" }}
+          >
+            <PixelCat />
+          </div>
+        )}
+
         {/* ── Right actions ───────────────────────────────────────────── */}
-        <div className="ml-auto flex items-stretch h-full" style={{ borderLeft: "4px solid #0D0D0D" }}>
+        <div className="flex items-stretch h-full">
 
           {user ? (
             <div className="flex items-stretch h-full">

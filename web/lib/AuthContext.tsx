@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string;
   displayName: string;
   role: "student" | "professional" | "self_learner" | "educator" | "other";
+  educationLevel: string;
   experienceLevel: "beginner" | "intermediate" | "advanced";
   learningGoal: "placement" | "upskilling" | "academic" | "freelancing" | "curiosity";
   preferredDomains: string[];

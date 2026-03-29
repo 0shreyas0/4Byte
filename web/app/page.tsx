@@ -85,15 +85,18 @@ export default function Home() {
       return;
     }
 
-    // Non-coding-capable domains go straight to timeline
-    const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev", "IoT", "Cybersecurity", "Data Science"];
-    if (CODING_DOMAINS.includes(d)) {
+    // Only engineering/professional levels have coding-capable domains
+    const CODING_LEVELS = ["engineering", "professional"];
+    const CODING_DOMAINS = ["DSA", "Web Dev", "Python", "App Dev", "IoT", "Cybersecurity", "Data Science", "CS-10", "CS-12"];
+    const eduLevel = profile?.educationLevel || "engineering";
+
+    if (CODING_LEVELS.includes(eduLevel) && CODING_DOMAINS.includes(d)) {
       navigate("mode-select");
     } else {
       setQuizMode("mcq");
       navigate("timeline");
     }
-  }, [navigate, user]);
+  }, [navigate, user, profile]);
 
   const handleModeSelect = useCallback((m: QuizMode, p: LearningPersona) => {
     setQuizMode(m);
