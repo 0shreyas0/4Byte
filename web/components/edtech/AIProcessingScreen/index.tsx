@@ -39,6 +39,7 @@ export default function AIProcessingScreen({ onComplete, scores, results, domain
   const animationsDoneRef = useRef(false);
   const aiDoneRef = useRef(false);
   const completedRef = useRef(false);
+  const startedRef = useRef(false);
 
   const tryComplete = useCallback(() => {
     if (aiDoneRef.current && !completedRef.current) {
@@ -48,6 +49,11 @@ export default function AIProcessingScreen({ onComplete, scores, results, domain
   }, [onComplete]);
 
   useEffect(() => {
+    if (startedRef.current) {
+      return;
+    }
+    startedRef.current = true;
+
     // 1. Start AI Analysis in background
     const runAnalysis = async () => {
       try {

@@ -13,14 +13,13 @@ Flow:
 All five items from the ANTIGRAVITY system prompt are wired here.
 """
 
-from __future__ import annotations
-
-import logging
+import os
 import re
 from dataclasses import dataclass
 from typing import Any
 
 import ollama
+from groq import Groq
 
 from app.memory_store import Memory, retrieve_memories, summarize_memories_as_context
 from app.memory_extractor import (
@@ -30,9 +29,15 @@ from app.memory_extractor import (
 
 logger = logging.getLogger(__name__)
 
-LOCAL_LLM_MODEL = "llama3"   # Ollama local model (context compression + extraction)
-MAIN_LLM_MODEL  = "llama3"   # Swap to groq/openai client here when ready
+# ── Config ──────────────────────────────────────────────────────────────────
+LOCAL_LLM_MODEL = "llama3"   # Ollama local (for compression + extraction)
+MAIN_LLM_MODEL  = "llama-3.1-70b-versatile"  # Groq (for intelligence + speed)
 
+# Initialize Groq client
+_groq_client = Groq(
+    api_key=os.environ.get("NEXT_PUBLIC_GROQ_API_KEY") 
+            or os.environ.get("GROQ_API_KEY")
+)
 
 # ── Context compression (local LLM role) ─────────────────────────────────────
 
@@ -170,24 +175,23 @@ def run_chat(
     compressed_context = compress_context(memories)
     logger.info("Compressed context (%d chars): %s...", len(compressed_context), compressed_context[:80])
 
-    # ── 3. Main LLM generates answer ────────────────────────────────────────
-    full_prompt = (
-        _ANTIGRAVITY_SYSTEM
-        + "\n\n"
-        + _ANTIGRAVITY_USER_TMPL.format(query=query, context=compressed_context)
-    )
-
+    # ── 3. Main LLM (Groq) generates answer ───────────────────────────────────
     try:
-        resp = ollama.generate(
+        completion = _groq_client.chat.completions.create(
             model=MAIN_LLM_MODEL,
-            prompt=full_prompt,
-            options={"temperature": 0.6, "top_p": 0.92, "num_predict": 700},
+            messages=[
+                {"role": "system", "content": _ANTIGRAVITY_SYSTEM},
+                {"role": "user", "content": _ANTIGRAVITY_USER_TMPL.format(query=query, context=compressed_context)},
+            ],
+            temperature=0.6,
+            max_tokens=800,
+            top_p=0.92,
         )
-        raw_answer = resp.get("response", "").strip()
+        raw_answer = (completion.choices[0].message.content or "").strip()
     except Exception as exc:
-        logger.error("Main LLM generation failed: %s", exc)
+        logger.error("Main LLM (Groq) failed: %s", exc)
         raw_answer = (
-            "I'm having trouble reaching the AI model right now. "
+            "I'm having trouble reaching the AI mentor right now. "
             "Please try again in a moment."
         )
 

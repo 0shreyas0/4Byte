@@ -225,10 +225,10 @@ async def generate_learning_summary(
     """
     results = results or []
 
-    # Prioritize missed questions for deep-dive
-    to_analyze = [r for r in results if not r.is_correct][:3]
-    if len(to_analyze) < 3:
-        to_analyze.extend([r for r in results if r.is_correct][:3 - len(to_analyze)])
+    # Prioritize missed questions for deep-dive; include enough context for richer UI cards.
+    missed = [r for r in results if not r.is_correct]
+    correct = [r for r in results if r.is_correct]
+    to_analyze = (missed + correct)[:8]
 
     detailed_report_context = "\n".join([
         f"- ID: {r.question_id} | Topic: {r.topic} | Concept: {r.concept} | Correct: {r.is_correct}"
@@ -297,6 +297,8 @@ Takeaway: (One memorable rule. Make it stick. Like a golden rule they'll remembe
         s_match = re.search(r'\*?\*?SUMMARY\*?\*?:?\s*(.*?)(?=\n\n|\*?\*?REASONING|\*?\*?DEEP_DIVE|$)', text, re.DOTALL | re.I)
         if s_match:
             summary = s_match.group(1).strip()
+        if not summary:
+            summary = f"You are improving in {domain}, and your current blocker is {root_cause}. We will fix it step by step."
 
         # ── Parse Reasoning ──
         reasoning = []
@@ -304,6 +306,12 @@ Takeaway: (One memorable rule. Make it stick. Like a golden rule they'll remembe
         if r_match:
             lines = r_match.group(1).strip().split('\n')
             reasoning = [l.strip().lstrip('-*123. ') for l in lines if len(l.strip()) > 5][:5]
+        if len(reasoning) == 0:
+            reasoning = [
+                f"Your core blocker is {root_cause}, and it affects dependent topics.",
+                "You can recover faster by dry-running small examples before coding.",
+                "Fixing one foundational concept will improve multiple downstream questions.",
+            ]
 
         # ── Parse Deep Dive sections (split by --- separator) ──
         detailed = []
@@ -329,6 +337,33 @@ Takeaway: (One memorable rule. Make it stick. Like a golden rule they'll remembe
                     "is_correct": matched.is_correct,
                     "mentor_thought_process": tp_match.group(1).strip(),
                     "key_takeaway": ta_match.group(1).strip() if ta_match else "Master this concept step by step."
+                })
+
+        # Fallback: if format drifts or parse is partial, fill missing cards deterministically.
+        seen_ids = {d["question_id"] for d in detailed}
+        missing_items = [r for r in to_analyze if r.question_id not in seen_ids]
+        if missing_items:
+            logger.warning("Deep-dive parse missing %s item(s); adding deterministic fallback cards", len(missing_items))
+            for r in missing_items:
+                concept = r.concept or "General"
+                confusion_hint = next(
+                    (g for g in micro_gaps if concept.lower() in g.lower() or g.lower() in concept.lower()),
+                    concept,
+                )
+                detailed.append({
+                    "question_id": r.question_id,
+                    "topic": r.topic,
+                    "concept": concept,
+                    "is_correct": r.is_correct,
+                    "mentor_thought_process": (
+                        f"You likely mixed up {confusion_hint} while solving this question. "
+                        f"First, restate the goal in one line. Then trace the logic for {concept} step by step "
+                        f"using a tiny dry run. Finally, validate edge cases before finalizing your answer. "
+                        f"This reduces confusion and builds strong fundamentals from {root_cause}."
+                    ),
+                    "key_takeaway": (
+                        f"Before coding, do a 3-step dry run for {concept} and check one edge case."
+                    ),
                 })
 
         logger.info(f"--- Parsed {len(detailed)} deep-dive items ---")

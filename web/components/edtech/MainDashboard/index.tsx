@@ -724,10 +724,38 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
 
   if (!analysis.detailedAiReport || analysis.detailedAiReport.length === 0) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <Sparkles size={48} color="#FFD60A" strokeWidth={1} style={{ margin: "0 auto 20px" }} />
-        <h2 style={{ fontWeight: 900, fontSize: "1.5rem", textTransform: "uppercase" }}>Analysis in Progress…</h2>
-        <p style={{ fontWeight: 700, color: "#666", marginTop: 10 }}>Your mentor is reviewing your thought process. Check back in a few seconds!</p>
+      <div style={{ padding: "28px", maxWidth: 860, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: "#fff", border: "3px solid #0D0D0D", padding: "24px", boxShadow: "6px 6px 0 #0D0D0D" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <Sparkles size={22} color="#FFD60A" strokeWidth={2} />
+            <h2 style={{ fontWeight: 900, fontSize: "1.05rem", textTransform: "uppercase", margin: 0 }}>
+              AI Mentor Summary
+            </h2>
+          </div>
+          <p style={{ fontWeight: 700, color: "#333", lineHeight: 1.7, margin: 0 }}>
+            {(analysis.explanation && analysis.explanation[0]) || "Mentor summary is available, but per-question deep dive could not be generated for this attempt."}
+          </p>
+        </div>
+
+        <div style={{ background: "#0D0D0D", border: "3px solid #FFD60A", padding: "18px 20px" }}>
+          <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.75rem", textTransform: "uppercase", marginBottom: 8 }}>
+            What this means
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, color: "#fff", lineHeight: 1.8, fontSize: "0.92rem", fontWeight: 600 }}>
+            {((analysis.explanation && analysis.explanation.length > 1) ? analysis.explanation.slice(1, 5) : [
+              "Detailed per-question thought process is missing for this run.",
+              "You can retake once to regenerate the full AI Mentor deep dive.",
+            ]).map((line, idx) => (
+              <li key={`${line}-${idx}`}>{line}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div style={{ border: "2px dashed #0D0D0D", padding: "14px 16px", background: "#fff" }}>
+          <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#555" }}>
+            Deep dive appears only when backend returns question-level mentor output (`detailed_report`).
+          </p>
+        </div>
       </div>
     );
   }

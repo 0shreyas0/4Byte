@@ -11,6 +11,10 @@ from contextlib import asynccontextmanager
 import os
 import sys
 
+# 🔥 Load .env for Groq support
+from dotenv import load_dotenv
+load_dotenv()
+
 # 🔥🔥🔥 RELOAD INDICATOR - Check your terminal to see if this appears! 🔥🔥🔥
 print("\n" + "🚀"*40)
 print("🚀🚀🚀 NEURALPATH RAG SERVER V2.0: AI MENTOR ONLINE 🚀🚀🚀")
@@ -174,6 +178,15 @@ def compile_and_explain(req: CompileRequest) -> CompileResponse:
             faulty_line=result.faulty_line,
             mapped_topic=result.mapped_topic,
         )
+        # 🟢 NEW: Automatic memory saving for the "Secretary"
+        if result.error_type and result.mapped_topic:
+            store_memory(
+                user_id=req.user_id,
+                domain=req.language.value,
+                topic=result.mapped_topic,
+                mem_type="weakness",
+                content=f"User triggered a {result.error_type} in {result.mapped_topic}: '{result.raw_error}'",
+            )
     except Exception as e:
         logger.exception("Failed to record error history: %s", e)
 
