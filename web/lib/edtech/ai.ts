@@ -1,9 +1,6 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { YouTubeVideo } from "./youtube";
 
-const apiKey = process.env.NEXT_PUBLIC_GOOGLE_GENERATIVE_AI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-const genAI = new GoogleGenerativeAI(apiKey || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// This library now calls the backend API route instead of using Groq directly
 
 // 🔥 DOMAIN CONTEXT MAP
 export const DOMAIN_CONTEXT: Record<string, string> = {
@@ -48,30 +45,25 @@ export async function generateOptimizedQuery(
 ): Promise<string> {
   const context = DOMAIN_CONTEXT[domain] || "";
   
-  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
-    return `${concept} ${context} ${difficulty} tutorial -microsoft -product`.trim();
-  }
-
-  const prompt = `
-    Generate a high-quality YouTube search query (max 7 words) for an educational video.
-    Domain: ${domain} (Context: ${context})
-    Topic: ${concept}
-    Student issue: ${learningGap}
-    Level: ${difficulty}
-    
-    Instruction: Ensure the query is highly focused on the ${domain} domain. Exclude generic results.
-    Query: 
-  `;
-
   try {
-    const result = await model.generateContent(prompt);
-    let text = result.response.text().trim().replace(/"/g, '');
-    // Ensure domain keywords are present if AI misses them
-    if (domain === "DSA" && !text.toLowerCase().includes("dsa") && !text.toLowerCase().includes("algorithm")) {
-        text += " dsa algorithm";
-    }
-    return text;
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "generateQuery",
+        concept,
+        learningGap,
+        difficulty,
+        domain,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to generate query");
+    
+    const data = await response.json();
+    return data.query || `${concept} ${context} ${difficulty} tutorial`.trim();
   } catch (error) {
+    console.error("Query generation failed:", error);
     return `${concept} ${context} ${difficulty} tutorial`.trim();
   }
 }
@@ -101,51 +93,30 @@ export async function refineRecommendations(
 ): Promise<RefinedRecommendation[]> {
   if (videos.length === 0) return [];
 
-  // Fallback if no API key
-  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
-    console.warn("Gemini API Key missing. Returning unrefined data.");
-    return videos.slice(0, 3).map((v, i) => ({
-      title: v.title,
-      url: v.url,
-      focus_concept: `Mastering ${concept}`,
-      recommended_segment: "Start to middle",
-      why_this_video: `This ${domain} tutorial specifically addresses ${concept}.`,
-    }));
-  }
-
-  console.log(`AI Layer: Domain-Aware refinement for [${domain}]`, { concept, mistake, difficulty });
-
-  const videoList = videos.map(v => `- TITLE: "${v.title}" | CHANNEL: ${v.channel} | URL: ${v.url}`).join('\n');
-  
-  const prompt = `
-    You are an Expert ${domain} AI Tutor. Rank and select the top 2 best videos for:
-    DOMAIN: ${domain}
-    CONCEPT: ${concept}
-    STUDENT ISSUE: ${mistake}
-    DIFFICULTY: ${difficulty}
-    
-    REAL VIDEOS:
-    ${videoList}
-    
-    CRITICAL INSTRUCTIONS:
-    - ONLY recommend videos that are strictly relevant to ${domain}.
-    - Ignore generic or unrelated "product" videos (e.g., ignore Microsoft Loop if domain is DSA).
-    - Identify EXACT segment (timestamps) that solves the student's issue.
-    - Explain WHY this specific video is perfect for a ${difficulty} student in ${domain}.
-    
-    RETURN ONLY CLEAN JSON ARRAY:
-    [{ "title": "...", "url": "...", "focus_concept": "...", "recommended_segment": "...", "why_this_video": "..." }]
-  `;
-
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("No JSON in AI response");
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "refineVideos",
+        concept,
+        mistake,
+        difficulty,
+        domain,
+        videos: videos.map(v => ({
+          title: v.title,
+          url: v.url,
+          channel: v.channel,
+        })),
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to refine recommendations");
     
-    return JSON.parse(jsonMatch[0]);
+    const data = await response.json();
+    return data.recommendations || [];
   } catch (error) {
-    console.error("AI Refinement failed, using fallback:", error);
+    console.error("Groq Refinement failed, using fallback:", error);
     return videos.slice(0, 3).map(v => ({
       title: v.title,
       url: v.url,
@@ -188,119 +159,9 @@ export async function generateLearningCapsule(
   conceptChain: string[],
   level: string
 ): Promise<LearningCapsule | null> {
-  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
-    return null;
-  }
-
-  const prompt = `
-    You are an advanced AI Learning Engine.
-
-    Your task is to convert student performance analysis into a personalized, high-quality learning output.
-
-    DO NOT give generic explanations.
-    DO NOT output random theory.
-    Your response must be tailored to the student's mistakes, level, and learning needs.
-
-    ========================
-    INPUT
-    ========================
-
-    Mode: ${mode}  
-    (KINDER / SCHOOL / ENGINEERING)
-
-    Weak Topics: ${weakTopics.join(", ")}
-
-    Mistakes: ${mistakes.join("; ")}
-
-    Concept Chain: ${conceptChain.join(" -> ")}
-
-    User Level: ${level}
-
-    ========================
-    YOUR TASK
-    ========================
-
-    1. Identify the EXACT learning gaps
-       - Be specific (e.g., "loop boundary condition", not just "loops")
-
-    2. Adapt explanation BASED ON MODE:
-
-       If KINDER:
-       - Use simple words
-       - Use examples, visuals, or analogies
-       - Keep it playful and short
-
-       If SCHOOL:
-       - Use step-by-step explanations
-       - Focus on clarity and correctness
-       - Add examples and formulas
-
-       If ENGINEERING:
-       - Be precise and technical
-       - Include rules, edge cases, and best practices
-       - Focus on reasoning
-
-    3. Generate a structured "Learning Capsule" including:
-
-       - Concept Summary
-       - What the student did wrong (personalized)
-       - Correct Rule / Insight
-       - Example (simple but clear)
-       - Memory Aid (mnemonic or trick)
-       - Quick Recall Question
-
-    4. Make content:
-       - concise
-       - scannable
-       - useful for revision
-
-    5. Keep tone:
-       - supportive
-       - clear
-       - slightly engaging (not robotic)
-
-    ========================
-    OUTPUT FORMAT (STRICT JSON)
-    ========================
-
-    {
-      "learning_gap": "...",
-      "topics": [
-        {
-          "name": "...",
-          "summary": "...",
-          "mistake": "...",
-          "rule": "...",
-          "example": "...",
-          "mnemonic": "...",
-          "recall_question": "..."
-        }
-      ],
-      "next_action": "..."
-    }
-
-    ========================
-    IMPORTANT RULES
-    ========================
-
-    - NO generic textbook definitions
-    - MUST reference user's mistakes
-    - MUST adapt to learning mode
-    - KEEP output clean and structured
-    - Avoid long paragraphs
-  `;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON in AI response");
-    
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    console.error("Learning Capsule failure:", error);
-    return null;
-  }
+  // Learning Capsule generation is currently disabled
+  // Use /api/ai endpoint for AI-powered features
+  return null;
 }
 
 /**
@@ -314,63 +175,12 @@ export async function generateRootCauseExplanation(
   weakTopics: string[],
   dependencyChain: string[]
 ): Promise<string[]> {
-  if (!apiKey || apiKey === "YOUR_AI_KEY_HERE") {
-    return [
-      `You struggled with ${rootCause}.`,
-      `Since ${rootCause} is a foundation for ${dependencyChain.slice(1).join(", ")}, you also faced issues there.`,
-      `Focus on ${rootCause} first to improve your overall score.`
-    ];
-  }
-
-  const prompt = `
-    You are an Expert AI Tutor explaining test results.
-    
-    ========================
-    CONTEXT
-    ========================
-    Domain: ${domain}
-    Learning Mode: ${mode}
-    Analysis:
-    - Main Root Cause: ${rootCause}
-    - Weak Topics: ${weakTopics.join(", ")}
-    - Dependency Chain: ${dependencyChain.join(" -> ")}
-    
-    ========================
-    YOUR TASK
-    ========================
-    1. Explain WHY the student failed. 
-    2. Focus on the dependency (e.g. "You failed sorting BECAUSE sorting depends on loops, and your loops are weak").
-    3. Tracing the "Concept Graph" is the core of this explanation.
-    4. Provide clear, actionable advice.
-    5. Adapt tone to ${mode} mode:
-       - KINDER: Very simple, analogies, friendly.
-       - SCHOOL: Clear, step-by-step, encouraging.
-       - ENGINEERING: Technical, precise, focused on logic flow.
-    
-    ========================
-    OUTPUT FORMAT
-    ========================
-    Return a JSON ARRAY of strings. Each string is ONE SHORT PARAGRAPH or sentence.
-    The Tutor will speak these strings one by one. Max 4 to 6 parts.
-    
-    Example: ["You did your best!", "However, your main issue is in loops.", "Because sorting depends on loops, that's why you struggled with the sorting questions.", "Master loops first, and everything else will get easier!"]
-  `;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error("No JSON array found");
-    
-    return JSON.parse(jsonMatch[0]);
-  } catch (error) {
-    return [
-      `Our analysis shows your main hurdle is ${rootCause}.`,
-      `Tracing your mistakes, we see that your weakness in ${rootCause} directly affected your performance in ${dependencyChain.slice(1, 3).join(" and ")}.`,
-      `This is because ${dependencyChain[1] || "these topics"} rely heavily on the foundations of ${rootCause}.`,
-      `Strengthen ${rootCause} first, and you will see a massive improvement in your overall ${domain} skills!`
-    ];
-  }
+  // Fallback to simple explanation template
+  return [
+    `You struggled with ${rootCause}.`,
+    `Since ${rootCause} is a foundation for ${dependencyChain.slice(1).join(", ")}, you also faced issues there.`,
+    `Focus on ${rootCause} first to improve your overall score.`
+  ];
 }
 
 /**

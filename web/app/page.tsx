@@ -226,6 +226,7 @@ export default function Home() {
             onRestart={handleRestart}
             onSimulate={() => navigate("simulation")}
             onPractice={() => navigate(domain === "Web Dev" ? "web-sandbox" : "sandbox")}
+            onNextModule={() => navigate("domain-select")}
           />
         )}
 

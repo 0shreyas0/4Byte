@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/AuthContext";
 import ProfilePanel from "@/components/edtech/ProfilePanel";
 import PixelCat from "@/components/edtech/PixelCat";
 import NotificationCenter from "@/components/edtech/NotificationCenter";
+import BrandLogo from "@/components/edtech/BrandLogo";
 
 export type Screen =
   | "auth"
@@ -112,26 +113,15 @@ export default function Navbar({
       className="sticky top-0 z-50 w-full"
       style={{ background: "#FFD60A", borderBottom: "4px solid #0D0D0D" }}
     >
-      <div className="max-w-screen-2xl mx-auto flex items-stretch" style={{ height: 56 }}>
+      <div className="max-w-screen-2xl mx-auto flex items-stretch" style={{ height: 64 }}>
 
         {/* ── Brand ──────────────────────────────────────────────────── */}
         <button
           onClick={onRestart}
-          className="flex items-center gap-2.5 px-5 shrink-0 cursor-pointer"
+          className="flex items-center gap-4 px-8 shrink-0 cursor-pointer h-full"
           style={{ borderRight: "4px solid #0D0D0D", background: "transparent" }}
         >
-          <div
-            className="w-9 h-9 flex items-center justify-center"
-            style={{ background: "#0D0D0D", boxShadow: "2px 2px 0px rgba(0,0,0,0.3)" }}
-          >
-            <BookOpen size={18} color="#FFD60A" />
-          </div>
-          <span
-            className="hidden sm:block"
-            style={{ fontWeight: 800, fontSize: "0.85rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "#0D0D0D" }}
-          >
-            NeuralPath
-          </span>
+          <BrandLogo />
         </button>
 
         {/* ── Desktop nav links ───────────────────────────────────────── */}

@@ -1,30 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AnalysisResult, TopicScore } from "@/lib/edtech/conceptGraph";
 import {
   LayoutDashboard, BarChart3, GitBranch, Zap, BookOpen,
   Bell, User, Menu, X, TrendingUp, AlertTriangle, CheckCircle2,
   Target, Flame, Clock, ChevronRight, Trophy, ArrowRight, Info, Terminal,
-  Brain, Sparkles, ChevronUp, ChevronDown, History, Calendar
+  Brain, Sparkles, ChevronUp, ChevronDown
 } from "lucide-react";
 import { tutorSpeak } from "../Avatar";
-import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 /* ─── Types ─── */
 interface Props {
-  uid?: string;
   domain: string;
   scores: Record<string, TopicScore>;
   analysis: AnalysisResult;
   onRestart: () => void;
   onSimulate: () => void;
   onPractice: () => void; // 🔥 Added
-  sessionHistory?: any[];
+  onNextModule?: () => void; // 🔥 New: Navigate to next module
 }
 
-type Tab = "dashboard" | "analytics" | "conceptmap" | "deepdive" | "history";
+type Tab = "dashboard" | "analytics" | "conceptmap" | "deepdive";
 
 /* ─── Helpers ─── */
 function statusColor(score: number) {
@@ -37,9 +34,9 @@ function statusLabel(score: number) {
 /* ─── Sidebar removed ─── */
 
 /* ─── DASHBOARD TAB ─── */
-function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
+function DashboardTab({ domain, scores, analysis, onSimulate, onPractice, onNextModule }: {
   domain: string; scores: Record<string, TopicScore>;
-  analysis: AnalysisResult; onSimulate: () => void; onPractice: () => void;
+  analysis: AnalysisResult; onSimulate: () => void; onPractice: () => void; onNextModule?: () => void;
 }) {
   const entries = Object.entries(scores);
   const overallScore = Math.round(entries.reduce((s, [, t]) => s + t.score, 0) / Math.max(entries.length, 1));
@@ -59,7 +56,7 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
             <Brain size={28} color="#AF52DE" />
           </div>
           <div>
-            <h2 style={{ color: "#FFF", fontWeight: 900, fontSize: "1.4rem", textTransform: "uppercase", lineHeight: 1 }}>Neural Mentor Audit</h2>
+            <h2 style={{ color: "#FFF", fontWeight: 900, fontSize: "1.4rem", textTransform: "uppercase", lineHeight: 1 }}>AI Cognitive Audit</h2>
             <p style={{ color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: "0.85rem", textTransform: "uppercase" }}>LLM behavioral analysis powered by Ollama</p>
           </div>
         </div>
@@ -94,7 +91,7 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
 
         <div style={{ position: "relative" }}>
           <div style={{ color: "#FFD60A", fontWeight: 900, fontSize: "0.7rem", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 8 }}>
-            📍 Official {domain} Skill Audit
+            📍 Quiz Complete — {domain}
           </div>
           <h1 style={{ color: "#fff", fontWeight: 900, fontSize: "clamp(1.6rem, 4vw, 2.5rem)", textTransform: "uppercase", lineHeight: 1.1, marginBottom: 12, letterSpacing: "-0.03em" }}>
             Your Score: <span style={{ color: "#FFD60A" }}>{overallScore}%</span> ⚡
@@ -103,6 +100,13 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
             {weak.length} weak topics found. Root cause: <strong style={{ color: "#FF3B3B" }}>{analysis.rootCause}</strong>
           </p>
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 16 }}>
+            {onNextModule && (
+              <button onClick={onNextModule}
+                style={{ background: "#3B82F6", color: "#fff", border: "3px solid #3B82F6", padding: "12px 28px", fontWeight: 900, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "5px 5px 0 #1e40af", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                <ChevronRight size={16} /> Next Module
+              </button>
+            )}
             <button onClick={onSimulate}
               style={{ background: "#FFD60A", color: "#0D0D0D", border: "3px solid #FFD60A", padding: "12px 28px", fontWeight: 900, fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "5px 5px 0 #fff", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}
             >
@@ -152,7 +156,7 @@ function DashboardTab({ domain, scores, analysis, onSimulate, onPractice }: {
                 alignItems: "center",
                 gap: 8
               }}>
-                Neural Mentor Report <span style={{ background: "#FFD60A", color: "#0D0D0D", padding: "1px 6px", borderRadius: 4, fontSize: "0.6rem", fontWeight: 900 }}>PERSONALIZED</span>
+                Mental Mentor Report <span style={{ background: "#FFD60A", color: "#0D0D0D", padding: "1px 6px", borderRadius: 4, fontSize: "0.6rem", fontWeight: 900 }}>PERSONALIZED</span>
               </div>
               <h2 style={{ fontWeight: 900, fontSize: "1.1rem", lineHeight: 1.4, marginBottom: 10, color: "#1A1A1A" }}>
                 {analysis.explanation[0]}
@@ -733,7 +737,7 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <Sparkles size={22} color="#FFD60A" strokeWidth={2} />
             <h2 style={{ fontWeight: 900, fontSize: "1.05rem", textTransform: "uppercase", margin: 0 }}>
-              Neural Mentor Summary
+              AI Mentor Summary
             </h2>
           </div>
           <p style={{ fontWeight: 700, color: "#333", lineHeight: 1.7, margin: 0 }}>
@@ -748,7 +752,7 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
           <ul style={{ margin: 0, paddingLeft: 18, color: "#fff", lineHeight: 1.8, fontSize: "0.92rem", fontWeight: 600 }}>
             {((analysis.explanation && analysis.explanation.length > 1) ? analysis.explanation.slice(1, 5) : [
               "Detailed per-question thought process is missing for this run.",
-              "You can retake once to regenerate the full Neural Mentor deep dive.",
+              "You can retake once to regenerate the full AI Mentor deep dive.",
             ]).map((line, idx) => (
               <li key={`${line}-${idx}`}>{line}</li>
             ))}
@@ -757,7 +761,7 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
 
         <div style={{ border: "2px dashed #0D0D0D", padding: "14px 16px", background: "#fff" }}>
           <p style={{ margin: 0, fontSize: "0.8rem", fontWeight: 700, color: "#555" }}>
-            The full deep dive is only available when this attempt includes question-by-question mentor feedback.
+            Deep dive appears only when backend returns question-level mentor output (`detailed_report`).
           </p>
         </div>
       </div>
@@ -771,7 +775,7 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontWeight: 900, fontSize: "1.4rem", textTransform: "uppercase", letterSpacing: "-0.02em" }}>
-            🧠 Neural Mentor Review
+            🧠 AI Mentor Review
           </h1>
           <p style={{ color: "#666", fontSize: "0.85rem", fontWeight: 600, marginTop: 4 }}>
             {analysis.detailedAiReport.length} questions reviewed · Tap a card for full analysis
@@ -914,131 +918,20 @@ function DeepDiveTab({ analysis }: { analysis: AnalysisResult }) {
   );
 }
 
-/* ─── HISTORY TAB ─── */
-function HistoryTab({ sessionHistory, onSelect }: { 
-  sessionHistory?: any[]; onSelect: (hist: any) => void 
-}) {
-  const sessions = sessionHistory || [];
-
-  if (sessions.length === 0) {
-    return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <History size={48} style={{ opacity: 0.2, marginBottom: 16 }} />
-        <h2 style={{ fontWeight: 900, textTransform: "uppercase" }}>No test history found</h2>
-        <p style={{ fontWeight: 700, color: "#666" }}>Complete a quiz to see your progress tracked here!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ padding: "32px", maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ marginBottom: 8 }}>
-        <h1 style={{ fontWeight: 900, fontSize: "1.8rem", textTransform: "uppercase", letterSpacing: "-0.03em" }}>🕰 Session History</h1>
-        <p style={{ fontWeight: 700, color: "#666", fontSize: "0.85rem", marginTop: 4 }}>Select a past session to revisit its knowledge graph and Neural Mentor review.</p>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {sessions.map((s, idx) => {
-          const overall = s.scores ? Math.round(Object.values(s.scores as Record<string, any>).reduce((sum, t) => sum + t.score, 0) / Math.max(Object.keys(s.scores).length, 1)) : 0;
-          const isCurrent = idx === 0;
-
-          return (
-            <div 
-              key={`${s.timestamp}-${idx}`}
-              onClick={() => onSelect(s)}
-              style={{
-                background: "#fff",
-                border: "4px solid #0D0D0D",
-                padding: "20px",
-                boxShadow: isCurrent ? "6px 6px 0 #FFD60A" : "4px 4px 0 #0D0D0D",
-                cursor: "pointer",
-                display: "grid",
-                gridTemplateColumns: "100px 1fr 120px 48px",
-                alignItems: "center",
-                gap: 20,
-                transition: "transform 0.1s ease"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-              onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-            >
-              {/* Score Badge */}
-              <div style={{ 
-                background: statusColor(overall), 
-                border: "3px solid #0D0D0D", 
-                height: "60px",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" 
-              }}>
-                <span style={{ fontWeight: 900, fontSize: "1.2rem", lineHeight: 1 }}>{overall}%</span>
-                <span style={{ fontWeight: 900, fontSize: "0.55rem", textTransform: "uppercase" }}>SCORE</span>
-              </div>
-
-              {/* Info */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 900, fontSize: "0.85rem", textTransform: "uppercase", color: "#0D0D0D" }}>
-                    {s.domain} Assessment
-                  </span>
-                  {isCurrent && (
-                    <span style={{ background: "#0D0D0D", color: "#FFD60A", fontSize: "0.6rem", fontWeight: 900, padding: "2px 6px", borderRadius: 4 }}>LATEST</span>
-                  )}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, color: "#666", fontSize: "0.72rem", fontWeight: 700 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}><Calendar size={12} /> {s.date}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#FF3B3B" }}>
-                    <Brain size={12} /> Hurdle: {s.analysis?.rootCause || "Universal Logic"}
-                  </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <Clock size={12} /> {Object.keys(s.scores || {}).length * 8} Questions
-                  </span>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                 <div style={{ fontSize: "0.65rem", fontWeight: 900, color: "#888", textTransform: "uppercase" }}>Topics Overview</div>
-                 <div style={{ display: "flex", gap: 4 }}>
-                    <div style={{ width: 12, height: 12, background: "#1DB954", border: "1px solid #0D0D0D" }} title="Strong" />
-                    <div style={{ width: 12, height: 12, background: "#FFD60A", border: "1px solid #0D0D0D" }} title="Medium" />
-                    <div style={{ width: 12, height: 12, background: "#FF3B3B", border: "1px solid #0D0D0D" }} title="Weak" />
-                 </div>
-              </div>
-
-              {/* Go Icon */}
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <div style={{ width: 32, height: 32, background: "#0D0D0D", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                   <ChevronRight size={20} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 /* ─── MAIN EXPORT ─── */
-export default function MainDashboard({ uid, domain, scores, analysis, onRestart, onSimulate, onPractice, sessionHistory }: Props) {
-  const [tab, setTab] = useState<Tab>(analysis ? "dashboard" : "history");
-  
-  const [activeAnalysis, setActiveAnalysis] = useState<AnalysisResult | null>(analysis || null);
-  const [activeScores, setActiveScores] = useState<Record<string, TopicScore>>(scores || {});
-  const [activeTabDomain, setActiveTabDomain] = useState<string>(domain || "");
+export default function MainDashboard({ domain, scores, analysis, onRestart, onSimulate, onPractice, onNextModule }: Props) {
+  const [tab, setTab] = useState<Tab>("dashboard");
+
+  if (!analysis) {
+    return <div style={{ padding: 40 }}>Missing Analysis</div>;
+  }
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "dashboard",  label: "Behavioral Insight", icon: LayoutDashboard },
     { id: "analytics",  label: "Performance Map",   icon: BarChart3 },
     { id: "conceptmap", label: "Knowledge Graph",    icon: GitBranch },
-    { id: "deepdive",   label: "Neural Mentor",         icon: Sparkles },
-    { id: "history",    label: "All Tests",         icon: History },
+    { id: "deepdive",   label: "AI Mentor",         icon: Sparkles },
   ];
-
-  // Sync state if props change (e.g. after a new quiz)
-  useEffect(() => {
-    setActiveAnalysis(analysis);
-    setActiveScores(scores);
-    setActiveTabDomain(domain);
-  }, [analysis, scores, domain]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8" }}>
@@ -1084,62 +977,12 @@ export default function MainDashboard({ uid, domain, scores, analysis, onRestart
         </button>
       </div>
 
-      <main style={{ flex: 1, paddingBottom: 60 }}>
-        {!activeAnalysis && tab !== "history" ? (
-          <AuditEmptyState onStart={onRestart} />
-        ) : (
-          <>
-            {tab === "dashboard"  && activeAnalysis && <DashboardTab  domain={activeTabDomain} scores={activeScores} analysis={activeAnalysis} onSimulate={onSimulate} onPractice={onPractice} />}
-            {tab === "analytics"  && activeAnalysis && <AnalyticsTab  scores={activeScores} analysis={activeAnalysis} />}
-            {tab === "conceptmap" && activeAnalysis && <ConceptMapTab domain={activeTabDomain} scores={activeScores} analysis={activeAnalysis} />}
-            {tab === "deepdive"   && activeAnalysis && <DeepDiveTab   analysis={activeAnalysis} />}
-            {tab === "history"    && (
-              <HistoryTab 
-                sessionHistory={sessionHistory}
-                onSelect={(hist) => {
-                  setActiveAnalysis(hist.analysis);
-                  setActiveScores(hist.scores);
-                  setActiveTabDomain(hist.domain);
-                  setTab("dashboard");
-                }} 
-              />
-            )}
-          </>
-        )}
+      <main style={{ flex: 1 }}>
+        {tab === "dashboard"  && <DashboardTab  domain={domain} scores={scores} analysis={analysis} onSimulate={onSimulate} onPractice={onPractice} onNextModule={onNextModule} />}
+        {tab === "analytics"  && <AnalyticsTab  scores={scores} analysis={analysis} />}
+        {tab === "conceptmap" && <ConceptMapTab domain={domain} scores={scores} analysis={analysis} />}
+        {tab === "deepdive"   && <DeepDiveTab   analysis={analysis} />}
       </main>
-    </div>
-  );
-}
-
-function AuditEmptyState({ onStart }: { onStart: () => void }) {
-  return (
-    <div style={{ 
-      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", 
-      padding: "80px 20px", textAlign: "center", gap: 24 
-    }}>
-      <div style={{ 
-        width: 100, height: 100, background: "#FFD60A", border: "4px solid #0D0D0D",
-        display: "flex", alignItems: "center", justifyContent: "center", 
-        boxShadow: "10px 10px 0 #0D0D0D", fontSize: "3rem"
-      }}>
-        ✨
-      </div>
-      <div>
-        <h1 style={{ fontWeight: 900, fontSize: "2rem", textTransform: "uppercase", margin: 0 }}>No active session found</h1>
-        <p style={{ fontWeight: 700, color: "#666", maxWidth: 450, margin: "12px auto 0" }}>
-          You haven't completed a skill audit recently. Run your first Neural Mentor analysis to see your behavioral insights.
-        </p>
-      </div>
-      <button 
-        onClick={onStart}
-        style={{
-          background: "#0D0D0D", color: "#FFD60A", border: "none",
-          padding: "16px 32px", fontWeight: 900, fontSize: "1rem", 
-          textTransform: "uppercase", cursor: "pointer", boxShadow: "8px 8px 0 #AF52DE"
-        }}
-      >
-        Start First Audit →
-      </button>
     </div>
   );
 }

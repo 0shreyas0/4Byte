@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useAuth, type UserProfile } from "@/lib/AuthContext";
 import { EDUCATION_LEVELS, getDomainChipsForLevel } from "@/lib/edtech/educationLevels";
+// import PerformanceGraphJS from "@/components/edtech/PerformanceGraphJS";
 
 interface UserProfilePageProps {
   onBack: () => void;
@@ -314,6 +315,9 @@ export default function UserProfilePage({ onBack, onNavigateToDomain }: UserProf
           userId={user?.uid ?? ""} 
           activityLog={profile?.activityLog} 
         />
+
+        {/* ── LIVE PERFORMANCE ANALYSIS (SLEAK JS VERSION) ── */}
+        {/* <PerformanceGraphJS userId={user?.uid ?? ""} /> */}
 
         {/* ── SMART RECOMMENDATIONS ── */}
         <SmartRecommendations profile={profile} onNavigateToDomain={onNavigateToDomain} />

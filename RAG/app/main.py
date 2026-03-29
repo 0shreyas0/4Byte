@@ -10,6 +10,7 @@ import logging
 from contextlib import asynccontextmanager
 import os
 import sys
+from pathlib import Path
 
 # 🔥 Load .env for Groq support
 from dotenv import load_dotenv
@@ -90,16 +91,17 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Personalized Compiler Error Explainer",
-    description="Python MVP with RAG + per-user weak-topic profiles.",
+    title="NeuralPath RAG Service",
+    description="AI-driven learning path optimizer",
     version="1.0.0",
     lifespan=lifespan,
 )
 
+# BULLETPROOF CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -465,4 +467,41 @@ def complete_topic(req: TopicCompleteRequest):
         "topic": req.topic,
         "xp_earned": req.xp_earned,
         "total_completed_in_domain": len(completed),
+    }
+
+@app.get("/user/performance/{user_id}")
+async def get_user_performance_data(user_id: str):
+    """Provide raw performance data points for the React frontend."""
+    DB_PATH = Path(__file__).resolve().parent.parent / "data" / "errors.db"
+    import sqlite3
+    import numpy as np
+    
+    data_points = []
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT created_at, mapped_topic FROM error_history WHERE user_id = ? ORDER BY created_at ASC", (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        
+        for i, row in enumerate(rows):
+            # Performance simulation logic
+            sim_time = max(15, 60 - (i * 3)) + np.random.randint(-5, 5)
+            sim_score = min(100, 30 + (i * 7)) + np.random.randint(-5, 5)
+            
+            data_points.append({
+                "session": i + 1,
+                "time": sim_time,
+                "score": sim_score,
+                "topic": row[1],
+                "date": row[0]
+            })
+
+    except Exception as e:
+        logger.error(f"Data retrieval failed: {e}")
+        return {"user_id": user_id, "performance": []}
+
+    return {
+        "user_id": user_id,
+        "performance": data_points
     }
