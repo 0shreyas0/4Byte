@@ -94,6 +94,7 @@ function PythonLogoMark({
 }
 
 interface DomainSelectionProps {
+  searchQuery?: string;
   onSelect: (domain: string) => void;
   onBack: () => void;
 }
@@ -313,152 +314,61 @@ const SUBJECTS_BY_GRADE: Record<string, string[]> = {
 
 import { useAuth } from "@/lib/AuthContext";
 
-export default function DomainSelection({ onSelect, onBack }: DomainSelectionProps) {
+export default function DomainSelection({ searchQuery = "", onSelect, onBack }: DomainSelectionProps) {
   const { profile } = useAuth();
   const savedEducationLevel = profile?.educationLevel ?? null;
   const opensDirectSubjects = savedEducationLevel ? !PROFESSIONAL_LEVELS.has(savedEducationLevel) : false;
   const opensDirectDomains = savedEducationLevel ? PROFESSIONAL_LEVELS.has(savedEducationLevel) : false;
 
-  const [step, setStep] = useState<"level" | "grade" | "stream" | "subject" | "professional">(
-    opensDirectSubjects ? "subject" : opensDirectDomains ? "professional" : profile?.academicGrade ? "subject" : "level"
+  const [step, setStep] = useState<"subject" | "professional">(
+    (opensDirectSubjects || profile?.academicGrade) ? "subject" : "professional"
   );
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(profile?.academicLevel ?? null);
   const [selectedGrade, setSelectedGrade] = useState<string | null>(
     opensDirectSubjects ? DIRECT_SUBJECT_LABELS[savedEducationLevel ?? ""] ?? null : profile?.academicGrade ?? null
   );
-  const [selectedStream, setSelectedStream] = useState<string | null>(profile?.academicStream ?? null);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   
   const [confirming, setConfirming] = useState(false);
-
-  const handleLevelSelect = (levelId: string) => {
-    setSelectedLevel(levelId);
-    if (levelId === "professional") {
-      setStep("professional");
-    } else {
-      setStep("grade");
-    }
-  };
-
-  const handleGradeSelect = (grade: string) => {
-    setSelectedGrade(grade);
-    if (grade === "11th Grade" || grade === "12th Grade" || grade === "Undergraduate") {
-      setStep("stream");
-    } else {
-      setStep("subject");
-    }
-  };
-
-  const handleStreamSelect = (stream: string) => {
-    setSelectedStream(stream);
-    setStep("subject");
-  };
 
   const handleSubjectSelect = (subject: string) => {
     setSelectedSubject(subject);
   };
 
   const handleFinalConfirm = () => {
+    const stream = profile?.academicStream;
     const finalSelection = step === "professional" || opensDirectSubjects
       ? selectedSubject || ""
-      : `${selectedSubject} (${selectedGrade}${selectedStream ? ` - ${selectedStream}` : ""})`;
+      : `${selectedSubject} (${selectedGrade}${stream ? ` - ${stream}` : ""})`;
       
     setConfirming(true);
     setTimeout(() => onSelect(finalSelection), 400);
   };
 
   const handleStepBack = () => {
-    if (step === "level") onBack();
-    else if (step === "grade") setStep("level");
-    else if (step === "stream") setStep("grade");
-    else if (step === "subject") {
-      if (opensDirectSubjects) onBack();
-      else setStep(selectedLevel === "senior" || selectedLevel === "higher" ? "stream" : "grade");
-    } else if (step === "professional") {
-      if (opensDirectDomains) onBack();
-      else setStep("level");
-    }
+    onBack();
   };
 
-  // ── Render Helpers ────────────────────────────────────────────────────────────
+  const normalizedSearch = searchQuery.trim().toLowerCase();
 
-  const renderLevels = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {GRADE_LEVELS.map((lvl) => {
-        const Icon = lvl.icon;
-        return (
-          <button
-            key={lvl.id}
-            onClick={() => handleLevelSelect(lvl.id)}
-            className="text-left p-6 group transition-all"
-            style={{
-              border: "4px solid #0D0D0D",
-              background: "#FFFFFF",
-              boxShadow: "6px 6px 0 #0D0D0D",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translate(-2px, -2px)";
-              e.currentTarget.style.boxShadow = "8px 8px 0 #0D0D0D";
-              e.currentTarget.style.background = lvl.color;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "none";
-              e.currentTarget.style.boxShadow = "6px 6px 0 #0D0D0D";
-              e.currentTarget.style.background = "#FFFFFF";
-            }}
-          >
-            <div className="flex items-center justify-between mb-4">
-               <div className="p-3 border-2 border-black bg-white">
-                 <Icon size={28} />
-               </div>
-               <span className="text-xs font-black uppercase tracking-widest bg-black text-white px-2 py-1">
-                 {lvl.range}
-               </span>
-            </div>
-            <h3 className="text-2xl font-black mb-2 tracking-tight">{lvl.name}</h3>
-            <p className="text-sm font-bold opacity-70">Trace gaps in {lvl.name} fundamentals.</p>
-          </button>
-        );
-      })}
+  const renderEmptyState = (label: string) => (
+    <div
+      className="px-6 py-10 text-center"
+      style={{
+        background: "#FFFFFF",
+        border: "4px dashed #0D0D0D",
+      }}
+    >
+      <div className="mb-2 text-xs font-black uppercase tracking-[0.2em]" style={{ color: "#FF3B30" }}>
+        No Match
+      </div>
+      <div className="text-2xl font-black" style={{ color: "#0D0D0D" }}>
+        No {label} found for &quot;{searchQuery}&quot;
+      </div>
     </div>
   );
 
-  const renderGrades = () => {
-    const grades = selectedLevel ? GRADES_BY_LEVEL[selectedLevel] : [];
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {grades.map((grade) => (
-          <button
-            key={grade}
-            onClick={() => handleGradeSelect(grade)}
-            className="p-5 text-center font-black text-lg border-4 border-black bg-white hover:bg-[#FFD60A] shadow-[4px_4px_0_#0D0D0D] hover:shadow-[2px_2px_0_#0D0D0D] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
-          >
-            {grade}
-          </button>
-        ))}
-      </div>
-    );
-  };
+  // ── Render Helpers ────────────────────────────────────────────────────────────
 
-  const renderStreams = () => {
-    const streamOptions = selectedLevel === "higher" 
-      ? ["Engineering", "Medical", "Commerce", "Humanities", "Law"]
-      : STREAMS;
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {streamOptions.map((stream) => (
-          <button
-            key={stream}
-            onClick={() => handleStreamSelect(stream)}
-            className="p-8 text-left border-4 border-black bg-white hover:bg-black hover:text-white shadow-[6px_6px_0_#0D0D0D] transition-all"
-          >
-            <div className="text-xs font-bold uppercase opacity-60 mb-1">Select Stream</div>
-            <div className="text-2xl font-black">{stream}</div>
-          </button>
-        ))}
-      </div>
-    );
-  };
 
   const renderSubjects = () => {
     const subjects = opensDirectSubjects
@@ -466,9 +376,18 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
       : selectedGrade
         ? (SUBJECTS_BY_GRADE[selectedGrade] || ["Math", "Science", "English", "History"])
         : [];
+        
+    const filteredSubjects = subjects.filter((sub) =>
+      sub.toLowerCase().includes(normalizedSearch)
+    );
+
+    if (filteredSubjects.length === 0 && searchQuery) {
+      return renderEmptyState("subjects");
+    }
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {subjects.map((sub) => {
+        {filteredSubjects.map((sub) => {
           const isSelected = selectedSubject === sub;
           return (
             <button
@@ -493,9 +412,29 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
     );
   };
 
-  const renderProfessional = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-      {DOMAINS.map((domain) => {
+  const renderProfessional = () => {
+    const filteredDomains = DOMAINS.filter((domain) => {
+      if (!normalizedSearch) return true;
+      const haystack = [
+        domain.id,
+        domain.name,
+        domain.fullName,
+        domain.description,
+        domain.tag,
+        domain.difficulty,
+        domain.level,
+        ...domain.topics,
+      ].join(" ").toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+
+    if (filteredDomains.length === 0 && searchQuery) {
+      return renderEmptyState("domains");
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        {filteredDomains.map((domain) => {
         const Icon = domain.icon;
         const isSelected = selectedSubject === domain.id;
         const usePythonMark = domain.id === "Python";
@@ -538,7 +477,8 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
         );
       })}
     </div>
-  );
+    );
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#F5F0E8" }}>
@@ -554,16 +494,10 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
         <div style={{ position: "relative", zIndex: 10 }}>
           <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "#FFD60A", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
             <ChevronRight size={14} /> 
-            {step === "level" && "Level Selection"}
-            {step === "grade" && `${selectedLevel} / Grade Selection`}
-            {step === "stream" && `${selectedGrade} / Stream Selection`}
             {step === "subject" && `${selectedGrade ?? "Subjects"} / Subject Selection`}
             {step === "professional" && "Professional Tracks"}
           </div>
           <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.05, color: "#FFFFFF", marginBottom: 12 }}>
-            {step === "level" && <>What is your <span style={{ color: "#FFD60A" }}>Current Scale?</span></>}
-            {step === "grade" && <>Which <span style={{ color: "#FFD60A" }}>Grade?</span></>}
-            {step === "stream" && <>Choose <span style={{ color: "#FFD60A" }}>Specialization</span></>}
             {step === "subject" && <>Select <span style={{ color: "#FFD60A" }}>Subject</span></>}
             {step === "professional" && <>Select <span style={{ color: "#FFD60A" }}>Domain</span></>}
           </h1>
@@ -571,9 +505,6 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-10">
-        {step === "level" && renderLevels()}
-        {step === "grade" && renderGrades()}
-        {step === "stream" && renderStreams()}
         {step === "subject" && renderSubjects()}
         {step === "professional" && renderProfessional()}
 
@@ -581,12 +512,6 @@ export default function DomainSelection({ onSelect, onBack }: DomainSelectionPro
           <button onClick={handleStepBack} className="brutal-btn px-8 py-4 text-sm font-black bg-white border-4 border-black shadow-[4px_4px_0_#000]">
             ← BACK
           </button>
-
-          {step === "subject" && profile?.academicGrade && !opensDirectSubjects && (
-            <button onClick={() => setStep("level")} className="text-xs font-black uppercase underline p-2">
-              Change My Level / Grade
-            </button>
-          )}
 
           {(step === "subject" || step === "professional") && (
             <button

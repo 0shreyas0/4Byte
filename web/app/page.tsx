@@ -34,6 +34,7 @@ export default function Home() {
   const [results, setResults] = useState<QuestionResult[]>([]);
   const [aiPersona, setAiPersona] = useState<LearningPersona>("ENGINEERING");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Whether we're waiting for the profile to load after a login event
   const [awaitingPostLogin, setAwaitingPostLogin] = useState(false);
@@ -53,6 +54,7 @@ export default function Home() {
     const onPop = (e: PopStateEvent) => {
       const s: Screen = (e.state?.screen as Screen) ?? "landing";
       setScreen(s);
+      setSearchQuery(""); // clear search on navigation
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -167,7 +169,12 @@ export default function Home() {
       <Navbar
         screen={screen}
         domain={domain}
-        onNavigate={navigate}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onNavigate={(s) => {
+          setSearchQuery(""); // Clear search on explicit navigation
+          navigate(s);
+        }}
         onRestart={handleRestart}
         onGetStarted={() => navigate("auth")}
       />
@@ -199,6 +206,7 @@ export default function Home() {
           <DomainSelection
             onSelect={handleDomainSelect}
             onBack={() => navigate("landing")}
+            searchQuery={searchQuery}
           />
         )}
 

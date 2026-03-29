@@ -41,6 +41,8 @@ export type Screen =
 interface NavbarProps {
   screen: Screen;
   domain: string;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
   onNavigate: (screen: Screen) => void;
   onRestart: () => void;
   onGetStarted: () => void;
@@ -87,6 +89,8 @@ const NAV_ITEMS: {
 export default function Navbar({ 
   screen, 
   domain, 
+  searchQuery = "",
+  onSearchChange,
   onNavigate, 
   onRestart, 
   onGetStarted 
@@ -94,7 +98,6 @@ export default function Navbar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const { user, profile } = useAuth();
 
@@ -176,8 +179,8 @@ export default function Navbar({
               ref={searchRef}
               type="text"
               placeholder="Search topics, concepts…"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
               style={{
@@ -195,9 +198,9 @@ export default function Navbar({
                 transition: "color 0.15s",
               }}
             />
-            {searchValue && (
+            {searchQuery && (
               <button
-                onClick={() => { setSearchValue(""); searchRef.current?.focus(); }}
+                onClick={() => { onSearchChange?.(""); searchRef.current?.focus(); }}
                 style={{
                   background: "transparent",
                   border: "none",
